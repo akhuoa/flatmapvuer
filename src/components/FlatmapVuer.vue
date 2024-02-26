@@ -279,7 +279,7 @@
                 ref="centrelinesSelection"
                 key="centrelinesSelection"
               />
-              <!--             
+              <!--
                 <selections-group
                   v-if="isFC && sckanDisplay && sckanDisplay.length > 0"
                   title="SCKAN"
@@ -1119,6 +1119,20 @@ export default {
           this.mapImp = returnedObject
           this.serverUUID = this.mapImp.getIdentifier().uuid
           this.onFlatmapReady()
+          this.mapImp._map.scrollZoom.disable()
+          // TODO: should be only scroll on canvas
+          this.mapImp._map.on('wheel', (event) => {
+            if (event.originalEvent.ctrlKey) {
+              event.originalEvent.preventDefault();
+              if (!this.mapImp._map.scrollZoom._enabled) {
+                this.mapImp._map.scrollZoom.enable();
+              }
+            } else {
+              if (this.mapImp._map.scrollZoom._enabled) {
+                this.mapImp._map.scrollZoom.disable();
+              }
+            }
+          });
           if (this._stateToBeSet) this.restoreMapState(this._stateToBeSet)
           else {
             this.restoreMapState(state)
