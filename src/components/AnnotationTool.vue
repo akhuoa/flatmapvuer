@@ -289,9 +289,11 @@ export default {
   },
   watch: {
     annotationEntry: {
-      handler: function () {
-        this.resetSubmission()
-        this.updatePrevSubmissions()
+      handler: function (newVal, oldVal) {
+        if (newVal !== oldVal) {
+          this.resetSubmission()
+          this.updatePrevSubmissions()
+        }
       },
       immediate: false,
       deep: false,

@@ -1,0 +1,18 @@
+{
+  "minZoom": 4,
+  "availableSpecies": {
+    "Test": {
+      "taxo": "NCBITaxon:1",
+      "displayWarning": true
+    }
+  },
+  "displayCloseButton": false,
+  "initial": "Test",
+  "displayMinimap": true,
+  "helpMode": false,
+  "pathControls": true,
+  "mapSettings": [],
+  "flatmapAPI": "https://mapcore-demo.org/devel/flatmap/v4/",
+  "featureInfo": true,
+  "layerControl": true
+}

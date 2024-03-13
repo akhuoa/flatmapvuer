@@ -5,6 +5,7 @@
         <el-button
           v-if="resource.id === 'pubmed'"
           class="button"
+          id="open-pubmed-button"
           :icon="ElIconNotebook"
           @click="openUrl(resource.url)"
         >

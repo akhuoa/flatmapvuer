@@ -383,8 +383,8 @@
               popper-class="flatmap_dropdown"
             >
               <el-option
-                v-for="item in viewingModes"
-                :key="item"
+                v-for="(item, i) in viewingModes"
+                :key="item + i"
                 :label="item"
                 :value="item"
               >
@@ -942,6 +942,7 @@ export default {
      */
     eventCallback: function () {
       return (eventType, data, ...args) => {
+        console.log('eventCallback', eventType, data, args)
         if (eventType !== 'pan-zoom') {
           const label = data.label
           const resource = [data.models]
@@ -1187,7 +1188,9 @@ export default {
     displayTooltip: function (feature) {
       this.tooltipDisplay = true
       if (!this.disableUI) {
-        this.displayPopup(feature)
+        this.$nextTick(() => {
+          this.displayPopup(feature)
+        });
       }
     },
     /**
@@ -1752,16 +1755,20 @@ export default {
     entry: function () {
       if (!this.state) this.createFlatmap()
     },
-    helpMode: function (val) {
-      this.setHelpMode(val)
+    helpMode: function (newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.setHelpMode(val)
+      }
     },
     state: {
-      handler: function (state) {
-        if (this.mapManager) {
-          this.setState(state)
-        } else {
-          //this component has not been mounted yet
-          this.setStateRequired = true
+      handler: function (state, oldVal) {
+        if (state !== oldVal) {
+          if (this.mapManager) {
+            this.setState(state)
+          } else {
+            //this component has not been mounted yet
+            this.setStateRequired = true
+          }
         }
       },
       immediate: true,
@@ -1773,7 +1780,11 @@ export default {
       }
     }
   },
+  created: function () {
+
+  },
   mounted: function () {
+
     this.openMapRef = shallowRef(this.$refs.openMapRef)
     this.backgroundIconRef = shallowRef(this.$refs.backgroundIconRef)
     this.tooltipWait = []
