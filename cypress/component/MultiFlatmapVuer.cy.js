@@ -60,7 +60,7 @@ describe('MultiFlatmapVuer', () => {
     //Check if multiflatmap is mounted correctly
     cy.get('.content-container').should('exist');
 
-        
+
     //Check if the minimap is visible
     cy.get('#maplibre-minimap > .maplibregl-canvas-container > .maplibregl-canvas').should('exist');
 
@@ -76,7 +76,11 @@ describe('MultiFlatmapVuer', () => {
       // Create a pop up and ensure it shows
       let mapImp = window.Cypress.multiFlatmapVuer.getCurrentFlatmap()
       console.log('flatmap', mapImp)
-      mapImp.showPopup(45,'Test', { className: 'flatmapvuer-popover', positionAtLastClick: true })
+      cy.log('Checking mapImp')
+      if (mapImp) {
+        cy.log('Show a test popup if mapImp exists.')
+        mapImp.showPopup(45,'Test', { className: 'flatmapvuer-popover', positionAtLastClick: true })
+      }
       cy.get('.flatmapvuer-popover').should('exist').contains('Test').then(() => {
         // Close the pop up
         cy.get('.maplibregl-popup-close-button').click();
@@ -130,16 +134,16 @@ describe('MultiFlatmapVuer', () => {
             cy.window().then(win => {
               cy.stub(win, 'open').as('Open')
             })
-            
+
             // Click the open pubmed button and check that the window.open call was intercepted
             cy.get('#open-pubmed-button').should('exist').click()
-            cy.get('@Open').should('have.been.calledOnceWithExactly', 'https://pubmed.ncbi.nlm.nih.gov/?term=1358408%2C9622251%2C9442414%2C7174880', '_blank')            
+            cy.get('@Open').should('have.been.calledOnceWithExactly', 'https://pubmed.ncbi.nlm.nih.gov/?term=1358408%2C9622251%2C9442414%2C7174880', '_blank')
 
           })
-          
+
           // Close the pop up
           cy.get('.maplibregl-popup-close-button').should('exist')
-        
+
         // Test the search
         }).then(() => {
           flatmapVuer.searchAndShowResult('body proper', 'body proper')
