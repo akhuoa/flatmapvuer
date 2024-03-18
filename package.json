@@ -43,7 +43,7 @@
     "./src/*": "./src/*"
   },
   "dependencies": {
-    "@abi-software/flatmap-viewer": "^2.4.4",
+    "@abi-software/flatmap-viewer": "^2.5.10",
     "@abi-software/sparc-annotation": "0.0.5",
     "@abi-software/svg-sprite": "^0.4.0-vue3-beta.0",
     "@element-plus/icons-vue": "^2.3.1",
@@ -69,11 +69,11 @@
     "babel-eslint": "^10.1.0",
     "babel-plugin-component": "^1.1.1",
     "base64-inline-loader": "^2.0.1",
+    "chokidar": "^3.6.0",
+    "concurrently": "^8.2.2",
     "cypress": "^13.6.6",
     "cypress-multi-reporters": "^1.6.4",
     "cypress-wait-until": "^2.0.1",
-    "chokidar": "^3.6.0",
-    "concurrently": "^8.2.2",
     "eslint": "^8.56.0",
     "eslint-plugin-cypress": "^2.15.1",
     "eslint-plugin-vue": "^9.19.2",
