@@ -394,9 +394,9 @@
               </el-option>
             </el-select>
           </el-row>
-          <el-row class="backgroundSpacer"></el-row>
-          <el-row class="backgroundText" v-if="isFC">Dimension display</el-row>
-          <el-row class="backgroundControl" v-if="isFC">
+          <el-row class="backgroundSpacer" v-if="displayFlightPathOption"></el-row>
+          <el-row class="backgroundText" v-if="displayFlightPathOption">Dimension display</el-row>
+          <el-row class="backgroundControl" v-if="displayFlightPathOption">
             <el-radio-group
               v-model="dimensionRadio"
               class="flatmap-radio"
@@ -1333,6 +1333,27 @@ export default {
     },
     /**
      * @vuese
+     * Function to show flight path option
+     * (3D option)
+     * based on the map version (currently 1.6 and above).
+     * @arg mapVersion
+     */
+    setFlightPathInfo: function (mapVersion) {
+      const mapVersionForFlightPath = 1.6
+      if (mapVersion === mapVersionForFlightPath || mapVersion > mapVersionForFlightPath) {
+        // Show flight path option UI
+        this.displayFlightPathOption = true
+        // Show 3D as default on FC type
+        this.setDimension(true)
+      } else {
+        // Hide flight path option UI
+        this.displayFlightPathOption = false
+        // Show 2D as default on FC type
+        this.setDimension(false)
+      }
+    },
+    /**
+     * @vuese
      * Function to create Flatmap
      * by providing the ``state``.
      * @arg state
@@ -1402,6 +1423,8 @@ export default {
         promise1.then((returnedObject) => {
           this.mapImp = returnedObject
           this.serverUUID = this.mapImp.getIdentifier().uuid
+          let mapVersion = this.mapImp.details.version
+          this.setFlightPathInfo(mapVersion)
           this.onFlatmapReady()
           if (this._stateToBeSet) this.restoreMapState(this._stateToBeSet)
           else {
@@ -1458,8 +1481,6 @@ export default {
       this.sensor = new ResizeSensor(this.$refs.display, this.mapResize)
       if (this.mapImp.options && this.mapImp.options.style === 'functional') {
         this.isFC = true
-        // Show 3D as default on FC type
-        this.setDimension(true)
       }
       this.mapImp.setBackgroundOpacity(1)
       this.backgroundChangeCallback(this.currentBackground)
@@ -1772,6 +1793,7 @@ export default {
       drawerOpen: false,
       annotationRadio: false,
       dimensionRadio: false,
+      displayFlightPathOption: false,
       colourRadio: true,
       outlinesRadio: true,
       minimapResizeShow: false,
