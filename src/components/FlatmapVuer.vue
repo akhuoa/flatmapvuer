@@ -400,7 +400,7 @@
             <el-radio-group
               v-model="flightPath3DRadio"
               class="flatmap-radio"
-              @change="etFlightPath3D"
+              @change="setFlightPath3D"
             >
             <el-radio :label="false">2D</el-radio>
             <el-radio :label="true">3D</el-radio>
@@ -633,7 +633,7 @@ export default {
      * Function to switch from 2D to 3D
      * @arg flag
      */
-    etFlightPath3D: function (flag) {
+    setFlightPath3D: function (flag) {
       this.flightPath3DRadio = flag
       if (this.mapImp) {
         this.mapImp.enable3dPaths(flag)
@@ -1459,7 +1459,7 @@ export default {
       if (this.mapImp.options && this.mapImp.options.style === 'functional') {
         this.isFC = true
         // Show 3D as default on FC type
-        this.etFlightPath3D(true)
+        this.setFlightPath3D(true)
       }
       this.mapImp.setBackgroundOpacity(1)
       this.backgroundChangeCallback(this.currentBackground)
