@@ -1345,11 +1345,6 @@ export default {
         this.displayFlightPathOption = true
         // Show 3D as default on FC type
         this.setDimension(true)
-      } else {
-        // Hide flight path option UI
-        this.displayFlightPathOption = false
-        // Show 2D as default on FC type
-        this.setDimension(false)
       }
     },
     /**
