@@ -1333,6 +1333,27 @@ export default {
     },
     /**
      * @vuese
+     * Function to show flight path option
+     * (3D option)
+     * based on the map version (currently 1.6 and above).
+     * @arg mapVersion
+     */
+    setFlightPathInfo: function (mapVersion) {
+      const mapVersionForFlightPath = 1.6
+      if (mapVersion === mapVersionForFlightPath || mapVersion > mapVersionForFlightPath) {
+        // Show flight path option UI
+        this.displayFlightPathOption = true
+        // Show 3D as default on FC type
+        this.setFlightPath3D(true)
+      } else {
+        // Hide flight path option UI
+        this.displayFlightPathOption = false
+        // Show 2D as default on FC type
+        this.setFlightPath3D(false)
+      }
+    },
+    /**
+     * @vuese
      * Function to create Flatmap
      * by providing the ``state``.
      * @arg state
