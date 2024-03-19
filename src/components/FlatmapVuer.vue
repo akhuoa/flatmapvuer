@@ -1339,17 +1339,16 @@ export default {
      * @arg mapVersion
      */
     setFlightPathInfo: function (mapVersion) {
-      const mapVersionForFlightPath = 1.6
-      if (mapVersion === mapVersionForFlightPath || mapVersion > mapVersionForFlightPath) {
-        // Show flight path option UI
-        this.displayFlightPathOption = true
-        // Show 3D as default on FC type
-        this.setFlightPath3D(true)
-      } else {
-        // Hide flight path option UI
-        this.displayFlightPathOption = false
-        // Show 2D as default on FC type
-        this.setFlightPath3D(false)
+      let version = mapVersion
+      if (version) {
+        if (typeof version !== 'number') {
+          version = parseFloat(version) || 0
+        }
+
+        if (version === 1.6 || version > 1.6) {
+          this.displayFlightPathOption = true
+          this.setFlightPath3D(true)
+        }
       }
     },
     /**
