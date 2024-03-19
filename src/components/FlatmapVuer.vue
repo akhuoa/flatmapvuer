@@ -394,9 +394,9 @@
               </el-option>
             </el-select>
           </el-row>
-          <el-row class="backgroundSpacer"></el-row>
-          <el-row class="backgroundText" v-if="isFC">Flight path display</el-row>
-          <el-row class="backgroundControl" v-if="isFC">
+          <el-row class="backgroundSpacer" v-if="displayFlightPathOption"></el-row>
+          <el-row class="backgroundText" v-if="displayFlightPathOption">Flight path display</el-row>
+          <el-row class="backgroundControl" v-if="displayFlightPathOption">
             <el-radio-group
               v-model="flightPath3DRadio"
               class="flatmap-radio"
@@ -1772,6 +1772,7 @@ export default {
       drawerOpen: false,
       annotationRadio: false,
       flightPath3DRadio: false,
+      displayFlightPathOption: false,
       colourRadio: true,
       outlinesRadio: true,
       minimapResizeShow: false,
