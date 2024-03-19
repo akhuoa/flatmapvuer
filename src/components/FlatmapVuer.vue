@@ -1423,6 +1423,8 @@ export default {
         promise1.then((returnedObject) => {
           this.mapImp = returnedObject
           this.serverUUID = this.mapImp.getIdentifier().uuid
+          let mapVersion = this.mapImp.details.version
+          this.setFlightPathInfo(mapVersion)
           this.onFlatmapReady()
           if (this._stateToBeSet) this.restoreMapState(this._stateToBeSet)
           else {
@@ -1479,8 +1481,6 @@ export default {
       this.sensor = new ResizeSensor(this.$refs.display, this.mapResize)
       if (this.mapImp.options && this.mapImp.options.style === 'functional') {
         this.isFC = true
-        // Show 3D as default on FC type
-        this.setFlightPath3D(true)
       }
       this.mapImp.setBackgroundOpacity(1)
       this.backgroundChangeCallback(this.currentBackground)
