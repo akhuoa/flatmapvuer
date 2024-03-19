@@ -395,12 +395,12 @@
             </el-select>
           </el-row>
           <el-row class="backgroundSpacer"></el-row>
-          <el-row class="backgroundText" v-if="isFC">Dimension display</el-row>
+          <el-row class="backgroundText" v-if="isFC">Flight path display</el-row>
           <el-row class="backgroundControl" v-if="isFC">
             <el-radio-group
-              v-model="dimensionRadio"
+              v-model="flightPath3DRadio"
               class="flatmap-radio"
-              @change="setDimension"
+              @change="etFlightPath3D"
             >
             <el-radio :label="false">2D</el-radio>
             <el-radio :label="true">3D</el-radio>
@@ -633,8 +633,8 @@ export default {
      * Function to switch from 2D to 3D
      * @arg flag
      */
-    setDimension: function (flag) {
-      this.dimensionRadio = flag
+    etFlightPath3D: function (flag) {
+      this.flightPath3DRadio = flag
       if (this.mapImp) {
         this.mapImp.enable3dPaths(flag)
       }
@@ -1459,7 +1459,7 @@ export default {
       if (this.mapImp.options && this.mapImp.options.style === 'functional') {
         this.isFC = true
         // Show 3D as default on FC type
-        this.setDimension(true)
+        this.etFlightPath3D(true)
       }
       this.mapImp.setBackgroundOpacity(1)
       this.backgroundChangeCallback(this.currentBackground)
@@ -1771,7 +1771,7 @@ export default {
       connectivityTooltipVisible: false,
       drawerOpen: false,
       annotationRadio: false,
-      dimensionRadio: false,
+      flightPath3DRadio: false,
       colourRadio: true,
       outlinesRadio: true,
       minimapResizeShow: false,
