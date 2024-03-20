@@ -1143,6 +1143,22 @@ export default {
       this.minimapSmall = !this.minimapSmall
     },
     /**
+     * Function to check if viewport screen is mobile screen size
+     */
+    isMobileScreen: function () {
+      const mqlMobile = window.matchMedia('(max-width: 600px)')
+      return mqlMobile.matches
+    },
+    /**
+     * Function to shrink mimimap for mobile screens
+     */
+    shrinkMinimapOnMobile: function () {
+      if (this.isMobileScreen()) {
+        this.minimapSmall = false
+        this.closeMinimap()
+      }
+    },
+    /**
      * Function to add resize button to minimap.
      */
     addResizeButtonToMinimap: function () {
@@ -1337,13 +1353,16 @@ export default {
      * based on the map version (currently 1.6 and above).
      * @arg mapVersion
      */
-    setFlightPathInfo: function (mapVersion) {
-      const mapVersionForFlightPath = 1.6
-      if (mapVersion === mapVersionForFlightPath || mapVersion > mapVersionForFlightPath) {
-        // Show flight path option UI
-        this.displayFlightPathOption = true
-        // Show 3D as default on FC type
-        this.setFlightPath3D(true)
+    setFlightPathInfo: function () {
+      if (this.mapImp) {
+        const mapVersion = this.mapImp.details.version
+        const mapVersionForFlightPath = 1.6
+        if (mapVersion === mapVersionForFlightPath || mapVersion > mapVersionForFlightPath) {
+          // Show flight path option UI
+          this.displayFlightPathOption = true
+          // Show 3D as default on FC type
+          this.setFlightPath3D(true)
+        }
       }
     },
     /**
@@ -1401,6 +1420,17 @@ export default {
           }
         }
 
+        let minZoomOption = this.minZoom
+        let minimapOption = minimap
+
+        if (this.isMobileScreen()) {
+          minZoomOption = 1
+          minimapOption = {
+            position: 'top-right',
+            width: '12%'
+          }
+        }
+
         let promise1 = this.mapManager.loadMap(
           identifier,
           this.$refs.display,
@@ -1409,16 +1439,14 @@ export default {
             //fullscreenControl: false,
             //annotatable: false,
             //debug: true,
-            minZoom: this.minZoom,
+            minZoom: minZoomOption,
             tooltips: this.tooltips,
-            minimap: minimap,
+            minimap: minimapOption
           }
         )
         promise1.then((returnedObject) => {
           this.mapImp = returnedObject
           this.serverUUID = this.mapImp.getIdentifier().uuid
-          let mapVersion = this.mapImp.details.version
-          this.setFlightPathInfo(mapVersion)
           this.onFlatmapReady()
           if (this._stateToBeSet) this.restoreMapState(this._stateToBeSet)
           else {
@@ -1489,6 +1517,8 @@ export default {
       this.computePathControlsMaximumHeight()
       this.drawerOpen = true
       this.mapResize()
+      this.shrinkMinimapOnMobile()
+      this.setFlightPathInfo()
       /**
        * This is ``onFlatmapReady`` event.
        * @arg ``this`` (Component Vue Instance)
@@ -1909,6 +1939,8 @@ export default {
   position: absolute;
   bottom: 0px;
   transition: all 1s ease;
+  z-index: 2;
+
   &.open {
     left: 0px;
   }
@@ -2217,7 +2249,8 @@ export default {
 
 :deep(.maplibregl-ctrl-minimap) {
   transform-origin: top right;
-  @media (max-width: 1250px) {
+  // max-width: 600px for mobile screen
+  @media (min-width: 601px) and (max-width: 1250px) {
     height: 125px !important; // important is needed here as we are over-riding the style set by the flatmap
     width: 180px !important;
     :deep(.maplibregl-canvas .maplibregl-canvas) {
