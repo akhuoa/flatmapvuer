@@ -219,7 +219,6 @@
               class="pathway-container"
               :class="{ open: drawerOpen, close: !drawerOpen }"
               :style="{ 'max-height': pathwaysMaxHeight + 'px' }"
-
               v-popover:checkBoxPopover
             >
               <svg-legends v-if="!isFC" class="svg-legends-container" />
@@ -534,6 +533,8 @@ import {
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 import * as flatmap from '@abi-software/flatmap-viewer'
+import { mapState } from 'pinia'
+import { useMainStore } from '@/store/index'
 
 
 const processFTUs = (parent, key) => {
@@ -636,7 +637,7 @@ export default {
     setFlightPath3D: function (flag) {
       this.flightPath3DRadio = flag
       if (this.mapImp) {
-        this.mapImp.enable3dPaths(flag)
+        this.mapImp.enableFlightPaths(flag)
       }
     },
     /**
@@ -1038,6 +1039,7 @@ export default {
         if (data.feature && data.feature.featureId && data.feature.models) {
           this.annotationEntry = {
             ...data.feature,
+            resource: this.serverURL,
             resourceId: this.serverUUID,
           }
           this.displayTooltip(data.feature.models)
@@ -1353,16 +1355,13 @@ export default {
      * based on the map version (currently 1.6 and above).
      * @arg mapVersion
      */
-    setFlightPathInfo: function () {
-      if (this.mapImp) {
-        const mapVersion = this.mapImp.details.version
-        const mapVersionForFlightPath = 1.6
-        if (mapVersion === mapVersionForFlightPath || mapVersion > mapVersionForFlightPath) {
-          // Show flight path option UI
-          this.displayFlightPathOption = true
-          // Show 3D as default on FC type
-          this.setFlightPath3D(true)
-        }
+    setFlightPathInfo: function (mapVersion) {
+      const mapVersionForFlightPath = 1.6
+      if (mapVersion === mapVersionForFlightPath || mapVersion > mapVersionForFlightPath) {
+        // Show flight path option UI
+        this.displayFlightPathOption = true
+        // Show 2D as default on FC type
+        this.setFlightPath3D(false)
       }
     },
     /**
@@ -1447,6 +1446,9 @@ export default {
         promise1.then((returnedObject) => {
           this.mapImp = returnedObject
           this.serverUUID = this.mapImp.getIdentifier().uuid
+          this.serverURL = this.mapImp.makeServerUrl('').slice(0, -1)
+          let mapVersion = this.mapImp.details.version
+          this.setFlightPathInfo(mapVersion)
           this.onFlatmapReady()
           if (this._stateToBeSet) this.restoreMapState(this._stateToBeSet)
           else {
@@ -1765,6 +1767,7 @@ export default {
     return {
       flatmapAPI: this.flatmapAPI,
       sparcAPI: this.sparcAPI,
+      userApiKey: this.userToken
     }
   },
   data: function () {
@@ -1775,6 +1778,7 @@ export default {
       //undesired location.
       tooltipDisplay: false,
       serverUUID: undefined,
+      serverURL: undefined,
       layers: [],
       pathways: [],
       sckanDisplay: [
@@ -1830,6 +1834,9 @@ export default {
       backgroundIconRef: undefined,
     }
   },
+  computed: {
+    ...mapState(useMainStore, ['userToken']),
+  },
   watch: {
     entry: function () {
       if (!this.state) this.createFlatmap()
@@ -1859,11 +1866,7 @@ export default {
       }
     }
   },
-  created: function () {
-
-  },
   mounted: function () {
-
     this.openMapRef = shallowRef(this.$refs.openMapRef)
     this.backgroundIconRef = shallowRef(this.$refs.backgroundIconRef)
     this.tooltipWait = []
@@ -2553,6 +2556,9 @@ export default {
 
 .flatmap-container {
   --el-color-primary: #8300BF;
+  --el-color-primary-light-5: #CD99E5;
+  --el-color-primary-light-9: #F3E6F9;
+  --el-color-primary-dark-2: var(--el-color-primary);
 }
 
 </style>

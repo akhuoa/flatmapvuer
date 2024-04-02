@@ -7,7 +7,7 @@ const versionNumber = process.env.npm_package_version
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "FlatmapVuer Docs",
+  title: "FlatmapVuer",
   description: "API documentation for FlatmapVuer",
   base: '/flatmapvuer/',
   themeConfig: {

@@ -43,7 +43,7 @@
               <el-row class="dialog-text">
                 <strong>Evidence: </strong>
                 <el-row
-                  v-for="evidence in sub.evidence"
+                  v-for="evidence in sub.body.evidence"
                   :key="evidence"
                   class="dialog-text"
                 >
@@ -51,7 +51,7 @@
                 </el-row>
               </el-row>
               <el-row class="dialog-text">
-                <strong>Comment: </strong> {{ sub.comment }}
+                <strong>Comment: </strong> {{ sub.body.comment }}
               </el-row>
             </div>
           </template>
@@ -60,7 +60,7 @@
           <template v-if="isEditable">
             <el-row class="dialog-spacer"></el-row>
             <el-row v-if="!editing">
-              <el-icon class="standard-icon"><el-icon-edit /></el-icon>
+              <el-icon class="standard-icon"><el-icon-edit @click="editing = true"/></el-icon>
             </el-row>
             <template v-else>
               <el-row class="dialog-text">
@@ -74,12 +74,12 @@
                   {{ evidence[index] }}
                 </el-col>
                 <el-col :span="4">
-                  <el-icon class="standard-icon"><el-icon-close /></el-icon>
+                  <el-icon class="standard-icon"><el-icon-close @click="removeEvidence(index)" /></el-icon>
                 </el-col>
               </el-row>
               <el-row>
                 <el-input
-                  size="mini"
+                  size="small"
                   placeholder="Enter"
                   v-model="newEvidence"
                   @change="evidenceEntered($event)"
@@ -171,7 +171,7 @@ export default {
       type: Object,
     },
   },
-  inject: ['flatmapAPI'],
+  inject: ['flatmapAPI', 'userApiKey'],
   data: function () {
     return {
       displayPair: {
@@ -191,12 +191,13 @@ export default {
       prevSubs: [],
       showSubmissions: true,
       errorMessage: '',
+      creator: undefined,
     }
   },
   computed: {
     isEditable: function () {
       return (
-        this.annotationEntry['resourceId'] && this.annotationEntry['featureId']
+        this.annotationEntry['resource'] && this.annotationEntry['featureId']
       )
     },
   },
@@ -221,12 +222,13 @@ export default {
     updatePrevSubmissions: function () {
       if (this.$annotator && this.authenticated) {
         if (
-          this.annotationEntry['resourceId'] &&
+          this.annotationEntry['resource'] &&
           this.annotationEntry['featureId']
         ) {
           this.$annotator
             .itemAnnotations(
-              this.annotationEntry['resourceId'],
+              this.userApiKey,
+              this.annotationEntry['resource'],
               this.annotationEntry['featureId']
             )
             .then((value) => {
@@ -241,7 +243,7 @@ export default {
     submit: function () {
       if (this.evidence.length > 0 || this.comment) {
         if (
-          this.annotationEntry['resourceId'] &&
+          this.annotationEntry['resource'] &&
           this.annotationEntry['featureId']
         ) {
           const evidenceURLs = []
@@ -258,13 +260,16 @@ export default {
             }
           })
           const userAnnotation = {
-            resource: this.annotationEntry['resourceId'],
+            resource: this.annotationEntry['resource'],
             item: this.annotationEntry['featureId'],
-            evidence: evidenceURLs,
-            comment: this.comment,
+            body: {
+              evidence: evidenceURLs,
+              comment: this.comment,
+            },
           }
+          if (this.creator) userAnnotation.creator = this.creator
           this.$annotator
-            .addAnnotation(userAnnotation)
+            .addAnnotation(this.userApiKey, userAnnotation)
             .then(() => {
               this.errorMessage = ''
               this.resetSubmission()
@@ -305,8 +310,10 @@ export default {
         `${this.flatmapAPI}annotator`
       )
     }
-    this.$annotator.authenticate().then((userData) => {
+    this.$annotator.authenticate(this.userApiKey).then((userData) => {
       if (userData.name && userData.email) {
+        this.creator = userData
+        if (!userData.orcid) this.creator.orcid = '0000-0000-0000-0000'
         this.authenticated = true
         this.updatePrevSubmissions()
       } else {
