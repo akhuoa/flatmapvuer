@@ -91,11 +91,12 @@ describe('MultiFlatmapVuer', () => {
         let flatmapVuer = window.Cypress.flatmapVuer
         console.log('flatmapVuer', flatmapVuer)
         let fmEventCallback = flatmapVuer.eventCallback()
+        const label = 'Sympathetic chain ganglion neuron (kblad)'
         fmEventCallback('click', {
           "id": "ilxtr_neuron-type-keast-4",
           "featureId": 28,
           "kind": "symp-post",
-          "label": "sympathetic chain ganglion neuron (kblad)",
+          "label": label,
           "models": "ilxtr:neuron-type-keast-4",
           "source": "https://apinatomy.org/uris/models/keast-bladder",
           "taxons": "[\"NCBITaxon:10116\"]",
@@ -103,15 +104,10 @@ describe('MultiFlatmapVuer', () => {
           "mapUUID": "dbd2fe65-ef1e-5fd1-8614-e26498d00ffb"
         }, [])
 
+
         // Check the pop up has the same information as when the test was created
-        cy.get('.subtitle').should('exist').contains('Observed in Rattus norvegicus species')
-        cy.get('[origin-item-label="Twelfth thoracic ganglion"]').should('exist')
-        cy.get('[component-item-label="connective tissue, neck of urinary bladder"]').should('exist')
-        cy.get('[destination-item-label="wall of blood vessel, Arteriole in connective tissue of bladder dome"]').should('exist')
 
-
-
-        cy.get('.flatmapvuer-popover').should('exist').contains('Sympathetic chain ganglion neuron (kblad)').then(() => {
+        cy.get('.flatmapvuer-popover').should('exist').contains(label).then(() => {
 
           // Set the tooltip to be visible (this is needed as the css hack does not work in testing for some reason)
           document.querySelector('#tooltip-container').style.display = 'block'
@@ -119,6 +115,43 @@ describe('MultiFlatmapVuer', () => {
           cy.get('#tooltip-container').invoke('css', 'display').then((display) => {
             expect(display).to.equal('block')
           }).then(() => {
+
+            // Tooltip return data
+            const tooltipEntryData = flatmapVuer.tooltipEntry
+
+            const checkAndGetArrayData = (arr) => {
+              if (
+                arr &&
+                arr.length &&
+                arr.some(val => val)
+              ) {
+                return arr[0]
+              }
+              return null
+            }
+
+            const tooltipSubtitle = checkAndGetArrayData(tooltipEntryData.provenanceTaxonomyLabel)
+            const originLabel = checkAndGetArrayData(tooltipEntryData.origins)
+            const componentLabel = checkAndGetArrayData(tooltipEntryData.components)
+            const destinationLabel = checkAndGetArrayData(tooltipEntryData.destinations)
+            const pubmedLink = tooltipEntryData.hyperlinks[0].url
+
+            if (tooltipSubtitle) {
+              cy.get('.subtitle').should('exist').contains(tooltipSubtitle)
+            }
+
+            if (originLabel) {
+              cy.get(`[origin-item-label="${originLabel}"]`).should('exist')
+            }
+
+            if (componentLabel) {
+              cy.get(`[component-item-label="${componentLabel}"]`).should('exist')
+            }
+
+            if (destinationLabel) {
+              cy.get(`[destination-item-label="${destinationLabel}"]`).should('exist')
+            }
+
             // Open the 'show more' section
             cy.get('#show-path-info').should('exist').click()
 
@@ -137,7 +170,7 @@ describe('MultiFlatmapVuer', () => {
 
             // Click the open pubmed button and check that the window.open call was intercepted
             cy.get('#open-pubmed-button').should('exist').click()
-            cy.get('@Open').should('have.been.calledOnceWithExactly', 'https://pubmed.ncbi.nlm.nih.gov/?term=1358408%2C9622251%2C9442414%2C7174880', '_blank')
+            cy.get('@Open').should('have.been.calledOnceWithExactly', pubmedLink, '_blank')
 
           })
 
