@@ -1078,13 +1078,13 @@ export default {
      */
     popUpCssHacks: function () {
       // Below is a hack to remove flatmap tooltips while popup is open
-      let ftooltip = document.querySelector('.flatmap-tooltip-popup')
+      const ftooltip = document.querySelector('.flatmap-tooltip-popup')
+      const popupCloseButton = document.querySelector('.maplibregl-popup-close-button')
       if (ftooltip) ftooltip.style.display = 'none'
-      document.querySelector('.maplibregl-popup-close-button').style.display =
-        'block'
+      popupCloseButton.style.display = 'block'
       this.$refs.tooltip.$el.style.display = 'flex'
-      document.querySelector('.maplibregl-popup-close-button').onclick = () => {
-        document.querySelector('.flatmap-tooltip-popup').style.display = 'block'
+      popupCloseButton.onclick = () => {
+        if (ftooltip) ftooltip.style.display = 'block'
       }
     },
     /**
