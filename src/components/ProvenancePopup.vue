@@ -15,11 +15,11 @@
     <div class="block" v-else>
       <div class="title">{{ entry.featureId }}</div>
     </div>
-    <div v-show="showDetails" class="hide" id="hide-path-info" @click="showDetails = false">
+    <div v-show="showDetails" class="hide" id="hide-path-info" @click="updatePopupPosition(false)">
       Hide path information
       <el-icon><el-icon-arrow-up /></el-icon>
     </div>
-    <div v-show="!showDetails" class="hide" id="show-path-info" @click="showDetails = true">
+    <div v-show="!showDetails" class="hide" id="show-path-info" @click="updatePopupPosition(true)">
       Show path information
       <el-icon><el-icon-arrow-down /></el-icon>
     </div>
@@ -271,6 +271,15 @@ export default {
     pubmedSearchUrlUpdate: function (val) {
       this.pubmedSearchUrl = val
     },
+    updatePopupPosition: function (showDetailsValue) {
+      this.showDetails = showDetailsValue;
+      // Re-position the popup after the content in popup change
+      this.$nextTick(() => {
+        if (this.$parent.$parent.mapImp._map) {
+          this.$parent.$parent.mapImp._map.resize()
+        }
+      })
+    }
   },
 }
 </script>
