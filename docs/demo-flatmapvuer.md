@@ -13,8 +13,14 @@
 </div>
 
 <script setup>
+import { getCurrentInstance } from 'vue'
+import { createPinia } from 'pinia'
 import { defineClientComponent } from 'vitepress'
 import './demo-styles.css'
+
+const app = getCurrentInstance()
+const pinia = createPinia()
+app.appContext.app.use(pinia)
 
 const FlatmapVuer = defineClientComponent(() => {
   return import('../src/components/FlatmapVuer.vue')

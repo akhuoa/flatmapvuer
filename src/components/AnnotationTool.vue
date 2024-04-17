@@ -2,7 +2,7 @@
   <el-main class="main">
     <div class="block">
       <el-row class="info-field">
-        <span class="title">Feature Annotations</span>
+        <div class="title">Feature Annotations</div>
       </el-row>
       <template v-if="annotationEntry">
         <el-row
@@ -332,6 +332,10 @@ export default {
 
 .block {
   margin-bottom: 0.5em;
+
+  .main > &:first-of-type {
+    margin-right: 0.5em;
+  }
 }
 
 .button {
@@ -363,7 +367,7 @@ export default {
   padding: 1em !important;
   overflow-x: hidden;
   overflow-y: auto;
-  min-width: 20rem;
+  min-width: 300px; // .maplibregl-popup max-width
   max-height: 400px;
   scrollbar-width: thin;
 
