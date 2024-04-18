@@ -14,7 +14,7 @@
       @click="closeImageDialog"
       aria-label="Close"
     >
-      ×
+      &times;
     </button>
   </div>
 </template>
