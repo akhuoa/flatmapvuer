@@ -33,8 +33,8 @@ export default {
     }
   },
   methods: {
-    viewImage: function (url) {
-      this.$emit('view-image', url)
+    viewImage: function (data) {
+      this.$emit('view-image', data)
     }
   }
 }

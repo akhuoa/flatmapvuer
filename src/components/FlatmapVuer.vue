@@ -503,6 +503,7 @@
       />
       <IframeImageDialog
         :imageIframeURL="imageIframeURL"
+        :imageGalleryItems="imageGalleryItems"
         :imageIframeOpen="imageIframeOpen"
         @closeImageIframe="closeImageIframe"
       />
@@ -1588,12 +1589,14 @@ export default {
       if (this.mapImp) return this.mapImp.search(term)
       return []
     },
-    viewIframeImage: function (url) {
-      this.imageIframeURL = url
+    viewIframeImage: function (data) {
+      this.imageIframeURL = data.url
+      this.imageGalleryItems = data.items
       this.imageIframeOpen = true
     },
     closeImageIframe: function () {
       this.imageIframeURL = ''
+      this.imageGalleryItems = []
       this.imageIframeOpen = false
     },
   },
@@ -1780,6 +1783,7 @@ export default {
       pathways: [],
       imageIframeOpen: false,
       imageIframeURL: '',
+      imageGalleryItems: [],
       sckanDisplay: [
         {
           label: 'Display Path with SCKAN',

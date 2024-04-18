@@ -1,10 +1,13 @@
 <template>
   <div class="image-dialog" v-if="imageIframeOpen">
-    <div class="map-iframe-container">
+    <div v-if="imageIframeURL" class="map-iframe-container">
       <iframe
         class="my-iframe"
         :src="imageIframeURL">
       </iframe>
+    </div>
+    <div v-if="imageGalleryItems" class="image-gallery-container">
+      <Gallery :items="imageGalleryItems" />
     </div>
     <button
       class="image-dialog-close"
@@ -17,11 +20,17 @@
 </template>
 
 <script>
+  import Gallery from "@abi-software/gallery";
+  import "@abi-software/gallery/dist/style.css";
   export default {
     name: 'IframeImageDialog',
+    components: {
+      Gallery,
+    },
     props: {
       imageIframeOpen: false,
-      imageIframeURL: ''
+      imageIframeURL: '',
+      imageGalleryItems: []
     },
     methods: {
       closeImageIframe: function () {
@@ -77,6 +86,28 @@
       width:100%;
       position:relative;
       border-width:0px;
+    }
+
+    .image-gallery-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 80%;
+      width: 80%;
+      background: transparent;
+      border: 1px solid black;
+      overflow: hidden;
+
+      :deep(.gallery) {
+        .gallery-strip {
+          padding: 1rem 0;
+          gap: 1rem;
+        }
+
+        > div {
+          min-height: max-content !important;
+        }
+      }
     }
   }
 </style>

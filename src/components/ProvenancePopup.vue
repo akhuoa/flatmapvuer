@@ -16,20 +16,10 @@
       <div class="title">{{ entry.featureId }}</div>
     </div>
     <div class="block">
-      <el-button
-        class="button"
-        @click="showImages = !showImages"
-      >
-        <span v-if="showImages">Hide images</span>
-        <span v-else>View images at this location (Gallery)</span>
+      <el-button class="button" @click="viewImage({items: galleryItems})">
+        <span>View images at this location (Gallery)</span>
       </el-button>
-      <div v-if="showImages" class="image-gallery-container">
-        <Gallery :items="galleryItems" />
-      </div>
-      <el-button
-        class="button"
-        @click="viewImage(imageIframeURL)"
-      >
+      <el-button class="button" @click="viewImage({url: imageIframeURL})">
         <span>View images at this location (iFrame)</span>
       </el-button>
     </div>
@@ -162,8 +152,6 @@
 </template>
 
 <script>
-import Gallery from "@abi-software/gallery";
-import "@abi-software/gallery/dist/style.css";
 import {
   ArrowUp as ElIconArrowUp,
   ArrowDown as ElIconArrowDown,
@@ -220,7 +208,6 @@ export default {
     ElIconArrowUp,
     ElIconArrowDown,
     ElIconWarning,
-    Gallery,
   },
   props: {
     entry: {
@@ -315,8 +302,8 @@ export default {
     pubmedSearchUrlUpdate: function (val) {
       this.pubmedSearchUrl = val
     },
-    viewImage: function (url) {
-      this.$emit('view-image', url)
+    viewImage: function (data) {
+      this.$emit('view-image', data)
     }
   },
 }
@@ -540,18 +527,6 @@ export default {
   border-radius: 4px;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.06);
   background-color: #979797;
-}
-
-.image-gallery-container {
-  :deep(.gallery) {
-    .gallery-strip {
-      padding: 1rem 0;
-    }
-
-    > div {
-      min-height: max-content !important;
-    }
-  }
 }
 
 /* Fix for chrome bug where under triangle pops up above one on top of it  */
