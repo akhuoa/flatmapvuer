@@ -1,5 +1,5 @@
 <template>
-  <div class="image-dialog" v-if="imageIframeOpen">
+  <div class="image-dialog" v-if="imageDialogOpen">
     <div v-if="imageIframeURL" class="map-iframe-container">
       <iframe
         class="my-iframe"
@@ -11,7 +11,7 @@
     </div>
     <button
       class="image-dialog-close"
-      @click="closeImageIframe"
+      @click="closeImageDialog"
       aria-label="Close"
     >
       ×
@@ -23,18 +23,18 @@
   import Gallery from "@abi-software/gallery";
   import "@abi-software/gallery/dist/style.css";
   export default {
-    name: 'IframeImageDialog',
+    name: 'ImageDialog',
     components: {
       Gallery,
     },
     props: {
-      imageIframeOpen: false,
+      imageDialogOpen: false,
       imageIframeURL: '',
       imageGalleryItems: []
     },
     methods: {
-      closeImageIframe: function () {
-        this.$emit('closeImageIframe')
+      closeImageDialog: function () {
+        this.$emit('closeImageDialog')
       },
     }
   }

@@ -499,13 +499,13 @@
         :annotationEntry="annotationEntry"
         :entry="tooltipEntry"
         :annotationDisplay="viewingMode === 'Annotation'"
-        @viewImage="viewIframeImage"
+        @viewImage="viewImage"
       />
-      <IframeImageDialog
+      <ImageDialog
         :imageIframeURL="imageIframeURL"
         :imageGalleryItems="imageGalleryItems"
-        :imageIframeOpen="imageIframeOpen"
-        @closeImageIframe="closeImageIframe"
+        :imageDialogOpen="imageDialogOpen"
+        @closeImageDialog="closeImageDialog"
       />
     </div>
   </div>
@@ -524,7 +524,7 @@ import SelectionsGroup from './SelectionsGroup.vue'
 import TreeControls from './TreeControls.vue'
 import { MapSvgIcon, MapSvgSpriteColor } from '@abi-software/svg-sprite'
 import SvgLegends from './legends/SvgLegends.vue'
-import IframeImageDialog from './IframeImageDialog.vue'
+import ImageDialog from './ImageDialog.vue'
 import {
   ElButton as Button,
   ElCol as Col,
@@ -1589,15 +1589,15 @@ export default {
       if (this.mapImp) return this.mapImp.search(term)
       return []
     },
-    viewIframeImage: function (data) {
+    viewImage: function (data) {
       this.imageIframeURL = data.url
       this.imageGalleryItems = data.items
-      this.imageIframeOpen = true
+      this.imageDialogOpen = true
     },
-    closeImageIframe: function () {
+    closeImageDialog: function () {
       this.imageIframeURL = ''
       this.imageGalleryItems = []
-      this.imageIframeOpen = false
+      this.imageDialogOpen = false
     },
   },
   props: {
@@ -1781,7 +1781,7 @@ export default {
       serverURL: undefined,
       layers: [],
       pathways: [],
-      imageIframeOpen: false,
+      imageDialogOpen: false,
       imageIframeURL: '',
       imageGalleryItems: [],
       sckanDisplay: [

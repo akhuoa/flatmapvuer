@@ -35,6 +35,7 @@ declare module 'vue' {
     ExternalResourceCard: typeof import('./components/ExternalResourceCard.vue')['default']
     FlatmapVuer: typeof import('./components/FlatmapVuer.vue')['default']
     IframeImageDialog: typeof import('./components/IframeImageDialog.vue')['default']
+    ImageDialog: typeof import('./components/ImageDialog.vue')['default']
     MultiFlatmapVuer: typeof import('./components/MultiFlatmapVuer.vue')['default']
     ProvenancePopup: typeof import('./components/ProvenancePopup.vue')['default']
     SelectionsGroup: typeof import('./components/SelectionsGroup.vue')['default']
