@@ -524,7 +524,8 @@ import SelectionsGroup from './SelectionsGroup.vue'
 import TreeControls from './TreeControls.vue'
 import { MapSvgIcon, MapSvgSpriteColor } from '@abi-software/svg-sprite'
 import SvgLegends from './legends/SvgLegends.vue'
-import ImageDialog from './ImageDialog.vue'
+import ImageDialog from '@abi-software/image-dialog'
+import '@abi-software/image-dialog/dist/style.css'
 import {
   ElButton as Button,
   ElCol as Col,
@@ -628,6 +629,7 @@ export default {
     ElIconWarningFilled,
     ElIconArrowDown,
     ElIconArrowLeft,
+    ImageDialog
   },
   beforeCreate: function () {
     this.mapManager = undefined
