@@ -35,7 +35,7 @@ declare module 'vue' {
     ElTree: typeof import('element-plus/es')['ElTree']
     ExternalResourceCard: typeof import('./components/ExternalResourceCard.vue')['default']
     FlatmapVuer: typeof import('./components/FlatmapVuer.vue')['default']
-    IframeImageDialog: typeof import('./components/IframeImageDialog.vue')['default']
+    ImageDialog: typeof import('@abi-software/image-dialog')['default']
     ImagePopup: typeof import('./components/imagePopup.vue')['default']
     MultiFlatmapVuer: typeof import('./components/MultiFlatmapVuer.vue')['default']
     ProvenancePopup: typeof import('./components/ProvenancePopup.vue')['default']

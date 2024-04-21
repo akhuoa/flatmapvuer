@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@abi-software/flatmap-viewer": "^2.6.2",
-    "@abi-software/gallery": "^0.5.0-vue3.5",
+    "@abi-software/image-dialog": "^0.0.1",
     "@abi-software/sparc-annotation": "0.2.0",
     "@abi-software/svg-sprite": "^0.4.0-vue3-beta.0",
     "@element-plus/icons-vue": "^2.3.1",
