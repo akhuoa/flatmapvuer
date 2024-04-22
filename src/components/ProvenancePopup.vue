@@ -16,16 +16,27 @@
       <span class="title">{{ entry.featureId }}</span>
     </div>
     <div class="block">
-      <el-button class="button"
-        @click="viewImage({items: galleryItems})"
-      >
-        <span>View images at this location (Gallery)</span>
-      </el-button>
-      <el-button class="button"
-        @click="viewImage({url: imageIframeURL[this.entry.featureId[0]]})"
-      >
-        <span>View images at this location (iFrame)</span>
-      </el-button>
+      <div>
+        <el-button class="button"
+          @click="viewImage({url: imageIframeURL[this.entry.featureId[0]]})"
+        >
+          View images
+        </el-button>
+        <div>
+          <small>View images of this location within the MapVuer</small>
+        </div>
+      </div>
+      <br>
+      <div>
+        <el-button class="button"
+          @click="viewImage({items: galleryItems})"
+        >
+          Open images
+        </el-button>
+        <div>
+          <small>Open images of this location in the Dataset Gallery</small>
+        </div>
+      </div>
     </div>
     <div v-show="showDetails" class="hide" id="hide-path-info" @click="showDetails = false">
       Hide path information
