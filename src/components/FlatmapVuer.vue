@@ -1258,6 +1258,31 @@ export default {
         { className: 'flatmapvuer-popover', positionAtLastClick: true }
       )
       this.popUpCssHacks()
+      this.getGalleryItems(feature)
+    },
+    getAPIData: async function (featureId) {
+      // hard-coded API
+      const API = 'https://api.sparc.science/dataset_info/using_doi?doi=10.26275%2Fcljd-yjqy'
+      // const API = 'https://api.sparc.science/image_search/230'
+      const response = await fetch(API)
+      const items = await response.json()
+      return items
+    },
+    getGalleryItems: function (featureId) {
+      // To use featureId to get data
+      this.getAPIData(featureId).then((data) => {
+        console.log('gallery items', data)
+        this.imageGalleryItems = []
+        const items = data.result[0]['biolucida-2d']
+        items.forEach((item) => {
+          // TODO: to transform data for gallery items
+          this.imageGalleryItems.push({
+            title: item.name,
+            type: item.description,
+            link: item.dataset.path
+          })
+        })
+      })
     },
     /**
      * @vuese
@@ -1593,7 +1618,8 @@ export default {
     },
     viewImage: function (data) {
       this.imageIframeURL = data.url
-      this.imageGalleryItems = data.items
+      // loaded from api - this.getGalleryItems()
+      // this.imageGalleryItems = data.items
       this.imageDialogOpen = true
     },
     closeImageDialog: function () {
