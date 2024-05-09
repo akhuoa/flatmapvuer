@@ -6,7 +6,8 @@
         content="Select a species"
         placement="right"
         trigger="manual"
-        popper-class="flatmap-popper right-popper"
+        popper-class="flatmap-popper flatmap-teleport-popper right-popper"
+        width="max-content"
         :visible="helpMode"
         :teleported="false"
         ref="selectPopover"
@@ -63,7 +64,7 @@
          */
         $emit('open-map', $event)"
       :minZoom="minZoom"
-      :helpMode="helpMode"
+      :helpMode="activeSpecies == key && helpMode"
       :renderAtMounted="renderAtMounted"
       :displayMinimap="displayMinimap"
       :showStarInLegend="showStarInLegend"
