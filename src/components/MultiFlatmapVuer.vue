@@ -8,7 +8,7 @@
         trigger="manual"
         popper-class="flatmap-popper flatmap-teleport-popper right-popper"
         width="max-content"
-        :visible="helpMode"
+        :visible="activateTooltipByIndex(0)"
         :teleported="false"
         ref="selectPopover"
       >
@@ -66,6 +66,11 @@
       @pathway-selection-changed="onSelectionsDataChanged"
       :minZoom="minZoom"
       :helpMode="activeSpecies == key && helpMode"
+      :helpModeActiveItem="helpModeActiveItem"
+      :helpModeInitialIndex="-2"
+      @help-mode-last-item="onHelpModeLastItem"
+      @shown-tooltip="onTooltipShown"
+      @shown-map-tooltip="onMapTooltipShown"
       :renderAtMounted="renderAtMounted"
       :displayMinimap="displayMinimap"
       :showStarInLegend="showStarInLegend"
@@ -463,6 +468,45 @@ export default {
         })
       }
     },
+    /**
+     * @vuese
+     * Function to activate help mode tooltip by item index number
+     */
+    activateTooltipByIndex: function (index) {
+      return (
+        index === this.helpModeActiveItem
+        && this.helpMode
+      );
+    },
+    /**
+     * @vuese
+     * Function to check the last item of help mode
+     */
+    onHelpModeLastItem: function (isLastItem) {
+      if (isLastItem) {
+        this.$emit('help-mode-last-item', true);
+      }
+    },
+    /**
+     * @vuese
+     * Function to emit event after a tooltip is shown.
+     */
+    onTooltipShown: function () {
+      /**
+       * This event is emitted after a tooltip in Flatmap is shown.
+       */
+      this.$emit('shown-tooltip');
+    },
+    /**
+     * @vuese
+     * Function to emit event after a tooltip on the map is shown.
+     */
+    onMapTooltipShown: function () {
+      /**
+       * This event is emitted after a tooltip on Flatmap's map is shown.
+       */
+      this.$emit('shown-map-tooltip');
+    },
   },
   props: {
     /**
@@ -491,6 +535,20 @@ export default {
      * The option to show tooltips for help mode.
      */
     helpMode: {
+      type: Boolean,
+      default: false,
+    },
+    /**
+     * The active item index of help mode.
+     */
+     helpModeActiveItem: {
+      type: Number,
+      default: 0,
+    },
+    /**
+     * The last item of help mode.
+     */
+     helpModeLastItem: {
       type: Boolean,
       default: false,
     },

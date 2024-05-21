@@ -4,7 +4,7 @@
       placement="bottom"
       trigger="click"
       width="500"
-      class="popover"
+      popper-class="popover options-popover"
       :teleported="false"
     >
       <div class="options-container">
@@ -69,12 +69,26 @@
       @ready="FlatmapReady"
       :initial="initial"
       :helpMode="helpMode"
+      :helpModeActiveItem="helpModeActiveItem"
+      @help-mode-last-item="onHelpModeLastItem"
+      @shown-tooltip="onTooltipShown"
+      @shown-map-tooltip="onMapTooltipShown"
       :displayMinimap="true"
       :enableOpenMapUI="true"
       :flatmapAPI="flatmapAPI"
       :disableUI="disableUI"
       @open-pubmed-url="onOpenPubmedUrl"
       @pathway-selection-changed="onPathwaySelectionChanged"
+      @flatmapChanged="onFlatmapChanged"
+    />
+
+    <HelpModeDialog
+      v-if="helpMode"
+      ref="multiflatmapHelp"
+      :multiflatmapRef="multiflatmapRef"
+      :lastItem="helpModeLastItem"
+      @show-next="onHelpModeShowNext"
+      @finish-help-mode="onFinishHelpMode"
     />
   </div>
 </template>
@@ -84,6 +98,7 @@ import { shallowRef } from 'vue';
 import { Setting as ElIconSetting } from '@element-plus/icons-vue'
 /* eslint-disable no-alert, no-console */
 import MultiFlatmapVuer from './components/MultiFlatmapVuer.vue'
+import HelpModeDialog from './components/HelpModeDialog.vue';
 import {
   ElAutocomplete as Autocomplete,
   ElButton as Button,
@@ -102,6 +117,7 @@ export default {
     ElIconSetting,
     Popover,
     Row,
+    HelpModeDialog,
   },
   methods: {
     saveSettings: function () {
@@ -166,6 +182,33 @@ export default {
         .getCurrentFlatmap()
         .searchAndShowResult(this.searchText, true)
     },
+    onFlatmapChanged: function () {
+      this.helpMode = false;
+    },
+    onHelpModeShowNext: function () {
+      this.helpModeActiveItem += 1;
+    },
+    onHelpModeLastItem: function (isLastItem) {
+      if (isLastItem) {
+        this.helpModeLastItem = true;
+      }
+    },
+    onFinishHelpMode: function () {
+      this.helpMode = false;
+      // reset help mode to default values
+      this.helpModeActiveItem = 0;
+      this.helpModeLastItem = false;
+    },
+    onTooltipShown: function () {
+      if (this.$refs.multi && this.$refs.multiflatmapHelp) {
+        this.$refs.multiflatmapHelp.toggleTooltipHighlight();
+      }
+    },
+    onMapTooltipShown: function () {
+      if (this.$refs.multi && this.$refs.multiflatmapHelp) {
+        this.$refs.multiflatmapHelp.toggleTooltipPinHighlight();
+      }
+    },
   },
   data: function () {
     return {
@@ -228,6 +271,9 @@ export default {
       displayCloseButton: false,
       initial: 'Rat (NPO)',
       helpMode: false,
+      helpModeActiveItem: 0,
+      helpModeLastItem: false,
+      multiflatmapRef: null,
       mapSettings: [],
       //flatmapAPI: "https://mapcore-demo.org/current/flatmap/v2/"
       //flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v3/"
@@ -237,6 +283,16 @@ export default {
       //flatmapAPI: "https://mapcore-demo.org/staging/flatmap/v1/"
       // flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v1/",
       ElIconSetting: shallowRef(ElIconSetting)
+    }
+  },
+  mounted: function () {
+    this.multiflatmapRef = this.$refs.multi;
+  },
+  watch: {
+    helpMode: function (newVal) {
+      if (!newVal) {
+        this.helpModeActiveItem = 0;
+      }
     }
   },
   components: {
@@ -306,6 +362,8 @@ body {
 .options-button {
   z-index:100;
   position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .options-container {
