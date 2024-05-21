@@ -4,16 +4,32 @@ layout: home
 <div class="demo-map-container full">
   <div class="demo-map-container-inner">
     <ClientOnly>
+      <div>
+        <el-button class="button">Help</el-button>
+      </div>
       <MultiFlatmapVuer
         ref="multi"
         :availableSpecies="availableSpecies"
         @ready="FlatmapReady"
         :initial="initial"
         :helpMode="helpMode"
+        :helpModeActiveItem="helpModeActiveItem"
+        @help-mode-last-item="onHelpModeLastItem"
+        @shown-tooltip="onTooltipShown"
+        @shown-map-tooltip="onMapTooltipShown"
         :displayMinimap="true"
         :enableOpenMapUI="true"
         :flatmapAPI="flatmapAPI"
         :disableUI="disableUI"
+        @flatmapChanged="onFlatmapChanged"
+      />
+      <HelpModeDialog
+        v-if="helpMode"
+        ref="multiflatmapHelp"
+        :multiflatmapRef="multiflatmapRef"
+        :lastItem="helpModeLastItem"
+        @show-next="onHelpModeShowNext"
+        @finish-help-mode="onFinishHelpMode"
       />
     </ClientOnly>
   </div>
@@ -31,6 +47,9 @@ app.appContext.app.use(pinia)
 
 const MultiFlatmapVuer = defineClientComponent(() => {
   return import('../src/components/MultiFlatmapVuer.vue')
+})
+const HelpModeDialog = defineClientComponent(() => {
+  return import('../src/components/HelpModeDialog.vue')
 })
 </script>
 
