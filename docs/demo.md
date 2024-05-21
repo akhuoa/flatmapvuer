@@ -20,8 +20,14 @@ layout: home
 </div>
 
 <script setup>
+import { getCurrentInstance } from 'vue'
+import { createPinia } from 'pinia'
 import { defineClientComponent } from 'vitepress'
 import './demo-styles.css'
+
+const app = getCurrentInstance()
+const pinia = createPinia()
+app.appContext.app.use(pinia)
 
 const MultiFlatmapVuer = defineClientComponent(() => {
   return import('../src/components/MultiFlatmapVuer.vue')
