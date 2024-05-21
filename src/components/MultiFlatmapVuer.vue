@@ -63,6 +63,7 @@
          * @arg $event
          */
         $emit('open-map', $event)"
+      @pathway-selection-changed="onSelectionsDataChanged"
       :minZoom="minZoom"
       :helpMode="activeSpecies == key && helpMode"
       :renderAtMounted="renderAtMounted"
@@ -121,6 +122,15 @@ export default {
     EventBus.on('onActionClick', (action) => {
       this.resourceSelected(action)
     })
+    EventBus.on('open-pubmed-url', (url) => {
+      /**
+       * This event is emitted when the user clicks
+       * on "Open publications in pubmed" button
+       * from provenance popup.
+       * @arg url
+       */
+      this.$emit('open-pubmed-url', url);
+    });
   },
   methods: {
     /**
@@ -244,6 +254,9 @@ export default {
        * @arg payload
        */
       this.$emit('pan-zoom-callback', payload)
+    },
+    onSelectionsDataChanged: function (data) {
+      this.$emit('pathway-selection-changed', data);
     },
     /**
      * @vuese

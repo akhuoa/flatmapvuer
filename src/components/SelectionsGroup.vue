@@ -11,6 +11,7 @@
           :indeterminate="isIndeterminate"
           v-model="checkAll"
           @change="handleCheckAllChange"
+          @click="onAllCheckboxNativeChange"
           >Display all</el-checkbox
         >
       </el-col>
@@ -32,6 +33,7 @@
               class="my-checkbox"
               :label="item[identifierKey]"
               @change="visibilityToggle(item[identifierKey], $event)"
+              @click="onCheckboxNativeChange"
               :checked="!('enabled' in item) || item.enabled === true"
             >
               <el-row class="checkbox-row">
@@ -85,8 +87,52 @@ export default {
         }
       })
     },
+    setCheckboxActionData: function (containerEl, option) {
+      // option = 'individual' or 'all'
+      if (containerEl) {
+        const checkboxEl = containerEl.querySelector('input[type="checkbox"]');
+        const checkboxLabelEl = containerEl.querySelector('.el-checkbox__label');
+        const selectionsContainerEl = containerEl.closest('.selections-container');
+        const selectionsTitleEl = selectionsContainerEl.querySelector('.checkall-display-text');
+
+        // change true/false to checked/unchecked for readability
+        let checkedLabel = '';
+        if (checkboxEl) {
+          checkedLabel = checkboxEl.checked ? 'checked' : 'unchecked';
+        }
+
+        this.checkboxActionData = {
+          selectionsTitle: selectionsTitleEl ? selectionsTitleEl.innerText : '',
+          property: (checkboxEl && option !== 'all') ? checkboxEl.value : '',
+          label: checkboxLabelEl ? checkboxLabelEl.innerText : '',
+          checked: checkedLabel
+        };
+      } else {
+        // reset if no checkbox container found
+        this.checkboxActionData = {
+          selectionsTitle: '',
+          property: '',
+          label: '',
+          checked: '',
+        };
+      }
+    },
+    onCheckboxNativeChange: function (event) {
+      const checkboxContainerEl = event.target.closest('.checkbox-container');
+      this.setCheckboxActionData(checkboxContainerEl, 'individual');
+    },
+    onAllCheckboxNativeChange: function (event) {
+      const checkboxContainerEl = event.target.closest('.all-checkbox');
+      this.setCheckboxActionData(checkboxContainerEl, 'all');
+    },
     visibilityToggle: function (key, value) {
       this.$emit('changed', { key, value })
+      // emit event with checkbox data for tracking
+      if (key === this.checkboxActionData.property) {
+        // change true/false to checked/unchecked for readability
+        this.checkboxActionData.checked = value ? 'checked' : 'unchecked';
+      }
+      this.$emit('selections-data-changed', this.checkboxActionData);
     },
     handleCheckedItemsChange: function (value) {
       let checkedCount = value.length
@@ -100,6 +146,11 @@ export default {
         keys: this.selections.map((a) => a[this.identifierKey]),
         value: val,
       })
+      // emit event with checkbox data for tracking
+      this.checkboxActionData.property = this.identifierKey;
+      // change true/false to checked/unchecked for readability
+      this.checkboxActionData.checked = val ? 'checked' : 'unchecked';
+      this.$emit('selections-data-changed', this.checkboxActionData);
     },
     getBackgroundStyles: function (item) {
       if ('colour' in item && this.colourStyle === 'background') {
@@ -159,6 +210,12 @@ export default {
     return {
       checkedItems: [],
       checkAll: true,
+      checkboxActionData: {
+        selectionsTitle: '',
+        property: '',
+        label: '',
+        checked: '',
+      },
     }
   },
   mounted: function () {

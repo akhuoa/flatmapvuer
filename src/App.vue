@@ -73,6 +73,8 @@
       :enableOpenMapUI="true"
       :flatmapAPI="flatmapAPI"
       :disableUI="disableUI"
+      @open-pubmed-url="onOpenPubmedUrl"
+      @pathway-selection-changed="onPathwaySelectionChanged"
     />
   </div>
 </template>
@@ -113,6 +115,12 @@ export default {
       if (resource.eventType === 'click') {
         console.log('resource', resource)
       }
+    },
+    onOpenPubmedUrl: function (url) {
+      console.log('open-pubmed-url', url);
+    },
+    onPathwaySelectionChanged: function (data) {
+      console.log('pathway-selection-changed', data);
     },
     FlatmapReady: function (component) {
       console.log(component)

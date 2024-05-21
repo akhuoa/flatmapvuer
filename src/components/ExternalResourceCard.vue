@@ -23,6 +23,7 @@ import {
 } from '@element-plus/icons-vue'
 /* eslint-disable no-alert, no-console */
 import { ElButton as Button } from 'element-plus'
+import EventBus from './EventBus'
 
 export default {
   name: 'ExternalResourceCard',
@@ -47,6 +48,7 @@ export default {
       return string.charAt(0).toUpperCase() + string.slice(1)
     },
     openUrl: function (url) {
+      EventBus.emit('open-pubmed-url', url);
       window.open(url, '_blank')
     },
   },
