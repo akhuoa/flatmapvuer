@@ -19,6 +19,9 @@
         <el-button class="button" @click="showNext">
           Next
         </el-button>
+        <el-button class="button secondary" @click="finishHelpMode">
+          Exit Help Mode
+        </el-button>
       </div>
     </template>
   </div>
@@ -241,7 +244,7 @@
       background-color: $app-primary-color;
       transform: scale(1);
       transform-origin: 50% 50%;
-      transition: transform var(--el-transition-duration);
+      transition: all var(--el-transition-duration);
 
       &:hover {
         color: #fff !important;
@@ -251,6 +254,17 @@
 
       &:active {
         transform: scale(0.95);
+      }
+
+      &.secondary {
+        background: #f3e6f9;
+        border-color: $app-primary-color;
+        color: $app-primary-color;
+
+        &:hover {
+          color: $app-primary-color !important;
+          background: #fff !important;
+        }
       }
     }
   }
