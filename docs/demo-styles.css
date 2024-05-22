@@ -5,6 +5,7 @@
   border: 1px solid var(--vp-c-divider);
   position: relative;
   z-index: 1; /* just for demo, to prevent tooltips go out of container */
+  overflow: hidden;
 }
 
 .demo-map-container-inner {
@@ -26,4 +27,19 @@
 .zoomOut,
 .fitWindow {
   padding-left: 0px !important;
+}
+
+.help-mode-button {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+
+  & button {
+    color: var(--el-text-color-regular);
+    padding: 3px 12px;
+    border: 1px solid var(--el-border-color);
+    border-radius: 4px;
+  }
 }

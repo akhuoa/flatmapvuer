@@ -4,9 +4,6 @@ layout: home
 <div class="demo-map-container full">
   <div class="demo-map-container-inner">
     <ClientOnly>
-      <div>
-        <el-button class="button">Help</el-button>
-      </div>
       <MultiFlatmapVuer
         ref="multi"
         :availableSpecies="availableSpecies"
@@ -23,6 +20,9 @@ layout: home
         :disableUI="disableUI"
         @flatmapChanged="onFlatmapChanged"
       />
+      <div class="help-mode-button">
+        <button class="button" @click="helpMode = true">Help</button>
+      </div>
       <HelpModeDialog
         v-if="helpMode"
         ref="multiflatmapHelp"
@@ -90,9 +90,40 @@ export default {
       },
       initial: 'Rat (NPO)',
       helpMode: false,
+      helpModeActiveItem: 0,
+      helpModeLastItem: false,
+      multiflatmapRef: null,
       flatmapAPI: 'https://mapcore-demo.org/devel/flatmap/v4/',
       disableUI: false,
     };
+  },
+  methods: {
+    onFlatmapChanged: function () {
+      this.helpMode = false;
+    },
+    onHelpModeShowNext: function () {
+      this.helpModeActiveItem += 1;
+    },
+    onHelpModeLastItem: function (isLastItem) {
+      if (isLastItem) {
+        this.helpModeLastItem = true;
+      }
+    },
+    onFinishHelpMode: function () {
+      this.helpMode = false;
+      this.helpModeActiveItem = 0;
+      this.helpModeLastItem = false;
+    },
+    onTooltipShown: function () {
+      if (this.$refs.multi && this.$refs.multiflatmapHelp) {
+        // this.$refs.multiflatmapHelp.toggleTooltipHighlight();
+      }
+    },
+    onMapTooltipShown: function () {
+      if (this.$refs.multi && this.$refs.multiflatmapHelp) {
+        // this.$refs.multiflatmapHelp.toggleTooltipPinHighlight();
+      }
+    },
   }
 }
 </script>
