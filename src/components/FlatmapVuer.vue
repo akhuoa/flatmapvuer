@@ -2369,7 +2369,7 @@ export default {
      * On default, `false`, clicking help will show all tooltips.
      * If `true`, and HelpModeDialog component is installed, clicking help will show the help-mode-dialog.
      */
-     useHelpModeDialog: {
+    useHelpModeDialog: {
       type: Boolean,
       default: false,
     },
