@@ -40,7 +40,6 @@ declare module 'vue' {
     ElTree: typeof import('element-plus/es')['ElTree']
     ExternalResourceCard: typeof import('./components/ExternalResourceCard.vue')['default']
     FlatmapVuer: typeof import('./components/FlatmapVuer.vue')['default']
-    HelpModeDialog: typeof import('./components/HelpModeDialog.vue')['default']
     MultiFlatmapVuer: typeof import('./components/MultiFlatmapVuer.vue')['default']
     ProvenancePopup: typeof import('./components/ProvenancePopup.vue')['default']
     SelectionsGroup: typeof import('./components/SelectionsGroup.vue')['default']

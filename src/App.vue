@@ -69,11 +69,6 @@
       @ready="FlatmapReady"
       :initial="initial"
       :helpMode="helpMode"
-      :helpModeDialog="useHelpModeDialog"
-      :helpModeActiveItem="helpModeActiveItem"
-      @help-mode-last-item="onHelpModeLastItem"
-      @shown-tooltip="onTooltipShown"
-      @shown-map-tooltip="onMapTooltipShown"
       :displayMinimap="true"
       :enableOpenMapUI="true"
       :flatmapAPI="flatmapAPI"
@@ -81,15 +76,6 @@
       @open-pubmed-url="onOpenPubmedUrl"
       @pathway-selection-changed="onPathwaySelectionChanged"
       @flatmapChanged="onFlatmapChanged"
-    />
-
-    <HelpModeDialog
-      v-if="helpMode && useHelpModeDialog"
-      ref="multiflatmapHelp"
-      :multiflatmapRef="multiflatmapRef"
-      :lastItem="helpModeLastItem"
-      @show-next="onHelpModeShowNext"
-      @finish-help-mode="onFinishHelpMode"
     />
   </div>
 </template>
@@ -99,7 +85,6 @@ import { shallowRef } from 'vue';
 import { Setting as ElIconSetting } from '@element-plus/icons-vue'
 /* eslint-disable no-alert, no-console */
 import MultiFlatmapVuer from './components/MultiFlatmapVuer.vue'
-import HelpModeDialog from './components/HelpModeDialog.vue';
 import {
   ElAutocomplete as Autocomplete,
   ElButton as Button,
@@ -118,7 +103,6 @@ export default {
     ElIconSetting,
     Popover,
     Row,
-    HelpModeDialog,
   },
   methods: {
     saveSettings: function () {
@@ -186,30 +170,6 @@ export default {
     onFlatmapChanged: function () {
       this.helpMode = false;
     },
-    onHelpModeShowNext: function () {
-      this.helpModeActiveItem += 1;
-    },
-    onHelpModeLastItem: function (isLastItem) {
-      if (isLastItem) {
-        this.helpModeLastItem = true;
-      }
-    },
-    onFinishHelpMode: function () {
-      this.helpMode = false;
-      // reset help mode to default values
-      this.helpModeActiveItem = 0;
-      this.helpModeLastItem = false;
-    },
-    onTooltipShown: function () {
-      if (this.$refs.multi && this.$refs.multiflatmapHelp) {
-        this.$refs.multiflatmapHelp.toggleTooltipHighlight();
-      }
-    },
-    onMapTooltipShown: function () {
-      if (this.$refs.multi && this.$refs.multiflatmapHelp) {
-        this.$refs.multiflatmapHelp.toggleTooltipPinHighlight();
-      }
-    },
   },
   data: function () {
     return {
@@ -273,9 +233,6 @@ export default {
       displayCloseButton: false,
       initial: 'Rat',
       helpMode: false,
-      helpModeActiveItem: 0,
-      helpModeLastItem: false,
-      useHelpModeDialog: true,
       multiflatmapRef: null,
       mapSettings: [],
       //flatmapAPI: "https://mapcore-demo.org/current/flatmap/v2/"
@@ -290,13 +247,6 @@ export default {
   },
   mounted: function () {
     this.multiflatmapRef = this.$refs.multi;
-  },
-  watch: {
-    helpMode: function (newVal) {
-      if (!newVal) {
-        this.helpModeActiveItem = 0;
-      }
-    }
   },
   components: {
     MultiFlatmapVuer,

@@ -1285,8 +1285,8 @@ export default {
 
         // Loop through the path features and check if we have origin nodes
         pathFeatures.forEach((p) => {
-        
-          // Get the nodes from each path feature 
+
+          // Get the nodes from each path feature
           this.mapImp.nodePathModels(p.featureId).forEach((f) => {
             highlight = true
             // s2 here is the second level paths
@@ -1298,7 +1298,7 @@ export default {
                 return
               }
             })
-            
+
             if (highlight) {
               toHighlight.push(f)
             }
@@ -1472,11 +1472,11 @@ export default {
     taxonMouseEnterEmitted: function (payload) {
       if (this.mapImp) {
         if (payload.value) {
-          let gid = this.mapImp.taxonFeatureIds(payload.key)  
+          let gid = this.mapImp.taxonFeatureIds(payload.key)
           this.mapImp.enableConnectivityByTaxonIds(payload.key, payload.value) // make sure path is visible
           this.mapImp.zoomToGeoJSONFeatures(gid, {noZoomIn: true})
         } else {
-          // reset visibility of paths 
+          // reset visibility of paths
           this.mapImp.selectGeoJSONFeatures("-1")
           payload.selections.forEach((item) => {
             let show = payload.checked.includes(item.taxon)
@@ -1887,12 +1887,12 @@ export default {
         this.$emit('help-mode-last-item', true);
       }
 
-      if (helpMode && !this.helpModeDialog) {
+      if (helpMode && !this.useHelpModeDialog) {
         this.inHelp = true;
         this.hoverVisibilities.forEach((item) => {
           item.value = true;
         });
-      } else if (helpMode && this.helpModeDialog && toolTipsLength > this.helpModeActiveIndex) {
+      } else if (helpMode && this.useHelpModeDialog && toolTipsLength > this.helpModeActiveIndex) {
 
         // Show the map tooltip as first item
         if (this.helpModeActiveIndex > -1) {
@@ -2365,11 +2365,11 @@ export default {
       default: 0,
     },
     /**
-     * The option to use helpModeDialog.
+     * The option to use HelpModeDialog when it is installed.
      * On default, `false`, clicking help will show all tooltips.
-     * If `true`, clicking help will show the help-mode-dialog.
+     * If `true`, and HelpModeDialog component is installed, clicking help will show the help-mode-dialog.
      */
-     helpModeDialog: {
+     useHelpModeDialog: {
       type: Boolean,
       default: false,
     },
@@ -2655,7 +2655,7 @@ export default {
       } else this.showAnnotator(false)
     },
     activeDrawMode: function () {
-      // Deselect any feature when draw mode is changed 
+      // Deselect any feature when draw mode is changed
       this.changeAnnotationDrawMode({ mode: 'simple_select' })
       this.connectionEntry = {}
     },

@@ -3,6 +3,5 @@
 import FlatmapVuer from './FlatmapVuer.vue'
 import MultiFlatmapVuer from './MultiFlatmapVuer.vue'
 import Tooltip from './Tooltip.vue'
-import HelpModeDialog from './HelpModeDialog.vue'
 
-export { FlatmapVuer, MultiFlatmapVuer, Tooltip, HelpModeDialog }
+export { FlatmapVuer, MultiFlatmapVuer, Tooltip }
