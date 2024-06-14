@@ -4,6 +4,7 @@ import rootConfig from './vite.config.js'
 // defineWorkspace provides a nice type hinting DX
 export default defineConfig((configEnv) => {
   const config = rootConfig(configEnv);
+  config.base = '/demos/flatmapvuer/';
   config.build = {
     outDir: "test-html"
   };
