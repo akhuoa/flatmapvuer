@@ -595,7 +595,7 @@ Please use `const` to assign meaningful names to them...
       <Tooltip
         ref="tooltip"
         class="tooltip"
-        v-show="tooltipDisplay"
+        v-show="tooltipDisplay && !provenanceSidebar"
         :annotationEntry="annotationEntry"
         :entry="tooltipEntry"
         :annotationDisplay="viewingMode === 'Annotation'"
@@ -1284,8 +1284,8 @@ export default {
 
         // Loop through the path features and check if we have origin nodes
         pathFeatures.forEach((p) => {
-        
-          // Get the nodes from each path feature 
+
+          // Get the nodes from each path feature
           this.mapImp.nodePathModels(p.featureId).forEach((f) => {
             highlight = true
             // s2 here is the second level paths
@@ -1297,7 +1297,7 @@ export default {
                 return
               }
             })
-            
+
             if (highlight) {
               toHighlight.push(f)
             }
@@ -1471,11 +1471,11 @@ export default {
     taxonMouseEnterEmitted: function (payload) {
       if (this.mapImp) {
         if (payload.value) {
-          let gid = this.mapImp.taxonFeatureIds(payload.key)  
+          let gid = this.mapImp.taxonFeatureIds(payload.key)
           this.mapImp.enableConnectivityByTaxonIds(payload.key, payload.value) // make sure path is visible
           this.mapImp.zoomToGeoJSONFeatures(gid, {noZoomIn: true})
         } else {
-          // reset visibility of paths 
+          // reset visibility of paths
           this.mapImp.selectGeoJSONFeatures("-1")
           payload.selections.forEach((item) => {
             let show = payload.checked.includes(item.taxon)
@@ -1749,6 +1749,11 @@ export default {
       popupCloseButton.style.display = 'block'
       this.$refs.tooltip.$el.style.display = 'flex'
       popupCloseButton.onclick = () => {
+        /**
+         * This event is emitted
+         * when a provenance popup is closed.
+         */
+        this.$emit('provenance-popup-close');
         if (ftooltip) ftooltip.style.display = 'block'
       }
     },
@@ -1974,11 +1979,54 @@ export default {
           options.positionAtLastClick = true
         }
       }
-      if (!this.disableUI) {
+      // If provenanceSidebar is set to `true`
+      // Provenance info will show in sidebar
+      if (this.provenanceSidebar) {
+        // move the map center to highlighted area
+        const featureIds = [feature];
+        this.moveMap(featureIds);
+        this.$emit('provenance-popup-open', this.tooltipEntry);
+      }
+      // If provenanceSidebar is not set (default) or set to `false`
+      // Provenance info tooltip will show on map
+      if (!this.disableUI && !this.provenanceSidebar) {
         this.$nextTick(() => {
           this.mapImp.showPopup(featureId, this.$refs.tooltip.$el, options)
           this.popUpCssHacks()
         })
+      }
+    },
+    /**
+     * Move the map to the left side
+     * to the visible area of the feature IDs
+     * because the sidebar is opened
+     * @arg featureIds
+     */
+     moveMap: function (featureIds) {
+      if (this.mapImp) {
+        const Map = this.mapImp._map;
+        const bbox = this.mapImp._bounds.toArray();
+        const sidebarWidth = 500; // actual width is 600
+
+        // Zoom the map to features first
+        this.mapImp.zoomToFeatures(featureIds, { noZoomIn: true });
+
+        // Hide the left pathway drawer
+        // to get more space for the map
+        this.showPathwaysDrawer(false);
+
+        // Move the map to left side
+        // since the sidebar is taking space on the right
+        if (bbox?.length) {
+          setTimeout(() => {
+            Map.fitBounds(bbox, {
+              padding: {
+                right: sidebarWidth
+              },
+              animate: true
+            });
+          });
+        }
       }
     },
     /**
@@ -2161,6 +2209,7 @@ export default {
             minZoom: this.minZoom,
             tooltips: this.tooltips,
             minimap: minimap,
+            // tooltipDelay: 15, // new feature to delay tooltips showing
           }
         )
         promise1.then((returnedObject) => {
@@ -2239,11 +2288,28 @@ export default {
       this.computePathControlsMaximumHeight()
       this.drawerOpen = true
       this.mapResize()
+      this.handleMapClick();
       /**
        * This is ``onFlatmapReady`` event.
        * @arg ``this`` (Component Vue Instance)
        */
       this.$emit('ready', this)
+    },
+    /**
+     * @vuese
+     * Function to handle mouse click on map area
+     * after the map is loaded.
+     */
+    handleMapClick: function () {
+      const _map = this.mapImp._map;
+
+      if (_map) {
+        _map.on('click', (e) => {
+          if (this.tooltipEntry.featureId) {
+            this.$emit('provenance-popup-close');
+          }
+        });
+      }
     },
     /**
      * @vuese
@@ -2494,7 +2560,14 @@ export default {
      disableUI: {
       type: Boolean,
       default: false,
-    }
+    },
+    /**
+     * The option to show provenance information in sidebar
+     */
+    provenanceSidebar: {
+      type: Boolean,
+      default: false,
+    },
   },
   provide() {
     return {
@@ -2573,7 +2646,7 @@ export default {
       viewingModeIndex: 0,
       viewingModes: {
         0: {
-          name: 'Exploration', 
+          name: 'Exploration',
           description:'Find relevant research and view detail of neural pathways by selecting a pathway to view its connections and data sources'
         },
         1: {
@@ -2676,7 +2749,7 @@ export default {
       } else this.showAnnotator(false)
     },
     activeDrawMode: function () {
-      // Deselect any feature when draw mode is changed 
+      // Deselect any feature when draw mode is changed
       this.changeAnnotationDrawMode({ mode: 'simple_select' })
       this.connectionEntry = {}
     },

@@ -56,6 +56,9 @@
       @resource-selected="resourceSelected"
       @ready="FlatmapReady"
       @pan-zoom-callback="panZoomCallback"
+      :provenanceSidebar="provenanceSidebar"
+      @provenance-popup-open="onProvenancePopupOpen"
+      @provenance-popup-close="onProvenancePopupClose"
       @open-map="
         /**
          * This event is emitted when the user chooses a different map option
@@ -260,6 +263,12 @@ export default {
        * @arg payload
        */
       this.$emit('pan-zoom-callback', payload)
+    },
+    onProvenancePopupClose: function () {
+      this.$emit('provenance-popup-close');
+    },
+    onProvenancePopupOpen: function (entryData) {
+      this.$emit('provenance-popup-open', entryData);
     },
     onSelectionsDataChanged: function (data) {
       this.$emit('pathway-selection-changed', data);
@@ -697,7 +706,14 @@ export default {
     disableUI: {
       type: Boolean,
       default: false,
-    }
+    },
+    /**
+     * The option to show provenance information in sidebar
+     */
+    provenanceSidebar: {
+      type: Boolean,
+      default: false,
+    },
   },
   data: function () {
     return {
