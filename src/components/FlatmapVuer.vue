@@ -595,7 +595,7 @@ Please use `const` to assign meaningful names to them...
       <Tooltip
         ref="tooltip"
         class="tooltip"
-        v-show="tooltipDisplay && !provenanceSidebar"
+        v-show="tooltipDisplay && !connectivityInfoSidebar"
         :annotationEntry="annotationEntry"
         :entry="tooltipEntry"
         :annotationDisplay="viewingMode === 'Annotation'"
@@ -1751,9 +1751,9 @@ export default {
       popupCloseButton.onclick = () => {
         /**
          * This event is emitted
-         * when a provenance popup is closed.
+         * when a connectivity info (provenance popup) is closed.
          */
-        this.$emit('provenance-popup-close');
+        this.$emit('connectivity-info-close');
         if (ftooltip) ftooltip.style.display = 'block'
       }
     },
@@ -1979,17 +1979,17 @@ export default {
           options.positionAtLastClick = true
         }
       }
-      // If provenanceSidebar is set to `true`
-      // Provenance info will show in sidebar
-      if (this.provenanceSidebar) {
+      // If connectivityInfoSidebar is set to `true`
+      // Connectivity info will show in sidebar
+      if (this.connectivityInfoSidebar) {
         // move the map center to highlighted area
         const featureIds = [feature];
         this.moveMap(featureIds);
-        this.$emit('provenance-popup-open', this.tooltipEntry);
+        this.$emit('connectivity-info-open', this.tooltipEntry);
       }
-      // If provenanceSidebar is not set (default) or set to `false`
-      // Provenance info tooltip will show on map
-      if (!this.disableUI && !this.provenanceSidebar) {
+      // If connectivityInfoSidebar is not set (default) or set to `false`
+      // Connectivity info (Provenance info) tooltip will show on map
+      if (!this.disableUI && !this.connectivityInfoSidebar) {
         this.$nextTick(() => {
           this.mapImp.showPopup(featureId, this.$refs.tooltip.$el, options)
           this.popUpCssHacks()
@@ -2306,7 +2306,7 @@ export default {
       if (_map) {
         _map.on('click', (e) => {
           if (this.tooltipEntry.featureId) {
-            this.$emit('provenance-popup-close');
+            this.$emit('connectivity-info-close');
           }
         });
       }
@@ -2562,9 +2562,9 @@ export default {
       default: false,
     },
     /**
-     * The option to show provenance information in sidebar
+     * The option to show connectivity information in sidebar
      */
-    provenanceSidebar: {
+    connectivityInfoSidebar: {
       type: Boolean,
       default: false,
     },

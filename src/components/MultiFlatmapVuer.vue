@@ -56,9 +56,9 @@
       @resource-selected="resourceSelected"
       @ready="FlatmapReady"
       @pan-zoom-callback="panZoomCallback"
-      :provenanceSidebar="provenanceSidebar"
-      @provenance-popup-open="onProvenancePopupOpen"
-      @provenance-popup-close="onProvenancePopupClose"
+      :connectivityInfoSidebar="connectivityInfoSidebar"
+      @connectivity-info-open="onConnectivityInfoOpen"
+      @connectivity-info-close="onConnectivityInfoClose"
       @open-map="
         /**
          * This event is emitted when the user chooses a different map option
@@ -264,11 +264,11 @@ export default {
        */
       this.$emit('pan-zoom-callback', payload)
     },
-    onProvenancePopupClose: function () {
-      this.$emit('provenance-popup-close');
+    onConnectivityInfoClose: function () {
+      this.$emit('connectivity-info-close');
     },
-    onProvenancePopupOpen: function (entryData) {
-      this.$emit('provenance-popup-open', entryData);
+    onConnectivityInfoOpen: function (entryData) {
+      this.$emit('connectivity-info-open', entryData);
     },
     onSelectionsDataChanged: function (data) {
       this.$emit('pathway-selection-changed', data);
@@ -708,9 +708,9 @@ export default {
       default: false,
     },
     /**
-     * The option to show provenance information in sidebar
+     * The option to show connectivity information in sidebar
      */
-    provenanceSidebar: {
+    connectivityInfoSidebar: {
       type: Boolean,
       default: false,
     },
