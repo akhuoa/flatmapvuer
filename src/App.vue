@@ -77,6 +77,7 @@
       :displayMinimap="true"
       :enableOpenMapUI="true"
       :flatmapAPI="flatmapAPI"
+      :sparcAPI="sparcAPI"
       :disableUI="disableUI"
       @open-pubmed-url="onOpenPubmedUrl"
       @pathway-selection-changed="onPathwaySelectionChanged"
@@ -106,6 +107,10 @@ import {
   ElRow as Row,
 } from 'element-plus'
 import './icons/mapicon-species-style.css'
+import imageThumbnail1 from './icons/imageThumbnail1'
+import imageThumbnail2 from './icons/imageThumbnail2'
+import imageThumbnail3 from './icons/imageThumbnail3'
+import scicrunchMixin from './services/scicrunchMixin'
 import MultiFlatmapVuer from './components/MultiFlatmapVuer.vue'
 import { HelpModeDialog } from '@abi-software/map-utilities'
 import '@abi-software/map-utilities/dist/style.css'
@@ -122,6 +127,7 @@ export default {
     MultiFlatmapVuer,
     HelpModeDialog,
   },
+  mixins: [scicrunchMixin],
   methods: {
     saveSettings: function () {
       this.mapSettings.push(this.$refs.multi.getState())
@@ -145,6 +151,7 @@ export default {
       if (this.consoleOn) console.log(component)
       let taxon = component.mapImp.describes
       let id = component.mapImp.addMarker('UBERON:0000948')
+
       window.flatmapImp = component.mapImp
       component.enablePanZoomEvents(true)
       //component.showPathwaysDrawer(false);
@@ -280,10 +287,12 @@ export default {
       useHelpModeDialog: true,
       multiflatmapRef: null,
       mapSettings: [],
+      sparcAPI: import.meta.env.SPARC_API,
+      flatmapAPI: import.meta.env.FLATMAP_API,
       //flatmapAPI: "https://mapcore-demo.org/current/flatmap/v2/"
       //flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v3/"
       //flatmapAPI: "https://mapcoe-demo.org/current/flatmap/v3/",
-      flatmapAPI: 'https://mapcore-demo.org/devel/flatmap/v4/',
+      // flatmapAPI: 'https://mapcore-demo.org/devel/flatmap/v4/',
       //flatmapAPI: "https://mapcore-demo.org/fccb/flatmap/"
       //flatmapAPI: "https://mapcore-demo.org/staging/flatmap/v1/"
       // flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v1/",
