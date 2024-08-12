@@ -287,8 +287,8 @@ export default {
       useHelpModeDialog: true,
       multiflatmapRef: null,
       mapSettings: [],
-      sparcAPI: import.meta.env.SPARC_API,
-      flatmapAPI: import.meta.env.FLATMAP_API,
+      sparcAPI: import.meta.env.VITE_SPARC_API,
+      flatmapAPI: import.meta.env.VITE_FLATMAP_API,
       //flatmapAPI: "https://mapcore-demo.org/current/flatmap/v2/"
       //flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v3/"
       //flatmapAPI: "https://mapcoe-demo.org/current/flatmap/v3/",
