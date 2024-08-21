@@ -54,7 +54,7 @@ Please use `const` to assign meaningful names to them...
                 SCKAN </a
               >.
             </p>
-            <p v-else @mouseover="showTooltip(6)" @mouseout="hideTooltip(6)">
+            <p v-else @mouseover="showTooltip(7)" @mouseout="hideTooltip(7)">
               This map displays the connectivity of neuron populations.
               Specifically, those from the primarily rat-based
               <a
@@ -76,8 +76,8 @@ Please use `const` to assign meaningful names to them...
               <div
                 class="warning-icon"
                 v-if="displayWarning"
-                @mouseover="showTooltip(6)"
-                @mouseout="hideTooltip(6)"
+                @mouseover="showTooltip(7)"
+                @mouseout="hideTooltip(7)"
               >
                 <el-icon><el-icon-warning-filled /></el-icon>
                 <template v-if="isLegacy">
@@ -452,6 +452,30 @@ Please use `const` to assign meaningful names to them...
               {{ viewingModes[viewingModeIndex].description}}
             </el-row>
           </el-row>
+          <template v-if="viewingMode === 'Exploration' && !isFC">
+            <el-row class="backgroundText">Images Display</el-row>
+            <el-row class="backgroundControl">
+              <el-select
+                :teleported="false"
+                v-model="imageType"
+                placeholder="Select"
+                class="select-box"
+                popper-class="flatmap_dropdown"
+                @change="setImageType"
+              >
+                <el-option
+                  v-for="item in imageTypes"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                >
+                  <el-row>
+                    <el-col :span="12">{{ item }}</el-col>
+                  </el-row>
+                </el-option>
+              </el-select>
+            </el-row>
+          </template>
           <template v-if="viewingMode === 'Annotation' && userInformation">
             <el-row class="backgroundText">Drawn By*</el-row>
             <el-row class="backgroundControl">
@@ -2360,8 +2384,7 @@ export default {
       this.computePathControlsMaximumHeight()
       this.drawerOpen = true
       this.mapResize()
-      this.addImagesToMap()
-      this.handleMapClick();
+      this.handleMapClick()
       /**
        * This is ``onFlatmapReady`` event.
        * @arg ``this`` (Component Vue Instance)
@@ -2464,13 +2487,18 @@ export default {
       this.imageIframeURL = ''
       this.imageIframeOpen = false
     },
-    addImagesToMap: async function () {
+    setImageType: async function (type) {
       if (this.mapImp) {
-        let response = await this.getImagesFromScicrunch()
-        if (response && response.success) {
-          console.log("addImagesToMap")
-          this.images = response.images
-          this.populateFlatmapWithImages(this.mapImp, response.images)
+        this.mapImp.clearMarkers()
+        const anatomicalIdentifiers = this.mapImp.anatomicalIdentifiers
+        if (type === "Segmentations") {
+          let images = await this.getSegmentationsThumbnails("id", anatomicalIdentifiers)
+          this.images = images
+          this.populateFlatmapWithImages(this.mapImp, images, type)
+        } else if (type === "Images") {
+          let images = await this.getBiolucidaThumbnails("id", anatomicalIdentifiers)
+          this.images = images
+          this.populateFlatmapWithImages(this.mapImp, images, type)
         }
       }
     },
@@ -2759,6 +2787,8 @@ export default {
       },
       drawnType: 'All tools',
       drawnTypes: ['All tools', 'Point', 'LineString', 'Polygon', 'None'],
+      imageType: 'None',
+      imageTypes: ['Segmentations', 'Images', 'None'],
       annotatedType: 'Anyone',
       annotatedTypes: ['Anyone', 'Me', 'Others'],
       openMapRef: undefined,
