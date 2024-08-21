@@ -157,6 +157,7 @@ export default {
       //component.showPathwaysDrawer(false);
       if (this.consoleOn) console.log(taxon, id)
       //component.searchAndShowResult("heart");
+      // component.changeViewingMode('Annotation')
     },
     panZoomcallback: function (payload) {
       this.payload = payload

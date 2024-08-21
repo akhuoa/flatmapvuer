@@ -511,6 +511,14 @@ export default {
        */
       this.$emit('shown-map-tooltip');
     },
+    /**
+     * @vuese
+     * Function to change the view mode of the map.
+     */
+    changeViewingMode: function (modeName) {
+      let map = this.getCurrentFlatmap()
+      map.changeViewingMode(modeName)
+    },
   },
   props: {
     /**

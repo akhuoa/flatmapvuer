@@ -363,7 +363,7 @@ Please use `const` to assign meaningful names to them...
                 key="pathwaysSelection"
               />
               <selections-group
-                v-if="!isFC && taxonConnectivity && taxonConnectivity.length > 0"
+                v-if="taxonConnectivity && taxonConnectivity.length > 0"
                 title="Studied in"
                 labelKey="label"
                 identifierKey="taxon"
@@ -437,19 +437,19 @@ Please use `const` to assign meaningful names to them...
           <el-row class="backgroundControl">
             <div style="margin-bottom: 2px;">
               <template
-                  v-for="(item, i) in viewingModes"
-                  :key="item + i"
+                  v-for="(value, key, index) in viewingModes"
+                  :key="key"
                 >
-                  <template v-if="item.name === viewingMode">
-                    <span class="viewing-mode-title"><b >{{ item.name }}</b></span>
+                  <template v-if="key === viewingMode">
+                    <span class="viewing-mode-title"><b >{{ key }}</b></span>
                   </template>
                   <template v-else>
-                    <span class="viewing-mode-unselected" @click="changeViewingMode(i)">{{ item.name }}</span>
+                    <span class="viewing-mode-unselected" @click="changeViewingMode(key)">{{ key }}</span>
                   </template>
               </template>
             </div>
             <el-row class="viewing-mode-description">
-              {{ viewingModes[viewingModeIndex].description}}
+              {{ viewingModes[viewingMode] }}
             </el-row>
           </el-row>
           <template v-if="viewingMode === 'Exploration' && !isFC">
@@ -1725,13 +1725,10 @@ export default {
      * Function triggered by viewing mode change.
      * (e.g., from 'Exploration' to 'Annotation')
      * All tooltips and popups currently showing on map will be closed
-     * when this function is triggered. Optional index can be provided, this will
-     * switch the provided view mode to the first index.
      */
-     changeViewingMode: function (newModeIndex=null) {
-      if (newModeIndex !== null) {
-        //this.viewingMode = this.viewingModes[newModeIndex].name
-        this.viewingModeIndex = newModeIndex
+    changeViewingMode: function (modeName) {
+      if (modeName) {
+        this.viewingMode = modeName
       }
       this.closeTooltip()
     },
@@ -2770,20 +2767,11 @@ export default {
       currentActive: '',
       selectedDrawnFeature: undefined, // Clicked drawn annotation
       currentHover: '',
-      viewingModeIndex: 0,
+      viewingMode: 'Exploration',
       viewingModes: {
-        0: {
-          name: 'Exploration',
-          description:'Find relevant research and view detail of neural pathways by selecting a pathway to view its connections and data sources'
-        },
-        1: {
-          name: 'Neuron Connection',
-          description: 'Discover Neuron connections by selecting a neuron and viewing its associated network connections'
-        },
-        2: {
-          name: 'Annotation',
-          description: 'View internal identifiers of features'
-        }
+        'Exploration': 'Find relevant research and view detail of neural pathways by selecting a pathway to view its connections and data sources',
+        'Neuron Connection': 'Discover Neuron connections by selecting a neuron and viewing its associated network connections',
+        'Annotation': 'View internal identifiers of features'
       },
       drawnType: 'All tools',
       drawnTypes: ['All tools', 'Point', 'LineString', 'Polygon', 'None'],
@@ -2835,9 +2823,6 @@ export default {
     ...mapState(useMainStore, ['userToken']),
     isValidDrawnCreated: function () {
       return Object.keys(this.drawnCreatedEvent).length > 0
-    },
-    viewingMode: function() {
-      return this.viewingModes[this.viewingModeIndex].name
     },
   },
   watch: {
