@@ -107,7 +107,6 @@ import {
   ElRow as Row,
 } from 'element-plus'
 import './icons/mapicon-species-style.css'
-import scicrunchMixin from './services/scicrunchMixin'
 import MultiFlatmapVuer from './components/MultiFlatmapVuer.vue'
 import { HelpModeDialog } from '@abi-software/map-utilities'
 import '@abi-software/map-utilities/dist/style.css'
@@ -124,7 +123,6 @@ export default {
     MultiFlatmapVuer,
     HelpModeDialog,
   },
-  mixins: [scicrunchMixin],
   methods: {
     saveSettings: function () {
       this.mapSettings.push(this.$refs.multi.getState())
