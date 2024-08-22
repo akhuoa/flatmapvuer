@@ -36,14 +36,15 @@ export default {
 The line above registers both the FlatmapVuer and MultiFlatmapVuer component into the global scope.
 You can now use the FlatmapVuer in your vue template as followed:
 ```html
-<FlatmapVuer entry="NCBITaxon:9606"   v-on:resource-selected="FlatmapSelected"  v-on:ready="FlatmapReady"/>
+<FlatmapVuer entry="NCBITaxon:9606" uuid="uuid-to-set" v-on:resource-selected="FlatmapSelected"  v-on:ready="FlatmapReady"/>
 ```
 
-**entry** is the variable/string with the NCBI Taxonomy term. There are five available at this moment:
-NCBITaxon:9606 (Human), NCBITaxon:9685 (Cat), NCBITaxon:9823 (Pig), NCBITaxon:10090 (Mouse) and NCBITaxon:10114 (Rat)
+**entry** is the variable/string with the NCBI Taxonomy term. Some of the available taxon including: NCBITaxon:9606 (Human), NCBITaxon:9685 (Cat), NCBITaxon:9823 (Pig), NCBITaxon:10090 (Mouse) and NCBITaxon:10114 (Rat). This will always get the latest version of a map with the matching taxon.
+
+**uuid** is the unique id of a specific map. This will be used instead of **entry** when specified.
 
 **ready** is the custom event when the map has been loaded successfully.
-**resource-selected** is the custom event triggered when a part of the flatmap is selected, the returned argument **resource** provides information of the selected resource.
+**resource-selected** is the custom event triggered when a part of the flatmap is selected, the returned argument **resource** provides information of the selected resource. Information of location is provided with supported maps in the **feature -> location** property.
 
 Markers must be added to make a label selectable and it can be done through the **addMarker** method on the mapImp member of the FlatmapVuer component.
 
