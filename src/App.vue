@@ -296,12 +296,12 @@ export default {
       flatmapAPI: import.meta.env.VITE_FLATMAP_API,
       //flatmapAPI: "https://mapcore-demo.org/current/flatmap/v2/"
       //flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v3/"
-      flatmapAPI: "https://mapcore-demo.org/current/flatmap/v3/",
+      //flatmapAPI: "https://mapcore-demo.org/current/flatmap/v3/",
       //flatmapAPI: 'https://mapcore-demo.org/devel/flatmap/v4/',
       //flatmapAPI: 'https://mapcore-demo.org/curation/flatmap/',
       //flatmapAPI: "https://mapcore-demo.org/fccb/flatmap/"
       //flatmapAPI: "https://mapcore-demo.org/staging/flatmap/v1/"
-      // flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v1/",
+      //flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v1/",
       ElIconSetting: shallowRef(ElIconSetting)
     }
   },
