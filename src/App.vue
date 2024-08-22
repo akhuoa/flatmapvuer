@@ -107,9 +107,6 @@ import {
   ElRow as Row,
 } from 'element-plus'
 import './icons/mapicon-species-style.css'
-import imageThumbnail1 from './icons/imageThumbnail1'
-import imageThumbnail2 from './icons/imageThumbnail2'
-import imageThumbnail3 from './icons/imageThumbnail3'
 import scicrunchMixin from './services/scicrunchMixin'
 import MultiFlatmapVuer from './components/MultiFlatmapVuer.vue'
 import { HelpModeDialog } from '@abi-software/map-utilities'
