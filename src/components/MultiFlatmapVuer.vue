@@ -59,6 +59,7 @@
       :connectivityInfoSidebar="connectivityInfoSidebar"
       @connectivity-info-open="onConnectivityInfoOpen"
       @connectivity-info-close="onConnectivityInfoClose"
+      @show-flatmap-images="onShowFlatmapImages"
       @open-map="
         /**
          * This event is emitted when the user chooses a different map option
@@ -266,6 +267,9 @@ export default {
     },
     onSelectionsDataChanged: function (data) {
       this.$emit('pathway-selection-changed', data);
+    },
+    onShowFlatmapImages: function (data) {
+      this.$emit('show-flatmap-images', data);
     },
     /**
      * @vuese

@@ -1705,7 +1705,12 @@ export default {
             }
             if (
               data &&
-              data.type !== 'marker' &&
+              (
+                data.type !== 'marker' ||
+                (
+                  data.type === 'marker' && (this.imageType === 'Segmentations' || this.imageType === 'Images')
+                )
+              ) &&
               eventType === 'click' &&
               !(this.viewingMode === 'Neuron Connection') &&
               // Disable popup when drawing
@@ -2051,6 +2056,23 @@ export default {
         }
         this.$emit('connectivity-info-open', this.tooltipEntry);
       }
+
+      // Images on Flatmap
+      if (this.imageType === 'Segmentations' || this.imageType === 'Images') {
+        // Images in Sidebar
+        if (this.connectivityInfoSidebar && this.viewingMode !== 'Annotation') {
+          this.$emit('show-flatmap-images', this.galleryItems);
+        }
+        // Images in popup
+        else {
+          this.tooltipDisplay = true;
+          this.$nextTick(() => {
+            this.mapImp.showPopup(featureId, this.$refs.tooltip.$el, options);
+            this.popUpCssHacks();
+          });
+        }
+      }
+
       // If UI is not disabled,
       // And connectivityInfoSidebar is not set (default) or set to `false`
       // Provenance popup will be shown on map
@@ -2384,7 +2406,7 @@ export default {
       this.addResizeButtonToMinimap()
       this.loading = false
       this.computePathControlsMaximumHeight()
-      this.drawerOpen = !this.isCentreLine      
+      this.drawerOpen = !this.isCentreLine
       this.mapResize()
       this.handleMapClick()
       /**
