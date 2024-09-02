@@ -1745,6 +1745,7 @@ export default {
               userData: args,
               eventType: eventType,
               provenanceTaxonomy: taxons,
+              markerType: this.imageRadio ? this.imageType : "Standard",
             }
             if (eventType === 'click') {
               this.featuresAlert = data.alert
