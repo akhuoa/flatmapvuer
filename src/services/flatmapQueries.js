@@ -256,7 +256,11 @@ let FlatmapQueries = function () {
           }
         })
         .catch((error) => {
-          console.error('Error:', error)
+          if (error.name === 'AbortError') {
+            // This error is from AbortController's abort method.
+          } else {
+            console.error('Error:', error)
+          }
           resolve(false)
         })
     })
