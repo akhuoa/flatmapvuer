@@ -77,6 +77,7 @@
       :displayMinimap="true"
       :enableOpenMapUI="true"
       :flatmapAPI="flatmapAPI"
+      :sparcAPI="sparcAPI"
       :disableUI="disableUI"
       @open-pubmed-url="onOpenPubmedUrl"
       @pathway-selection-changed="onPathwaySelectionChanged"
@@ -145,6 +146,7 @@ export default {
       if (this.consoleOn) console.log(component)
       let taxon = component.mapImp.describes
       let id = component.mapImp.addMarker('UBERON:0000948')
+
       window.flatmapImp = component.mapImp
       component.enablePanZoomEvents(true)
       //component.showPathwaysDrawer(false);
@@ -285,14 +287,16 @@ export default {
       useHelpModeDialog: true,
       multiflatmapRef: null,
       mapSettings: [],
+      sparcAPI: import.meta.env.VITE_SPARC_API,
+      flatmapAPI: import.meta.env.VITE_FLATMAP_API,
       //flatmapAPI: "https://mapcore-demo.org/current/flatmap/v2/"
       //flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v3/"
-      flatmapAPI: "https://mapcore-demo.org/current/flatmap/v3/",
+      //flatmapAPI: "https://mapcore-demo.org/current/flatmap/v3/",
       //flatmapAPI: 'https://mapcore-demo.org/devel/flatmap/v4/',
       //flatmapAPI: 'https://mapcore-demo.org/curation/flatmap/',
       //flatmapAPI: "https://mapcore-demo.org/fccb/flatmap/"
       //flatmapAPI: "https://mapcore-demo.org/staging/flatmap/v1/"
-      // flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v1/",
+      //flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v1/",
       ElIconSetting: shallowRef(ElIconSetting)
     }
   },

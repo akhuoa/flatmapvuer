@@ -10,3 +10,5 @@ docs/.vitepress/cache
 docs/components
 .DS_Store
 /.vitepress
+.env
+.env.local

@@ -452,6 +452,30 @@ Please use `const` to assign meaningful names to them...
               {{ viewingModes[viewingMode] }}
             </el-row>
           </el-row>
+          <template v-if="viewingMode === 'Exploration' && !isFC">
+            <el-row class="backgroundText">Images Display</el-row>
+            <el-row class="backgroundControl">
+              <el-select
+                :teleported="false"
+                v-model="imageType"
+                placeholder="Select"
+                class="select-box"
+                popper-class="flatmap_dropdown"
+                @change="setImageType"
+              >
+                <el-option
+                  v-for="item in imageTypes"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                >
+                  <el-row>
+                    <el-col :span="12">{{ item }}</el-col>
+                  </el-row>
+                </el-option>
+              </el-select>
+            </el-row>
+          </template>
           <template v-if="viewingMode === 'Annotation' && userInformation">
             <el-row class="backgroundText">Drawn By*</el-row>
             <el-row class="backgroundControl">
@@ -604,8 +628,16 @@ Please use `const` to assign meaningful names to them...
         v-show="tooltipDisplay"
         :annotationEntry="annotationEntry"
         :tooltipEntry="tooltipEntry"
+        :tooltipType="tooltipType"
+        :galleryItems="galleryItems"
         :annotationDisplay="viewingMode === 'Annotation'"
+        @viewImage="viewIframeImage"
         @annotation="commitAnnotationEvent"
+      />
+      <IframeImageDialog
+        :imageIframeURL="imageIframeURL"
+        :imageIframeOpen="imageIframeOpen"
+        @closeImageIframe="closeImageIframe"
       />
     </div>
   </div>
@@ -639,13 +671,15 @@ import {
   FlatmapQueries,
   findTaxonomyLabel,
 } from '../services/flatmapQueries.js'
+import scicrunchMixin from '../services/scicrunchMixin.js'
+import flatmapImageMixin from '../mixins/flatmapImageMixin.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 import * as flatmap from '@abi-software/flatmap-viewer'
 import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
-import { DrawToolbar, Tooltip, TreeControls } from '@abi-software/map-utilities'
+import { DrawToolbar, Tooltip, TreeControls, IframeImageDialog } from '@abi-software/map-utilities'
 import '@abi-software/map-utilities/dist/style.css'
 
 const centroid = (geometry) => {
@@ -735,6 +769,7 @@ const createUnfilledTooltipData = function () {
  */
 export default {
   name: 'FlatmapVuer',
+  mixins: [scicrunchMixin, flatmapImageMixin],
   components: {
     Button,
     Col,
@@ -754,7 +789,8 @@ export default {
     ElIconWarningFilled,
     ElIconArrowDown,
     ElIconArrowLeft,
-    DrawToolbar
+    DrawToolbar,
+    IframeImageDialog
   },
   beforeCreate: function () {
     //The state watcher may triggered before
@@ -1669,7 +1705,12 @@ export default {
             }
             if (
               data &&
-              data.type !== 'marker' &&
+              (
+                data.type !== 'marker' ||
+                (
+                  data.type === 'marker' && (this.imageType === 'Segmentations' || this.imageType === 'Images')
+                )
+              ) &&
               eventType === 'click' &&
               !(this.viewingMode === 'Neuron Connection') &&
               // Disable popup when drawing
@@ -1703,6 +1744,17 @@ export default {
      * @arg data
      */
     checkAndCreatePopups: async function (data) {
+      console.log("checkandcreate")
+      if (data.feature.type === 'marker') {
+        this.tooltipType = 'image-gallery'
+        console.log('marker data', data)
+        console.log('saved images', this.images)
+        let filteredImages = this.findImagesForAnatomy(this.images, data.resource[0])
+        console.log('filtered images:',filteredImages)
+        this.galleryItems = filteredImages
+        this.displayTooltip(data.feature.models)
+      } else {
+
       // Call flatmap database to get the connection data
       if (this.viewingMode === 'Annotation') {
         if (data.feature) {
@@ -1710,6 +1762,7 @@ export default {
             ...data.feature,
             resourceId: this.serverURL,
           }
+          this.tooltipType = 'annotation'
           if (data.feature.featureId && data.feature.models) {
             this.displayTooltip(data.feature.models)
           } else if (data.feature.feature) {
@@ -1743,9 +1796,11 @@ export default {
           results[1] ||
           (data.feature.hyperlinks && data.feature.hyperlinks.length > 0)
         ) {
+          this.tooltipType = 'provenance'
           this.resourceForTooltip = data.resource[0]
           data.resourceForTooltip = this.resourceForTooltip
           this.createTooltipFromNeuronCuration(data)
+          }
         }
       }
     },
@@ -2001,6 +2056,23 @@ export default {
         }
         this.$emit('connectivity-info-open', this.tooltipEntry);
       }
+
+      // Images on Flatmap
+      if (this.imageType === 'Segmentations' || this.imageType === 'Images') {
+        // Images in Sidebar
+        if (this.connectivityInfoSidebar && this.viewingMode !== 'Annotation') {
+          this.$emit('show-flatmap-images', this.galleryItems);
+        }
+        // Images in popup
+        else {
+          this.tooltipDisplay = true;
+          this.$nextTick(() => {
+            this.mapImp.showPopup(featureId, this.$refs.tooltip.$el, options);
+            this.popUpCssHacks();
+          });
+        }
+      }
+
       // If UI is not disabled,
       // And connectivityInfoSidebar is not set (default) or set to `false`
       // Provenance popup will be shown on map
@@ -2334,9 +2406,9 @@ export default {
       this.addResizeButtonToMinimap()
       this.loading = false
       this.computePathControlsMaximumHeight()
-      this.drawerOpen = !this.isCentreLine      
+      this.drawerOpen = !this.isCentreLine
       this.mapResize()
-      this.handleMapClick();
+      this.handleMapClick()
       /**
        * This is ``onFlatmapReady`` event.
        * @arg ``this`` (Component Vue Instance)
@@ -2430,6 +2502,29 @@ export default {
     searchSuggestions: function (term) {
       if (this.mapImp) return this.mapImp.search(term)
       return []
+    },
+    viewIframeImage: function (url) {
+      this.imageIframeURL = url
+      this.imageIframeOpen = true
+    },
+    closeImageIframe: function () {
+      this.imageIframeURL = ''
+      this.imageIframeOpen = false
+    },
+    setImageType: async function (type) {
+      if (this.mapImp) {
+        this.mapImp.clearMarkers()
+        const anatomicalIdentifiers = this.mapImp.anatomicalIdentifiers
+        if (type === "Segmentations") {
+          let images = await this.getSegmentationsThumbnails("id", anatomicalIdentifiers)
+          this.images = images
+          this.populateFlatmapWithImages(this.mapImp, images, type)
+        } else if (type === "Images") {
+          let images = await this.getBiolucidaThumbnails("id", anatomicalIdentifiers)
+          this.images = images
+          this.populateFlatmapWithImages(this.mapImp, images, type)
+        }
+      }
     },
   },
   props: {
@@ -2639,6 +2734,10 @@ export default {
       serverURL: undefined,
       layers: [],
       pathways: [],
+      imageIframeOpen: false,
+      imageIframeURL: '',
+      galleryItems: [],
+      tooltipType: 'provenance',
       sckanDisplay: [
         {
           label: 'Display Path with SCKAN',
@@ -2704,6 +2803,8 @@ export default {
       },
       drawnType: 'All tools',
       drawnTypes: ['All tools', 'Point', 'LineString', 'Polygon', 'None'],
+      imageType: 'None',
+      imageTypes: ['Segmentations', 'Images', 'None'],
       annotatedType: 'Anyone',
       annotatedTypes: ['Anyone', 'Me', 'Others'],
       openMapRef: undefined,
