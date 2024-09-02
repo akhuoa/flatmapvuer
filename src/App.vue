@@ -304,7 +304,9 @@ export default {
   },
   mounted: function () {
     this.multiflatmapRef = this.$refs.multi;
-    getOrganCuries(this.sparcAPI).then((organCuries) => this.settingsStore.updateOrganCuries(organCuries))
+    if (this.sparcAPI) {
+      getOrganCuries(this.sparcAPI).then((organCuries) => this.settingsStore.updateOrganCuries(organCuries))
+    }
   },
   computed: {
     ...mapStores(useSettingsStore),

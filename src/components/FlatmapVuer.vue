@@ -512,53 +512,57 @@ Please use `const` to assign meaningful names to them...
               </el-select>
             </el-row>
           </template>
-          <el-row class="backgroundSpacer" v-if="viewingMode === 'Exploration' && !isFC"></el-row>
-          <el-row class="backgroundText" v-if="viewingMode === 'Exploration' && !isFC">Markers display</el-row>
-          <el-row class="backgroundControl" v-if="viewingMode === 'Exploration' && !isFC">
-            <el-col :span="14">
-              <el-radio-group
-                v-model="imageRadio"
-                class="flatmap-radio"
-                @change="setImage"
-              >
-                <el-radio :label="false">Standard</el-radio>
-                <el-radio :label="true">Image</el-radio>
-              </el-radio-group>
-            </el-col>
-            <el-col :span="10" v-if="imageRadio">
-              <el-select
-                :teleported="false"
-                v-model="imageType"
-                placeholder="Select"
-                class="select-box imageSelector"
-                popper-class="flatmap_dropdown"
-                @change="setImageType"
-              >
-                <el-option
-                  v-for="item in imageTypes"
-                  :key="item"
-                  :label="item"
-                  :value="item"
+          <template v-if="viewingMode === 'Exploration' && !isFC && sparcAPI">
+            <el-row class="backgroundSpacer"></el-row>
+            <el-row class="backgroundText">Markers display</el-row>
+            <el-row class="backgroundControl">
+              <el-col :span="14">
+                <el-radio-group
+                  v-model="imageRadio"
+                  class="flatmap-radio"
+                  @change="setImage"
                 >
-                  <el-row>
-                    <el-col :span="12">{{ item }}</el-col>
-                  </el-row>
-                </el-option>
-              </el-select>
-            </el-col>
-          </el-row>
-          <el-row class="backgroundSpacer" v-if="displayFlightPathOption"></el-row>
-          <el-row class="backgroundText" v-if="displayFlightPathOption">Flight path display</el-row>
-          <el-row class="backgroundControl" v-if="displayFlightPathOption">
-            <el-radio-group
-              v-model="flightPath3DRadio"
-              class="flatmap-radio"
-              @change="setFlightPath3D"
-            >
-            <el-radio :label="false">2D</el-radio>
-            <el-radio :label="true">3D</el-radio>
-            </el-radio-group>
-          </el-row>
+                  <el-radio :label="false">Standard</el-radio>
+                  <el-radio :label="true">Image</el-radio>
+                </el-radio-group>
+              </el-col>
+              <el-col :span="10" v-if="imageRadio">
+                <el-select
+                  :teleported="false"
+                  v-model="imageType"
+                  placeholder="Select"
+                  class="select-box imageSelector"
+                  popper-class="flatmap_dropdown"
+                  @change="setImageType"
+                >
+                  <el-option
+                    v-for="item in imageTypes"
+                    :key="item"
+                    :label="item"
+                    :value="item"
+                  >
+                    <el-row>
+                      <el-col :span="12">{{ item }}</el-col>
+                    </el-row>
+                  </el-option>
+                </el-select>
+              </el-col>
+            </el-row>
+          </template>
+          <template v-if="displayFlightPathOption">
+            <el-row class="backgroundSpacer"></el-row>
+            <el-row class="backgroundText">Flight path display</el-row>
+            <el-row class="backgroundControl">
+              <el-radio-group
+                v-model="flightPath3DRadio"
+                class="flatmap-radio"
+                @change="setFlightPath3D"
+              >
+              <el-radio :label="false">2D</el-radio>
+              <el-radio :label="true">3D</el-radio>
+              </el-radio-group>
+            </el-row>
+          </template>
           <el-row class="backgroundSpacer"></el-row>
           <el-row class="backgroundText">Organs display</el-row>
           <el-row class="backgroundControl">
@@ -2749,7 +2753,7 @@ export default {
      */
     sparcAPI: {
       type: String,
-      default: 'https://api.sparc.science',
+      default: '',
     },
     /**
      * Flag to disable UIs on Map
