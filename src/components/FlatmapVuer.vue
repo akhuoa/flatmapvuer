@@ -176,13 +176,17 @@ Please use `const` to assign meaningful names to them...
           ref="zoomInPopover"
         >
           <template #reference>
-            <map-svg-icon
-              icon="zoomIn"
-              class="icon-button zoomIn"
+            <div
+              class="icon-button-container"
               @click="zoomIn()"
               @mouseover="showTooltip(1)"
               @mouseout="hideTooltip(1)"
-            />
+            >
+              <map-svg-icon
+                class="icon-button zoomIn"
+                icon="zoomIn"
+              />
+            </div>
           </template>
         </el-popover>
         <el-popover
@@ -196,13 +200,17 @@ Please use `const` to assign meaningful names to them...
           ref="zoomOutPopover"
         >
           <template #reference>
-            <map-svg-icon
-              icon="zoomOut"
-              class="icon-button zoomOut"
+            <div
+              class="icon-button-container"
               @click="zoomOut()"
               @mouseover="showTooltip(2)"
               @mouseout="hideTooltip(2)"
-            />
+            >
+              <map-svg-icon
+                class="icon-button zoomOut"
+                icon="zoomOut"
+              />
+            </div>
           </template>
         </el-popover>
         <el-popover
@@ -221,13 +229,17 @@ Please use `const` to assign meaningful names to them...
             window
           </div>
           <template #reference>
-            <map-svg-icon
-              icon="fitWindow"
-              class="icon-button fitWindow"
+            <div
+              class="icon-button-container"
               @click="resetView()"
               @mouseover="showTooltip(3)"
               @mouseout="hideTooltip(3)"
-            />
+            >
+              <map-svg-icon
+                class="icon-button fitWindow"
+                icon="fitWindow"
+              />
+            </div>
           </template>
         </el-popover>
       </div>
@@ -285,7 +297,7 @@ Please use `const` to assign meaningful names to them...
                 width="200"
                 trigger="manual"
                 popper-class="flatmap-popper flatmap-marker-popper"
-                :visible="hoverVisibilities[5].value"
+                :visible="hoverVisibilities[0].value"
                 ref="markerPopover"
               >
                 <template #reference>
@@ -602,14 +614,18 @@ Please use `const` to assign meaningful names to them...
             ref="openMapPopover"
           >
             <template #reference>
-              <map-svg-icon
+              <div
                 v-if="enableOpenMapUI && openMapOptions.length > 0"
                 ref="openMapRef"
-                icon="openMap"
-                class="icon-button open-map-button"
+                class="icon-button-container"
                 @mouseover="showTooltip(4)"
                 @mouseout="hideTooltip(4)"
-              />
+              >
+                <map-svg-icon
+                  icon="openMap"
+                  class="icon-button open-map-button"
+                />
+              </div>
             </template>
           </el-popover>
         </el-row>
@@ -624,13 +640,17 @@ Please use `const` to assign meaningful names to them...
             ref="settingsPopover"
           >
             <template #reference>
-              <map-svg-icon
+              <div
                 ref="backgroundIconRef"
-                icon="changeBckgd"
-                class="icon-button"
+                class="icon-button-container"
                 @mouseover="showTooltip(5)"
                 @mouseout="hideTooltip(5)"
-              />
+              >
+                <map-svg-icon
+                  icon="changeBckgd"
+                  class="icon-button"
+                />
+              </div>
             </template>
           </el-popover>
         </el-row>
@@ -2462,7 +2482,7 @@ export default {
       this.addResizeButtonToMinimap()
       this.loading = false
       this.computePathControlsMaximumHeight()
-      this.drawerOpen = !this.isCentreLine      
+      this.drawerOpen = !this.isCentreLine
       this.mapResize()
       this.handleMapClick()
       /**
@@ -3390,6 +3410,10 @@ export default {
   &.lightskyblue {
     background-color: lightskyblue;
   }
+}
+
+.icon-button-container {
+  display: inline-block;
 }
 
 .icon-button {
