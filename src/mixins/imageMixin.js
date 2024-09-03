@@ -3,10 +3,14 @@ export default {
     populateMapWithImages: function (mapImp, images, type) {
       this.downloadImageKeys = []; // to count downloaded images
       for (const [key, list] of Object.entries(images)) {
-        this.downloadImageThumbnail(mapImp, key, list, type);
+        // Exclude empty list
+        if (list.length) {
+          this.downloadImageThumbnail(mapImp, key, list, type);
+        }
       }
     },
     downloadImageThumbnail: function (mapImp, key, list, type) {
+      // This inner list count will be updated by failed download
       const count = list.length;
 
       if (!this.downloadImageKeys.includes(key)) {
