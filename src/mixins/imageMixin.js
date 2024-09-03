@@ -1,25 +1,46 @@
 export default {
   methods: {
     populateMapWithImages: function (mapImp, images, type) {
+      this.downloadImageKeys = []; // to count downloaded images
       for (const [key, list] of Object.entries(images)) {
         this.downloadImageThumbnail(mapImp, key, list, type);
       }
     },
     downloadImageThumbnail: function (mapImp, key, list, type) {
       const count = list.length;
+
+      if (!this.downloadImageKeys.includes(key)) {
+        this.downloadImageKeys.push(key);
+      }
+
       if (count > 0) {
         //Pick a random image
         const index = Math.floor(Math.random() * count);
         const thumbnail = list[index].thumbnail;
         this.getThumbnail(thumbnail, type)
           .then((wrapperElement) => {
+            this.downloadImageKeys = this.downloadImageKeys.filter((item) => item !== key);
             this.addImageThumbnailMarker(mapImp, key, wrapperElement);
+
+            // All images are downloaded
+            if (!this.downloadImageKeys.length) {
+              this.imagesDownloading = false;
+            }
           })
           .catch(() => {
             //Failed to download, pick another one
             list.splice(index);
             this.downloadImageThumbnail(mapImp, key, list, type);
           });
+      } else {
+        if (this.downloadImageKeys.includes(key)) {
+          this.downloadImageKeys = this.downloadImageKeys.filter((item) => item !== key);
+
+          // Failed to download, the last item
+          if (!this.downloadImageKeys.length) {
+            this.imagesDownloading = false;
+          }
+        }
       }
     },
     getThumbnail: async function (url, type) {

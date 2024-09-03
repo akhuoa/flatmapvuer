@@ -520,6 +520,7 @@ Please use `const` to assign meaningful names to them...
                 v-model="imageRadio"
                 class="flatmap-radio"
                 @change="setImage"
+                :disabled="imagesDownloading"
               >
                 <el-radio :label="false">Standard</el-radio>
                 <el-radio :label="true">Image</el-radio>
@@ -539,6 +540,7 @@ Please use `const` to assign meaningful names to them...
                   :key="item"
                   :label="item"
                   :value="item"
+                  :disabled="imagesDownloading"
                 >
                   <el-row>
                     <el-col :span="12">{{ item }}</el-col>
@@ -873,6 +875,7 @@ export default {
     setImageType: async function (type) {
       this.imageType = type
       if (this.mapImp) {
+        this.imagesDownloading = true;
         if (!this.settingsStore.imageTypeCached(type)) {
           this.loading = true
           await this.fetchImageThumbnails(type)
@@ -2840,6 +2843,7 @@ export default {
       currentBackground: 'white',
       availableBackground: ['white', 'lightskyblue', 'black'],
       loading: false,
+      imagesDownloading: false,
       flatmapMarker: flatmapMarker,
       provenanceEntry: createUnfilledTooltipData(),
       connectivityTooltipVisible: false,
