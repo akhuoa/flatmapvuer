@@ -893,6 +893,7 @@ export default {
           this.setImageType(this.imageType)
         } else {
           this.mapImp.clearMarkers();
+          this.closeTooltip();
         }
         this.$emit('imageThumbnailDisplay', flag)
       }
