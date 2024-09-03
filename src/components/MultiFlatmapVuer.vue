@@ -709,7 +709,7 @@ export default {
      */
     sparcAPI: {
       type: String,
-      default: 'https://api.sparc.science',
+      default: '',
     },
     /**
      * Flag to disable UIs on Map
