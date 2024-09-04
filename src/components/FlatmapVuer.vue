@@ -520,6 +520,7 @@ Please use `const` to assign meaningful names to them...
                 <el-radio-group
                   v-model="imageRadio"
                   class="flatmap-radio"
+                  :disabled="imagesDownloading"
                   @change="setImage"
                 >
                   <el-radio :label="false">Standard</el-radio>
@@ -533,6 +534,7 @@ Please use `const` to assign meaningful names to them...
                   placeholder="Select"
                   class="select-box imageSelector"
                   popper-class="flatmap_dropdown"
+                  :disabled="imagesDownloading"
                   @change="setImageType"
                 >
                   <el-option
@@ -877,6 +879,7 @@ export default {
     setImageType: async function (type) {
       this.imageType = type
       if (this.mapImp) {
+        this.imagesDownloading = true;
         if (!this.settingsStore.imageTypeCached(type)) {
           this.loading = true
           await this.fetchImageThumbnails(type)
@@ -897,6 +900,7 @@ export default {
           this.setImageType(this.imageType)
         } else {
           this.mapImp.clearMarkers();
+          this.closeTooltip();
         }
         this.$emit('imageThumbnailDisplay', flag)
       }
@@ -2843,6 +2847,7 @@ export default {
       currentBackground: 'white',
       availableBackground: ['white', 'lightskyblue', 'black'],
       loading: false,
+      imagesDownloading: false,
       flatmapMarker: flatmapMarker,
       provenanceEntry: createUnfilledTooltipData(),
       connectivityTooltipVisible: false,
