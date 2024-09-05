@@ -2152,7 +2152,7 @@ export default {
         }
         this.$emit('connectivity-info-open', this.provenanceEntry);
       }
-      if (this.imageThumbnailSidebar && this.viewingMode === 'Exploration') {
+      if (this.imageThumbnailSidebar && this.imageEntry.length && this.viewingMode === 'Exploration') {
         this.$emit('image-thumbnail-open', this.imageEntry)
       }
       // If UI is not disabled,
