@@ -67,6 +67,7 @@ const getBiolucidaThumbnails = async (sparcApi, organCuries, type) => {
               let image = {
                 thumbnail: thumbnailURL,
                 resource: entry.file_path,
+                biolucida_id: entry.biolucida_id,
                 id: entry.id,
                 title: getFileNameFromPath(entry.file_path),
                 type: type,
