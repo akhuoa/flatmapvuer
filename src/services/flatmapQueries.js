@@ -579,8 +579,7 @@ let FlatmapQueries = function () {
           const transformedIDs = pmids.join()
           resolve([this.pubmedSearchUrl(transformedIDs)])
         } else {
-          // return empty array for non-pubmed urls
-          resolve(pmids)
+          resolve([])
         }
       })
     })
@@ -628,7 +627,11 @@ let FlatmapQueries = function () {
         if (data.values.length > 0) {
            this.getURLsForPubMed(data.values).then((urls) => {
             this.urls = urls
-            resolve(true)
+            if (urls.length) {
+              resolve(true)
+            } else {
+              resolve(false)
+            }
           })
           .catch(() => {
             this.urls = []

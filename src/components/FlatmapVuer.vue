@@ -2918,12 +2918,14 @@ export default {
 .pathway-location {
   position: absolute;
   bottom: 0px;
+  left: 0px;
+  transform: translateX(0);
   transition: all var(--el-transition-duration);
   &.open {
-    left: 0px;
+    transform: translateX(0);
   }
   &.close {
-    left: -298px;
+    transform: translateX(-100%);
   }
 }
 
@@ -2941,6 +2943,8 @@ export default {
   text-align: left;
   overflow: auto;
   border: 1px solid rgb(220, 223, 230);
+  border-left: 0;
+  border-bottom: 0;
   padding-bottom: 16px;
   background: #ffffff;
   overflow-x: hidden;
@@ -3497,6 +3501,7 @@ export default {
     }
   }
   &.close {
+    transform: translateX(22px); // button + border width
     i {
       transform: rotate(180deg) scaleY(2);
     }

@@ -275,7 +275,7 @@ export default {
           displayWarning: true,
         },
         Vagus: {
-          taxo: 'UBERON:1759',
+          taxo: 'UBERON:0001759',
           displayWarning: true,
         },
         Sample: { taxo: 'NCBITaxon:1', displayWarning: true },
