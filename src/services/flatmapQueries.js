@@ -260,7 +260,6 @@ let FlatmapQueries = function () {
             if (processConnectivity) {
               this.processConnectivity(mapImp, connectivity).then((processedConnectivity) => {
                 // response.references is publication urls
-                // same data as mapImp.queryPublications(keastIds[0]) method
                 if (response.references) {
                   // with publications
                   this.getURLsForPubMed(response.references).then((urls) => {
