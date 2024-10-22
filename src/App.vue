@@ -175,7 +175,8 @@ export default {
         const results = this.$refs.multi
           .getCurrentFlatmap()
           .searchSuggestions(term)
-        results.__featureIds.forEach((id) => {
+        const featureIds = results.__featureIds || results.featureIds;
+        featureIds.forEach((id) => {
           const annotation = this.$refs.multi
             .getCurrentFlatmap()
             .mapImp.annotation(id)
