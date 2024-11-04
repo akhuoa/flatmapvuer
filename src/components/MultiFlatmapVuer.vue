@@ -1,6 +1,6 @@
 <template>
   <div class="multi-container" ref="multiContainer">
-    <div style="position: absolute; z-index: 10" v-if="!disableUI">
+    <div style="position: absolute; z-index: 100" v-if="!disableUI">
       <div class="species-display-text">Species</div>
       <el-popover
         content="Select a species"
@@ -752,9 +752,6 @@ export default {
 }
 
 .select-box {
-  width: 120px;
-  border-radius: 4px;
-  border: 1px solid rgb(144, 147, 153);
   background-color: var(--white);
   font-weight: 500;
   color: rgb(48, 49, 51);
@@ -766,6 +763,27 @@ export default {
     padding-top: 0.25em;
   }
   :deep() {
+    .el-select__wrapper {
+      position: relative;
+      width: fit-content;
+      box-shadow: none;
+      border-radius: 4px;
+      border: 1px solid var(--el-border-color);
+      &.is-focused {
+        border-color: $app-primary-color;
+      }
+    }
+    .el-select__selection {
+      width: fit-content;
+      position: relative;
+    }
+    .el-select__placeholder {
+      position: relative;
+      top: auto;
+      transform: none;
+      min-width: 80px;
+      width: fit-content;
+    }
     .el-input {
       .el-input__wrapper{
         &is-focus,

@@ -49,6 +49,7 @@
             <el-checkbox
               class="my-checkbox"
               :label="item[identifierKey]"
+              :value="item[identifierKey]"
               @change="visibilityToggle(item[identifierKey], $event)"
               @click="onCheckboxNativeChange"
               :checked="!('enabled' in item) || item.enabled === true"
