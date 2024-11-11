@@ -1735,10 +1735,9 @@ export default {
         let results =
           await this.flatmapQueries.retrieveFlatmapKnowledgeForEvent(this.mapImp, data)
         // The line below only creates the tooltip if some data was found on the path
-        // result 0 is the connection, result 1 is the pubmed results from flatmap
+        // the pubmed URLs are in knowledge response.references
         if (
-          results[0] ||
-          results[1] ||
+          (results && results[0]) ||
           (data.feature.hyperlinks && data.feature.hyperlinks.length > 0)
         ) {
           this.resourceForTooltip = data.resource[0]

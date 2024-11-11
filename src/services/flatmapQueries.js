@@ -243,7 +243,7 @@ let FlatmapQueries = function () {
     this.origins = []
     this.components = []
     this.urls = []
-    if (!keastIds || keastIds.length == 0) return
+    if (!keastIds || keastIds.length == 0 || !keastIds[0]) return
 
     let prom1 = this.queryForConnectivityNew(mapImp, keastIds, signal) // This on returns a promise so dont need 'await'
     // let prom2 = await this.pubmedQueryOnIds(eventData)
