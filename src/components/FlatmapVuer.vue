@@ -257,7 +257,7 @@ Please use `const` to assign meaningful names to them...
           <div
             class="pathway-location"
             :class="{ open: drawerOpen, close: !drawerOpen }"
-            v-show="!(disableUI || isCentreLine)"
+            v-show="!disableUI"
           >
             <div
               class="pathway-container"
@@ -387,17 +387,6 @@ Please use `const` to assign meaningful names to them...
                 @checkAll="checkAllTaxons"
                 ref="taxonSelection"
                 key="taxonSelection"
-              />
-              <selections-group
-                v-if="!(isCentreLine || isFC)  && centreLines && centreLines.length > 0"
-                title="Nerves"
-                labelKey="label"
-                identifierKey="key"
-                :selections="centreLines"
-                @changed="centreLinesSelected"
-                @selections-data-changed="onSelectionsDataChanged"
-                ref="centrelinesSelection"
-                key="centrelinesSelection"
               />
             </div>
             <div
@@ -1226,9 +1215,6 @@ export default {
     resetView: function () {
       if (this.mapImp) {
         this.mapImp.resetMap()
-        if (this.$refs.centrelinesSelection) {
-          this.$refs.centrelinesSelection.reset()
-        }
         if (this.$refs.skcanSelection) {
           this.$refs.skcanSelection.reset()
         }
@@ -1261,18 +1247,6 @@ export default {
     zoomOut: function () {
       if (this.mapImp) {
         this.mapImp.zoomOut()
-      }
-    },
-    /**
-     * @public
-     * Function to show or hide centrelines and nodes.
-     * The parameter ``payload`` is an object with a boolean property, ``value``,
-     * ``payload.value = true/false``.
-     * @arg {Object} `payload`
-     */
-    centreLinesSelected: function (payload) {
-      if (this.mapImp && this.mapImp.enableCentrelines) {
-        this.mapImp.enableCentrelines(payload.value)
       }
     },
     onSelectionsDataChanged: function (data) {
@@ -2347,15 +2321,10 @@ export default {
       console.log(this.mapImp.options)
       if (this.mapImp.options?.style === 'functional') {
         this.isFC = true
-      } else if (this.mapImp.options?.style === 'centreline') {
-        this.isCentreLine = true
       }
       this.mapImp.setBackgroundOpacity(1)
       this.backgroundChangeCallback(this.currentBackground)
       this.pathways = this.mapImp.pathTypes()
-      if (!this.isCentreLine && this.mapImp.enableCentrelines) {
-        this.mapImp.enableCentrelines(false)
-      }
       //Disable layers for now
       //this.layers = this.mapImp.getLayers();
       this.processSystems(this.mapImp.getSystems())
@@ -2364,7 +2333,7 @@ export default {
       this.addResizeButtonToMinimap()
       this.loading = false
       this.computePathControlsMaximumHeight()
-      this.drawerOpen = !this.isCentreLine
+      this.drawerOpen = true;
       this.mapResize()
       this.handleMapClick();
       /**
@@ -2675,13 +2644,6 @@ export default {
           key: 'VALID',
         },
       ],
-      centreLines: [
-        {
-          label: 'Display Nerves',
-          key: 'centrelines',
-          enabled: false,
-        },
-      ],
       systems: [],
       taxonConnectivity: [],
       pathwaysMaxHeight: 1000,
@@ -2707,7 +2669,6 @@ export default {
       helpModeActiveIndex: this.helpModeInitialIndex,
       yellowstar: yellowstar,
       isFC: false,
-      isCentreLine: false,
       inHelp: false,
       currentBackground: 'white',
       availableBackground: ['white', 'lightskyblue', 'black'],
@@ -2922,6 +2883,9 @@ export default {
   transform: translateX(0);
   transition: all var(--el-transition-duration);
   z-index: 99;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 
   &.open {
     transform: translateX(0);
@@ -3468,7 +3432,6 @@ export default {
   }
 }
 
-.open-drawer,
 .drawer-button {
   z-index: 8;
   width: 20px;
@@ -3478,18 +3441,6 @@ export default {
   vertical-align: middle;
   cursor: pointer;
   pointer-events: auto;
-}
-
-.open-drawer {
-  position: absolute;
-  left: 0px;
-  background-color: #f7faff;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
-}
-
-.drawer-button {
-  float: left;
-  margin-top: calc(50% - 36px);
   background-color: #f9f2fc;
 
   i {
