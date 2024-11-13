@@ -233,7 +233,7 @@ export default {
       consoleOn: true,
       searchText: '',
       disableUI: false,
-      minZoom: 4,
+      minZoom: 1,
       availableSpecies: {
         'Human Female': {
           taxo: 'NCBITaxon:9606',

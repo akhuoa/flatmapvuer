@@ -42,7 +42,7 @@
           :key="item[identifierKey]"
           :label="item[identifierKey]"
         >
-          <div class="checkbox-container" 
+          <div class="checkbox-container"
             @mouseenter="checkboxMouseEnterEmit(item[identifierKey], true)"
             @mouseleave="checkboxMouseEnterEmit(item[identifierKey], false)"
             >
@@ -162,7 +162,6 @@ export default {
       // Update the stated to send to the emit
       this.$emit('checkboxMouseEnter', { key: key, value: value, selections: this.selections, checked: this.checkedItems})
     },
-
     handleCheckedItemsChange: function (value) {
       let checkedCount = value.length
       this.checkAll = checkedCount === this.selections.length
@@ -171,7 +170,7 @@ export default {
       this.checkedItems = val
         ? this.selections.map((a) => a[this.identifierKey])
         : []
-      
+
       this.$emit('checkAll', {
         keys: this.selections.map((a) => a[this.identifierKey]),
         value: val,
@@ -187,6 +186,33 @@ export default {
         return { background: item.colour }
       }
       return {}
+    },
+    getState: function() {
+      let checkedCount = this.checkedItems.length
+      const checkAll = checkedCount === this.selections.length
+      return {
+        checkAll,
+        checked: !checkAll ? this.checkedItems : []
+      }
+    },
+    setState: function(state) {
+      this.checkAll = state.checkAll
+      this.checkedItems.length = 0
+      if (state.checked?.length) {
+        this.checkedItems.push(...state.checked)
+        this.selections.forEach((item) => {
+          const key = item[this.identifierKey]
+          this.$emit('changed', {key, value: this.checkedItems.includes(key)})
+        })
+      } else {
+        const keys = this.selections.map((a) => a[this.identifierKey])
+        let value = false
+        if (this.checkAll) {
+          value = true
+          this.checkedItems.push(...keys)
+        }
+        this.$emit('checkAll', { keys, value })
+      }
     },
     hasLineStyles: function(item) {
       return 'colour' in item && this.colourStyle === 'line'
@@ -312,7 +338,7 @@ export default {
 
 :deep(.el-checkbox__label) {
   padding-left: 5px;
-  color: $app-primary-color;
+  color: inherit !important;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0px;
@@ -333,10 +359,6 @@ export default {
 :deep(.el-row) {
   height:20px;
   margin-bottom: 0;
-}
-
-:deep(.el-checkbox__label) {
-  color: $app-primary-color !important;
 }
 
 .checkbox-row {
