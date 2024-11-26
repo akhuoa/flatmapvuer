@@ -652,6 +652,7 @@ import {
   FlatmapQueries,
   findTaxonomyLabels,
 } from '../services/flatmapQueries.js'
+import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 import * as flatmap from '@abi-software/flatmap-viewer'
@@ -660,6 +661,8 @@ import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
 import { DrawToolbar, Tooltip, TreeControls } from '@abi-software/map-utilities'
 import '@abi-software/map-utilities/dist/style.css'
+
+const ERROR_MESSAGE = 'cannot be found on the map.';
 
 const centroid = (geometry) => {
   let featureGeometry = { lng: 0, lat: 0, }
@@ -1728,6 +1731,120 @@ export default {
         this.viewingMode = modeName
       }
       this.manualAbortedOnClose()
+    },
+    /**
+     * @public
+     * Function to remove active tooltips on map.
+     */
+    removeActiveTooltips: function () {
+      const tooltips = this.$el.querySelectorAll('.flatmap-tooltip-popup');
+      tooltips.forEach((tooltip) => tooltip.remove());
+    },
+    /**
+     * Function to create tooltip for the provided connectivity data.
+     * @arg {Array} `connectivityData`
+     */
+    createTooltipForConnectivity: function (connectivityData) {
+      // combine all labels to show together
+      // content type must be DOM object to use HTML
+      const labelsContainer = document.createElement('div');
+      labelsContainer.classList.add('flatmap-feature-label');
+
+      connectivityData.forEach((connectivity, i) => {
+        const { label } = connectivity;
+        labelsContainer.append(capitalise(label));
+
+        if ((i + 1) < connectivityData.length) {
+          const hr = document.createElement('hr');
+          labelsContainer.appendChild(hr);
+        }
+      });
+
+      this.mapImp.showPopup(
+        connectivityData[0].featureId,
+        labelsContainer,
+        {
+          className: 'custom-popup flatmap-tooltip-popup',
+          positionAtLastClick: false,
+          preserveSelection: true,
+        }
+      );
+    },
+    /**
+     * Function to show connectivity tooltips on the map
+     * and highlight the nerve.
+     * @arg {Object} `payload`
+     */
+    showConnectivityTooltips: function (payload) {
+      const { connectivityInfo, data } = payload;
+      const featuresToHighlight = [];
+      const connectivityData = [];
+      const filteredConnectivityData = [];
+      const errorData = [];
+
+      if (!data.length) {
+        // Close all tooltips on the current flatmap element
+        this.removeActiveTooltips();
+      } else {
+        data.forEach((item) => {
+          connectivityData.push({
+            id: item.id,
+            label: item.label,
+          });
+        });
+      }
+
+      // to keep the highlighted path on map
+      if (connectivityInfo && connectivityInfo.featureId) {
+        featuresToHighlight.push(...connectivityInfo.featureId);
+      }
+
+      // search the features on the map first
+      if (this.mapImp) {
+        connectivityData.forEach((connectivity, i) => {
+          const {id, label} = connectivity;
+          const response = this.mapImp.search(id);
+
+          if (response?.results.length) {
+            const featureId = response?.results[0].featureId;
+
+            filteredConnectivityData.push({
+              featureId,
+              id,
+              label,
+            });
+            featuresToHighlight.push(id);
+          } else {
+            errorData.push(connectivity);
+          }
+        });
+
+        if (filteredConnectivityData.length) {
+          // show tooltip of the first item
+          // with all labels
+          this.createTooltipForConnectivity(filteredConnectivityData);
+        } else {
+          errorData.push(...connectivityData);
+          // Close all tooltips on the current flatmap element
+          this.removeActiveTooltips();
+        }
+
+        // Emit error message for connectivity graph
+        if (errorData.length) {
+          this.emitConnectivityGraphError(errorData);
+        }
+
+        // highlight all available features
+        this.mapImp.zoomToFeatures(featuresToHighlight, { noZoomIn: true });
+      }
+    },
+    emitConnectivityGraphError: function (errorData) {
+      this.$emit('connectivity-graph-error', {
+        data: {
+          errorData: errorData,
+          errorMessage: ERROR_MESSAGE,
+        }
+      });
     },
     /**
      * @public
