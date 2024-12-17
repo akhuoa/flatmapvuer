@@ -81,7 +81,9 @@ let FlatmapQueries = function () {
     this.destinations = []
     this.origins = []
     this.components = []
-    this.urls = []
+    this.rawURLs = []
+    this.pubMedURLs = []
+    this.openLibraryURLs = []
     this.controller = undefined
     this.uberons = []
     this.lookUp = []
@@ -95,7 +97,22 @@ let FlatmapQueries = function () {
     ) {
       hyperlinks = eventData.feature.hyperlinks
     } else {
-      hyperlinks = this.urls.map((url) => ({ url: url, id: 'pubmed' }))
+      // TODO: move to externalresourcecard
+      // const pubMedHyperlinks = this.pubMedURLs.map((url) => ({
+      //   url: url.link,
+      //   dataId: url.id,
+      //   id: 'pubmed'
+      // }))
+      // const openLibHyperlinks = this.openLibraryURLs.map((url) => ({
+      //   url: url.link,
+      //   dataId: url.id,
+      //   id: url.type || 'openlib'
+      // }))
+      // hyperlinks = [
+      //   ...pubMedHyperlinks,
+      //   ...openLibHyperlinks
+      // ];
+      hyperlinks = this.rawURLs;
     }
     let taxonomyLabel = undefined
     if (eventData.provenanceTaxonomy) {
@@ -245,7 +262,9 @@ let FlatmapQueries = function () {
     this.destinations = []
     this.origins = []
     this.components = []
-    this.urls = []
+    this.rawURLs = []
+    this.pubMedURLs = []
+    this.openLibraryURLs = []
     if (!keastIds || keastIds.length == 0 || !keastIds[0]) return
 
     let prom1 = this.queryForConnectivityNew(mapImp, keastIds, signal) // This on returns a promise so dont need 'await'
@@ -264,14 +283,18 @@ let FlatmapQueries = function () {
               this.processConnectivity(mapImp, connectivity).then((processedConnectivity) => {
                 // response.references is publication urls
                 if (response.references) {
-                  // with publications
-                  this.getURLsForPubMed(response.references).then((urls) => {
-                    // TODO: if empty urls array is returned,
-                    // the urls are not on PubMed.
-                    // Those urls, response.references, will be shown in another way.
-                    this.urls = urls;
-                    resolve(processedConnectivity)
-                  })
+                  // with publications from both PubMed and Others
+                  this.rawURLs = [...response.references];
+                  resolve(processedConnectivity)
+                  // TODO: move to externalResourceCard
+                  // Promise.all([
+                  //   this.getOpenLibraryURLs(response.references),
+                  //   this.getURLsForPubMed(response.references)
+                  // ]).then((urls) => {
+                  //   this.openLibraryURLs = urls[0];
+                  //   this.pubMedURLs = urls[1];
+                  //   resolve(processedConnectivity)
+                  // })
                 } else {
                   // without publications
                   resolve(processedConnectivity)
@@ -533,6 +556,17 @@ let FlatmapQueries = function () {
     })
   }
 
+  this.getPubMedDomains = function () {
+    const names = [
+      'doi.org/',
+      'nih.gov/pubmed/',
+      'pmc/articles/',
+      'pubmed.ncbi.nlm.nih.gov/',
+    ]
+
+    return names;
+  }
+
   this.extractPublicationIdFromURLString = function (urlStr) {
     if (!urlStr) return
 
@@ -540,12 +574,7 @@ let FlatmapQueries = function () {
 
     let term = {id: '', type: ''}
 
-    const names = [
-      'doi.org/',
-      'nih.gov/pubmed/',
-      'pmc/articles/',
-      'pubmed.ncbi.nlm.nih.gov/',
-    ]
+    const names = this.getPubMedDomains()
 
     names.forEach((name) => {
       const lastIndex = str.lastIndexOf(name)
@@ -579,6 +608,67 @@ let FlatmapQueries = function () {
     return term
   }
 
+  this.extractNonPubMedURLs = function (urls) {
+    const extractedURLs = [];
+    const names = this.getPubMedDomains();
+
+    urls.forEach((url) => {
+      let count = 0;
+      names.forEach((name) => {
+        if (url.includes(name)) {
+          count++;
+        }
+      });
+      if (!count) {
+        extractedURLs.push(url);
+      }
+    });
+
+    return extractedURLs;
+  }
+
+  this.getOpenLibraryURLs = async function (urls) {
+    const transformedURLs = [];
+    const nonPubMedURLs = this.extractNonPubMedURLs(urls);
+    const openLibraryURLs = nonPubMedURLs.filter((url) => url.indexOf('isbn') !== -1);
+
+    const isbnIDs = openLibraryURLs.map((url) => {
+      const isbnId = url.split('/').pop();
+      return 'ISBN:' + isbnId;
+    });
+    const isbnIDsKey = isbnIDs.join(',');
+    const failedIDs = isbnIDs.slice();
+
+    const openlibAPI = `https://openlibrary.org/api/books?bibkeys=${isbnIDsKey}&format=json`;
+    const response = await fetch(openlibAPI);
+    const data = await response.json();
+
+    for (const key in data) {
+      const successKeyIndex = failedIDs.indexOf(key);
+      failedIDs.splice(successKeyIndex, 1);
+
+      transformedURLs.push({
+        id: key.split(':')[1], // Key => "ISBN:1234"
+        link: data[key].info_url,
+      });
+    }
+
+    failedIDs.forEach((failedID) => {
+      const id = failedID.split(':')[1];
+      // TODO: to replace ISBN DB ?
+      // Data does not exist in OpenLibrary
+      // Provide ISBN DB link
+      const link = `https://isbndb.com/book/${id}`;
+      transformedURLs.push({
+        id: id,
+        link: link,
+        type: 'isbndb'
+      });
+    });
+
+    return transformedURLs;
+  }
+
   this.getURLsForPubMed = function (data) {
     return new Promise((resolve) => {
       const ids = data.map((id) =>
@@ -588,8 +678,14 @@ let FlatmapQueries = function () {
       )
       this.convertPublicationIds(ids).then((pmids) => {
         if (pmids.length > 0) {
-          const transformedIDs = pmids.join()
-          resolve([this.pubmedSearchUrl(transformedIDs)])
+          const transformedIDs = [];
+          pmids.forEach(pmid => {
+            transformedIDs.push({
+              id: pmid,
+              link: this.pubmedSearchUrl(pmid),
+            })
+          })
+          resolve(transformedIDs)
         } else {
           resolve([])
         }
@@ -638,7 +734,7 @@ let FlatmapQueries = function () {
         // Create pubmed url on paths if we have them
         if (data.values.length > 0) {
            this.getURLsForPubMed(data.values).then((urls) => {
-            this.urls = urls
+            this.pubMedURLs = urls
             if (urls.length) {
               resolve(true)
             } else {
@@ -646,7 +742,7 @@ let FlatmapQueries = function () {
             }
           })
           .catch(() => {
-            this.urls = []
+            this.pubMedURLs = []
             resolve(false)
           })
         } else {
@@ -665,15 +761,15 @@ let FlatmapQueries = function () {
     ).then((data) => {
       if (Array.isArray(data.values) && data.values.length > 0) {
         this.getURLsForPubMed(data.values).then((urls) => {
-          this.urls = urls
+          this.pubMedURLs = urls
           return true
         })
         .catch(() => {
-          this.urls = []
+          this.pubMedURLs = []
           return false
         })
       } else {
-        this.urls = [] // Clears the pubmed search button
+        this.pubMedURLs = [] // Clears the pubmed search button
       }
       return false
     })
