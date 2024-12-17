@@ -156,8 +156,8 @@ describe('MultiFlatmapVuer', () => {
 
         // Test the search
         }).then(() => {
-          flatmapVuer.searchAndShowResult('body proper', 'body proper')
-          cy.get('.maplibregl-popup').should('exist').contains('body proper')
+          flatmapVuer.searchAndShowResult('body proper', true)
+          cy.get('.maplibregl-popup').should('exist').contains('Body proper')
         })
 
       })

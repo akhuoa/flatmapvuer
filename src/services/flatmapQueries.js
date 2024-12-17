@@ -481,23 +481,25 @@ let FlatmapQueries = function () {
         //
         const promises = []
         const results = []
-        idsList.forEach((id) => {
-          const wrapped = '"' + id + '"'
-          const params = new URLSearchParams({
-            db: 'pubmed',
-            term: wrapped,
-            format: 'json'
-          })
-          const promise = fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?${params}`, {
-            method: 'GET',
-          })
-          .then((response) => response.json())
-          .then((data) => {
-            const newIds = data.esearchresult ? data.esearchresult.idlist : []
-            results.push(...newIds)
-          })
-          promises.push(promise)
+        let wrapped = ''
+        idsList.forEach((id, i) => {
+          wrapped += i > 0 ? 'OR"' + id + '"' : '"' + id + '"'
         })
+
+        const params = new URLSearchParams({
+          db: 'pubmed',
+          term: wrapped,
+          format: 'json'
+        })
+        const promise = fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?${params}`, {
+          method: 'GET',
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          const newIds = data.esearchresult ? data.esearchresult.idlist : []
+          results.push(...newIds)
+        })
+        promises.push(promise)
 
         Promise.all(promises).then(() => {
           resolve(results)
