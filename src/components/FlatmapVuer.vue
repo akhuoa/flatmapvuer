@@ -614,7 +614,7 @@ Please use `const` to assign meaningful names to them...
       <Tooltip
         ref="tooltip"
         class="tooltip"
-        v-show="tooltipDisplay"
+        v-if="tooltipDisplay"
         :annotationEntry="annotationEntry"
         :tooltipEntry="tooltipEntry"
         :annotationDisplay="viewingMode === 'Annotation'"

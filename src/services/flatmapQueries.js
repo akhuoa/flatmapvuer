@@ -82,8 +82,6 @@ let FlatmapQueries = function () {
     this.origins = []
     this.components = []
     this.rawURLs = []
-    this.pubMedURLs = []
-    this.openLibraryURLs = []
     this.controller = undefined
     this.uberons = []
     this.lookUp = []
@@ -97,21 +95,6 @@ let FlatmapQueries = function () {
     ) {
       hyperlinks = eventData.feature.hyperlinks
     } else {
-      // TODO: move to externalresourcecard
-      // const pubMedHyperlinks = this.pubMedURLs.map((url) => ({
-      //   url: url.link,
-      //   dataId: url.id,
-      //   id: 'pubmed'
-      // }))
-      // const openLibHyperlinks = this.openLibraryURLs.map((url) => ({
-      //   url: url.link,
-      //   dataId: url.id,
-      //   id: url.type || 'openlib'
-      // }))
-      // hyperlinks = [
-      //   ...pubMedHyperlinks,
-      //   ...openLibHyperlinks
-      // ];
       hyperlinks = this.rawURLs;
     }
     let taxonomyLabel = undefined
@@ -263,12 +246,9 @@ let FlatmapQueries = function () {
     this.origins = []
     this.components = []
     this.rawURLs = []
-    this.pubMedURLs = []
-    this.openLibraryURLs = []
     if (!keastIds || keastIds.length == 0 || !keastIds[0]) return
 
     let prom1 = this.queryForConnectivityNew(mapImp, keastIds, signal) // This on returns a promise so dont need 'await'
-    // let prom2 = await this.pubmedQueryOnIds(eventData)
     let results = await Promise.all([prom1])
     return results
   }
@@ -286,15 +266,6 @@ let FlatmapQueries = function () {
                   // with publications from both PubMed and Others
                   this.rawURLs = [...response.references];
                   resolve(processedConnectivity)
-                  // TODO: move to externalResourceCard
-                  // Promise.all([
-                  //   this.getOpenLibraryURLs(response.references),
-                  //   this.getURLsForPubMed(response.references)
-                  // ]).then((urls) => {
-                  //   this.openLibraryURLs = urls[0];
-                  //   this.pubMedURLs = urls[1];
-                  //   resolve(processedConnectivity)
-                  // })
                 } else {
                   // without publications
                   resolve(processedConnectivity)
@@ -492,207 +463,6 @@ let FlatmapQueries = function () {
     return found.flat()
   }
 
-  this.stripPMIDPrefix = function (pubmedId) {
-    return pubmedId.split(':')[1]
-  }
-
-  this.getPMID = function(idsList) {
-    return new Promise((resolve) => {
-      if (idsList.length > 0) {
-        //Muliple term search does not work well,
-        //DOIs term get splitted unexpectedly
-        //
-        const promises = []
-        const results = []
-        let wrapped = ''
-        idsList.forEach((id, i) => {
-          wrapped += i > 0 ? 'OR"' + id + '"' : '"' + id + '"'
-        })
-
-        const params = new URLSearchParams({
-          db: 'pubmed',
-          term: wrapped,
-          format: 'json'
-        })
-        const promise = fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?${params}`, {
-          method: 'GET',
-        })
-        .then((response) => response.json())
-        .then((data) => {
-          const newIds = data.esearchresult ? data.esearchresult.idlist : []
-          results.push(...newIds)
-        })
-        promises.push(promise)
-
-        Promise.all(promises).then(() => {
-          resolve(results)
-        }).catch(() => {
-          resolve(results)
-        })
-      } else {
-        resolve([])
-      }
-    })
-  }
-
-  this.convertPublicationIds = function (ids) {
-    return new Promise((resolve) => {
-      const pmids = []
-      const toBeConverted = []
-      ids.forEach((id) => {
-        if (id.type === "pmid") {
-          pmids.push(id.id)
-        } else if (id.type === "doi" || id.type === "pmc") {
-          toBeConverted.push(id.id)
-        }
-      })
-      this.getPMID(toBeConverted).then((idList) => {
-        pmids.push(...idList)
-        resolve(pmids)
-      })
-      .catch(() => {
-        resolve(pmids)
-      })
-    })
-  }
-
-  this.getPubMedDomains = function () {
-    const names = [
-      'doi.org/',
-      'nih.gov/pubmed/',
-      'pmc/articles/',
-      'pubmed.ncbi.nlm.nih.gov/',
-    ]
-
-    return names;
-  }
-
-  this.extractPublicationIdFromURLString = function (urlStr) {
-    if (!urlStr) return
-
-    const str = decodeURIComponent(urlStr)
-
-    let term = {id: '', type: ''}
-
-    const names = this.getPubMedDomains()
-
-    names.forEach((name) => {
-      const lastIndex = str.lastIndexOf(name)
-      if (lastIndex !== -1) {
-        term.id = str.slice(lastIndex + name.length)
-        if (name === 'doi.org/') {
-          term.type = "doi"
-        } else if (name === 'pmc/articles/') {
-          term.type = "pmc"
-        } else {
-          term.type = "pmid"
-        }
-      }
-    })
-
-    //Backward compatability with doi: and PMID:
-    if (term.id === '') {
-      if (urlStr.includes("doi:")) {
-        term.id = this.stripPMIDPrefix(urlStr)
-        term.type = "doi"
-      } else if (urlStr.includes("PMID:")) {
-        term.id = this.stripPMIDPrefix(urlStr)
-        term.type = "pmid"
-      }
-    }
-
-    if (term.id.endsWith('/')) {
-      term.id = term.id.slice(0, -1)
-    }
-
-    return term
-  }
-
-  this.extractNonPubMedURLs = function (urls) {
-    const extractedURLs = [];
-    const names = this.getPubMedDomains();
-
-    urls.forEach((url) => {
-      let count = 0;
-      names.forEach((name) => {
-        if (url.includes(name)) {
-          count++;
-        }
-      });
-      if (!count) {
-        extractedURLs.push(url);
-      }
-    });
-
-    return extractedURLs;
-  }
-
-  this.getOpenLibraryURLs = async function (urls) {
-    const transformedURLs = [];
-    const nonPubMedURLs = this.extractNonPubMedURLs(urls);
-    const openLibraryURLs = nonPubMedURLs.filter((url) => url.indexOf('isbn') !== -1);
-
-    const isbnIDs = openLibraryURLs.map((url) => {
-      const isbnId = url.split('/').pop();
-      return 'ISBN:' + isbnId;
-    });
-    const isbnIDsKey = isbnIDs.join(',');
-    const failedIDs = isbnIDs.slice();
-
-    const openlibAPI = `https://openlibrary.org/api/books?bibkeys=${isbnIDsKey}&format=json`;
-    const response = await fetch(openlibAPI);
-    const data = await response.json();
-
-    for (const key in data) {
-      const successKeyIndex = failedIDs.indexOf(key);
-      failedIDs.splice(successKeyIndex, 1);
-
-      transformedURLs.push({
-        id: key.split(':')[1], // Key => "ISBN:1234"
-        link: data[key].info_url,
-      });
-    }
-
-    failedIDs.forEach((failedID) => {
-      const id = failedID.split(':')[1];
-      // TODO: to replace ISBN DB ?
-      // Data does not exist in OpenLibrary
-      // Provide ISBN DB link
-      const link = `https://isbndb.com/book/${id}`;
-      transformedURLs.push({
-        id: id,
-        link: link,
-        type: 'isbndb'
-      });
-    });
-
-    return transformedURLs;
-  }
-
-  this.getURLsForPubMed = function (data) {
-    return new Promise((resolve) => {
-      const ids = data.map((id) =>
-        (typeof id === 'object') ?
-        this.extractPublicationIdFromURLString(id[0]) :
-        this.extractPublicationIdFromURLString(id)
-      )
-      this.convertPublicationIds(ids).then((pmids) => {
-        if (pmids.length > 0) {
-          const transformedIDs = [];
-          pmids.forEach(pmid => {
-            transformedIDs.push({
-              id: pmid,
-              link: this.pubmedSearchUrl(pmid),
-            })
-          })
-          resolve(transformedIDs)
-        } else {
-          resolve([])
-        }
-      })
-    })
-  }
-
   this.buildPubmedSqlStatement = function (keastIds) {
     let sql = 'select distinct publication from publications where entity in ('
     if (keastIds.length === 1) {
@@ -722,64 +492,6 @@ let FlatmapQueries = function () {
       .catch((error) => {
         console.error('Error:', error)
       })
-  }
-  // Note that this functin WILL run to the end, as it doesn not catch the second level of promises
-  this.pubmedQueryOnIds = function (eventData) {
-    return new Promise((resolve) => {
-      const keastIds = eventData.resource
-      const source = eventData.feature.source
-      if (!keastIds || keastIds.length === 0) return
-      const sql = this.buildPubmedSqlStatement(keastIds)
-      this.flatmapQuery(sql).then((data) => {
-        // Create pubmed url on paths if we have them
-        if (data.values.length > 0) {
-           this.getURLsForPubMed(data.values).then((urls) => {
-            this.pubMedURLs = urls
-            if (urls.length) {
-              resolve(true)
-            } else {
-              resolve(false)
-            }
-          })
-          .catch(() => {
-            this.pubMedURLs = []
-            resolve(false)
-          })
-        } else {
-          // Create pubmed url on models
-          this.pubmedQueryOnModels(source).then((result) => {
-            resolve(result)
-          })
-        }
-      })
-    })
-  }
-
-  this.pubmedQueryOnModels = function (source) {
-    return this.flatmapQuery(
-      this.buildPubmedSqlStatementForModels(source)
-    ).then((data) => {
-      if (Array.isArray(data.values) && data.values.length > 0) {
-        this.getURLsForPubMed(data.values).then((urls) => {
-          this.pubMedURLs = urls
-          return true
-        })
-        .catch(() => {
-          this.pubMedURLs = []
-          return false
-        })
-      } else {
-        this.pubMedURLs = [] // Clears the pubmed search button
-      }
-      return false
-    })
-  }
-
-  this.pubmedSearchUrl = function (ids) {
-    let url = 'https://pubmed.ncbi.nlm.nih.gov/?'
-    let params = new URLSearchParams()
-    params.append('term', ids)
-    return url + params.toString()
   }
 }
 
