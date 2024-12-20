@@ -11,11 +11,11 @@
       "iconClass": "mapicon-icon_human",
       "displayWarning": true
     },
-    "Rat (NPO)": {
-      "taxo": "NCBITaxon:10116",
-      "iconClass": "mapicon-icon_rat",
-      "displayWarning": true,
-      "displayLatestChanges": true
+    "Human Male": {
+      "taxo": "NCBITaxon:9606",
+      "biologicalSex": "PATO:0000384",
+      "iconClass": "mapicon-icon_human",
+      "displayWarning": true
     },
     "Functional Connectivity": {
       "taxo": "FunctionalConnectivity",
