@@ -152,7 +152,6 @@ Please use `const` to assign meaningful names to them...
           class: '.maplibregl-canvas',
         }"
         :toolbarOptions="toolbarOptions"
-        :drawnType="drawnType"
         :activeDrawTool="activeDrawTool"
         :activeDrawMode="activeDrawMode"
         :newlyDrawnEntry="drawnCreatedEvent"
@@ -454,44 +453,22 @@ Please use `const` to assign meaningful names to them...
               </template>
             </div>
             <el-row class="viewing-mode-description">
-              {{ viewingModes[viewingMode] }}
+              {{ modeDescription }}
             </el-row>
           </el-row>
           <template v-if="viewingMode === 'Annotation' && userInformation">
-            <el-row class="backgroundText">Drawn By*</el-row>
+            <el-row class="backgroundText">Annotations From</el-row>
             <el-row class="backgroundControl">
               <el-select
                 :teleported="false"
-                v-model="drawnType"
+                v-model="annotationFrom"
                 placeholder="Select"
                 class="select-box"
                 popper-class="flatmap_dropdown"
-                @change="setDrawnType"
+                @change="setAnnotationFrom"
               >
                 <el-option
-                  v-for="item in drawnTypes"
-                  :key="item"
-                  :label="item"
-                  :value="item"
-                >
-                  <el-row>
-                    <el-col :span="12">{{ item }}</el-col>
-                  </el-row>
-                </el-option>
-              </el-select>
-            </el-row>
-            <el-row class="backgroundText">Annotated By*</el-row>
-            <el-row class="backgroundControl">
-              <el-select
-                :teleported="false"
-                v-model="annotatedType"
-                placeholder="Select"
-                class="select-box"
-                popper-class="flatmap_dropdown"
-                @change="setAnnotatedType"
-              >
-                <el-option
-                  v-for="item in annotatedTypes"
+                  v-for="item in annotatedSource"
                   :key="item"
                   :label="item"
                   :value="item"
@@ -668,20 +645,24 @@ const centroid = (geometry) => {
   let featureGeometry = { lng: 0, lat: 0, }
   let coordinates
   if (geometry.type === "Polygon") {
-    coordinates = geometry.coordinates[0]
+    if (geometry.coordinates.length) {
+      coordinates = geometry.coordinates[0]
+    }
   } else {
     coordinates = geometry.coordinates
   }
-  if (!(geometry.type === 'Point')) {
-    coordinates.map((coor) => {
-      featureGeometry.lng += parseFloat(coor[0])
-      featureGeometry.lat += parseFloat(coor[1])
-    })
-    featureGeometry.lng = featureGeometry.lng / coordinates.length
-    featureGeometry.lat = featureGeometry.lat / coordinates.length
-  } else {
-    featureGeometry.lng += parseFloat(coordinates[0])
-    featureGeometry.lat += parseFloat(coordinates[1])
+  if (coordinates) {    
+    if (!(geometry.type === 'Point')) {
+      coordinates.map((coor) => {
+        featureGeometry.lng += parseFloat(coor[0])
+        featureGeometry.lat += parseFloat(coor[1])
+      })
+      featureGeometry.lng = featureGeometry.lng / coordinates.length
+      featureGeometry.lat = featureGeometry.lat / coordinates.length
+    } else {
+      featureGeometry.lng += parseFloat(coordinates[0])
+      featureGeometry.lat += parseFloat(coordinates[1])
+    }
   }
   return featureGeometry
 }
@@ -773,6 +754,7 @@ export default {
       if (this.annotationSidebar) this.$emit("annotation-close")
       this.closeTooltip()
       this.annotationEventCallback({}, { type: 'aborted' })
+      this.initialiseDrawing()
     },
     /**
      * @public
@@ -848,21 +830,19 @@ export default {
      * @arg {String} `name`
      */
     toolbarEvent: function (type, name) {
+      if (this.isValidDrawnCreated) return;
       this.manualAbortedOnClose()
       this.doubleClickedFeature = false
-      this.connectionEntry = {}
+      // Deselect any feature when draw mode/tool is changed
+      this.changeAnnotationDrawMode({ mode: 'simple_select' })
       if (type === 'mode') {
-        // Deselect any feature when draw mode is changed
-        this.changeAnnotationDrawMode({ mode: 'simple_select' })
         this.activeDrawMode = name
       } else if (type === 'tool') {
+        // Remove any unsubmitted drawn
+        this.cancelDrawnFeature()
         if (name) {
           const tool = name.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
           this.changeAnnotationDrawMode({ mode: `draw${tool}` })
-          this.initialiseDrawing()
-        } else {
-          this.changeAnnotationDrawMode({ mode: 'simple_select' })
-          this.cancelDrawnFeature()
         }
         this.activeDrawTool = name
       }
@@ -885,8 +865,7 @@ export default {
           }
           this.doubleClickedFeature = false
         }
-      }
-      if (this.activeDrawMode === 'Delete') {
+      } else if (this.activeDrawMode === 'Delete') {
         this.changeAnnotationDrawMode({
           mode: 'simple_select',
           options: { featureIds: [data.feature.feature.id] }
@@ -972,9 +951,12 @@ export default {
       ) {
         this.featureAnnotationSubmitted = true
         this.mapImp.commitAnnotationEvent(this.annotationEntry)
-        if (this.annotationEntry.type === 'deleted') {
+        if (annotation.body.comment === "Position Updated") {
+          this.annotationEntry.positionUpdated = false
+        } else if (this.annotationEntry.type === 'deleted') {
           if (this.annotationSidebar) this.$emit("annotation-close")
           this.closeTooltip()
+          // Only delete need, keep the annotation tooltip/sidebar open if created/updated
           this.annotationEntry = {}
         }
         this.addAnnotationFeature()
@@ -1015,12 +997,6 @@ export default {
       let drawnFeatures = await this.annotator.drawnFeatures(this.userToken, this.serverURL, annotatedItemIds)
       // The annotator has `resource` and `features` fields
       if ('resource' in drawnFeatures) drawnFeatures = drawnFeatures.features
-      // Use to switch the displayed feature type
-      if (this.drawnType !== 'All tools') {
-        drawnFeatures = drawnFeatures.filter((feature) => {
-          return feature.geometry.type === this.drawnType
-        })
-      }
       return drawnFeatures
     },
     /**
@@ -1029,22 +1005,22 @@ export default {
      */
     addAnnotationFeature: async function () {
       if (this.mapImp) {
-        if (!this.featureAnnotationSubmitted) this.clearAnnotationFeature()
-        if (this.drawnType !== 'None') {
-          if (!this.featureAnnotationSubmitted) this.loading = true
-          const userId = this.annotatedType === 'Anyone' ?
-            undefined : this.userInformation.orcid ?
-              this.userInformation.orcid : '0000-0000-0000-0000'
-          const participated = this.annotatedType === 'Anyone' ?
-            undefined : this.annotatedType === 'Me' ?
-              true : false
-          const drawnFeatures = await this.fetchDrawnFeatures(userId, participated)
-          this.existDrawnFeatures = drawnFeatures
-          this.loading = false
-          if (!this.featureAnnotationSubmitted) {
-            for (const feature of drawnFeatures) {
-              this.mapImp.addAnnotationFeature(feature)
-            }
+        if (!this.featureAnnotationSubmitted) {
+          this.clearAnnotationFeature()
+          this.loading = true
+        }
+        const userId = this.annotationFrom === 'Anyone' ?
+          undefined : this.userInformation.orcid ?
+            this.userInformation.orcid : '0000-0000-0000-0000'
+        const participated = this.annotationFrom === 'Anyone' ?
+          undefined : this.annotationFrom === 'Me' ?
+            true : false
+        const drawnFeatures = await this.fetchDrawnFeatures(userId, participated)
+        this.existDrawnFeatures = drawnFeatures
+        this.loading = false
+        if (!this.featureAnnotationSubmitted) {
+          for (const feature of drawnFeatures) {
+            this.mapImp.addAnnotationFeature(feature)
           }
         }
       }
@@ -1064,24 +1040,11 @@ export default {
     },
     /**
      * @public
-     * Function to switch the type of annotation.
-     * @arg {Boolean} `flag`
-     */
-    setDrawnType: function (flag) {
-      this.drawnType = flag
-      if (this.mapImp) {
-        this.manualAbortedOnClose()
-        this.addAnnotationFeature()
-        this.initialiseDrawing()
-      }
-    },
-    /**
-     * @public
      * Function to switch the type of person who annotated.
      * @arg {Boolean} `flag`
      */
-    setAnnotatedType: function (flag) {
-      this.annotatedType = flag
+    setAnnotationFrom: function (flag) {
+      this.annotationFrom = flag
       if (this.mapImp) {
         this.manualAbortedOnClose()
         this.addAnnotationFeature()
@@ -1589,7 +1552,7 @@ export default {
         this.annotationEntry = {}
       } else if (data.type === 'modeChanged') {
         if (data.feature.mode === 'direct_select') this.doubleClickedFeature = true
-        if (this.annotationSidebar && data.feature.mode === 'simple_select') {
+        if (this.annotationSidebar && data.feature.mode === 'simple_select' && this.activeDrawMode === 'Deleted') {
           this.annotationEventCallback({}, { type: 'aborted' })
         }
       } else if (data.type === 'selectionChanged') {
@@ -1607,6 +1570,15 @@ export default {
               this.connectionEntry = drawnFeature.connection
             }
             this.annotationDrawModeEvent(payload)
+          } else {
+            if (this.annotationSidebar && this.previousEditEvent.type === 'updated') {
+              this.annotationEntry = {
+                ...this.previousEditEvent,
+                resourceId: this.serverURL
+              }
+              this.annotationEventCallback({}, { type: 'aborted' })
+            }
+            this.previousEditEvent = {}
           }
         }
       } else {
@@ -1624,6 +1596,7 @@ export default {
         if (data.type === 'created') this.drawnCreatedEvent = payload
         else this.checkAndCreatePopups(payload)
       }
+      if (data.type === 'updated') this.previousEditEvent = data
       if (data.type === 'deleted') this.previousDeletedEvent = data
       else this.previousDeletedEvent = {}
     },
@@ -1870,12 +1843,8 @@ export default {
           if (data.feature.featureId && data.feature.models) {
             this.displayTooltip(data.feature.models)
           } else if (data.feature.feature) {
-            // in drawing or edit/delete mode is on or has connectivity
-            if (
-              this.activeDrawTool ||
-              this.activeDrawMode ||
-              Object.keys(this.connectionEntry).length > 0
-            ) {
+            // in drawing or edit/delete mode is on or valid drawn
+            if (this.activeDrawTool || this.activeDrawMode || this.isValidDrawnCreated) {
               this.featureAnnotationSubmitted = false
               this.annotationEntry.featureId = data.feature.feature.id
               if (this.activeDrawTool) {
@@ -2178,8 +2147,7 @@ export default {
         !this.disableUI && (
           (
             this.viewingMode === 'Annotation' &&
-            !this.annotationSidebar &&
-            this.userInformation
+            !this.annotationSidebar
           ) ||
           (
             this.viewingMode === 'Exploration' &&
@@ -2193,7 +2161,6 @@ export default {
           this.mapImp.showPopup(featureId, this.$refs.tooltip.$el, options);
           this.popUpCssHacks();
         });
-
       }
     },
     hasTooltipEntry: function () {
@@ -2958,12 +2925,10 @@ export default {
       viewingModes: {
         'Exploration': 'Find relevant research and view detail of neural pathways by selecting a pathway to view its connections and data sources',
         'Neuron Connection': 'Discover Neuron connections by selecting a neuron and viewing its associated network connections',
-        'Annotation': 'View internal identifiers of features'
+        'Annotation': ['View feature annotations', 'Add, comment on and view feature annotations']
       },
-      drawnType: 'All tools',
-      drawnTypes: ['All tools', 'Point', 'LineString', 'Polygon', 'None'],
-      annotatedType: 'Anyone',
-      annotatedTypes: ['Anyone', 'Me', 'Others'],
+      annotationFrom: 'Anyone',
+      annotatedSource: ['Anyone', 'Me', 'Others'],
       openMapRef: undefined,
       backgroundIconRef: undefined,
       toolbarOptions: [
@@ -2980,6 +2945,7 @@ export default {
       activeDrawTool: undefined,
       featureAnnotationSubmitted: false,
       drawnCreatedEvent: {},
+      previousEditEvent: {},
       previousDeletedEvent: {},
       connectionEntry: {},
       existDrawnFeatures: [], // Store all exist drawn features
@@ -3034,7 +3000,17 @@ export default {
       }
       this.drawerOpen = false
       return true
-    }
+    },
+    modeDescription: function () {
+      let description = this.viewingModes[this.viewingMode]
+      if (this.viewingMode === 'Annotation') {
+        if (this.userInformation) {
+          return description[1]
+        }
+        return description[0]
+      }
+      return description
+    },
   },
   watch: {
     entry: function () {
