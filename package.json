@@ -1,6 +1,6 @@
 {
   "name": "@abi-software/flatmapvuer",
-  "version": "1.6.2-beta.11",
+  "version": "1.6.2-beta.12",
   "license": "Apache-2.0",
   "files": [
     "dist/*",
