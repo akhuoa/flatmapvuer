@@ -1901,7 +1901,9 @@ export default {
      * Function to close tooltip.
      */
     closeTooltip: function () {
-      this.$refs.tooltip.$el.style.display = 'none'
+      if (this.$refs.tooltip) {
+        this.$refs.tooltip.$el.style.display = 'none'
+      }
       document.querySelectorAll('.maplibregl-popup').forEach((item) => {
         item.style.display = 'none'
       })
