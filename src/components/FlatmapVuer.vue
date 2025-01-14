@@ -1703,6 +1703,12 @@ export default {
      * Function to remove active tooltips on map.
      */
     removeActiveTooltips: function () {
+      // Remove active tooltip/popup on map
+      if (this.mapImp) {
+        this.mapImp.removePopup();
+      }
+
+      // Fallback: remove any existing toolitp on DOM
       const tooltips = this.$el.querySelectorAll('.flatmap-tooltip-popup');
       tooltips.forEach((tooltip) => tooltip.remove());
     },
@@ -3424,6 +3430,12 @@ export default {
       height: 0;
       border-style: solid;
       flex-shrink: 0;
+    }
+
+    hr {
+      margin: 0.5rem 0;
+      border: 0;
+      border-top: 1px solid var(--el-border-color);
     }
   }
   .maplibregl-popup-tip {
