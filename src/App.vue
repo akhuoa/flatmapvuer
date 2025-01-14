@@ -245,45 +245,38 @@ export default {
           taxo: 'NCBITaxon:9606',
           biologicalSex: 'PATO:0000383',
           iconClass: 'mapicon-icon_human',
-          displayWarning: true,
         },
         'Human Male': {
           taxo: 'NCBITaxon:9606',
           biologicalSex: 'PATO:0000384',
           iconClass: 'mapicon-icon_human',
-          displayWarning: true,
+          displayLatestChanges: true,
         },
         Rat: {
           taxo: 'NCBITaxon:10114',
           iconClass: 'mapicon-icon_rat',
-          displayWarning: true,
           displayLatestChanges: true,
         },
         'Rat (NPO)': {
           taxo: 'NCBITaxon:10116',
           iconClass: 'mapicon-icon_rat',
-          displayWarning: true,
           displayLatestChanges: true,
         },
         Mouse: {
           taxo: 'NCBITaxon:10090',
           iconClass: 'mapicon-icon_mouse',
-          displayWarning: true,
         },
         Kember: { taxo: 'ABI:1000001', displayWarning: true },
         Pig: {
           taxo: 'NCBITaxon:9823',
           iconClass: 'mapicon-icon_pig',
-          displayWarning: true,
         },
         Cat: {
           taxo: 'NCBITaxon:9685',
           iconClass: 'mapicon-icon_cat',
-          displayWarning: true,
         },
         Vagus: {
           taxo: 'UBERON:0001759',
-          displayWarning: true,
         },
         Sample: { taxo: 'NCBITaxon:1', displayWarning: true },
         'Functional Connectivity': {

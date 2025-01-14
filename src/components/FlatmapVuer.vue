@@ -75,18 +75,17 @@ Please use `const` to assign meaningful names to them...
             <template #reference>
               <div
                 class="warning-icon"
-                v-if="displayWarning"
                 @mouseover="showTooltip(7)"
                 @mouseout="hideTooltip(7)"
               >
-                <el-icon><el-icon-warning-filled /></el-icon>
+                <el-icon v-if="displayWarning || isLegacy"><el-icon-warning-filled /></el-icon>
                 <template v-if="isLegacy">
                   <span class="warning-text">Legacy Map</span>
                   <div class="latest-map-text" @click="viewLatestMap">
                     Click here for the latest map
                   </div>
                 </template>
-                <template v-else>
+                <template v-else-if="displayWarning">
                   <span class="warning-text">Beta</span>
                 </template>
               </div>
@@ -114,16 +113,10 @@ Please use `const` to assign meaningful names to them...
             </div>
           </template>
           <template #default>
-            <b>Connectivity Graph</b>
+            <b>Connectivity References</b>
             <p>
-              You can now view individual connectivity after clicking
-              on a connection in exploration mode.
-            </p>
-            <b>Interactive connectivity list and graph</b>
-            <p>
-              Corresponding features on the map can be located when
-              hovering or clicking on the features in the connecitivity
-              list and graph.
+              Connectivity references have been improved and available
+              in various formats.
             </p>
             <b>Improved state storing</b>
             <p>
