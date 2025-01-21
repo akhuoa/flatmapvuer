@@ -1823,11 +1823,13 @@ export default {
         }
 
         // highlight all available features
-        this.mapImp.selectFeatures(featuresToHighlight);
+        const featureIdsToHighlight = this.mapImp.modelFeatureIdList(featuresToHighlight);
+        const allFeaturesToHighlight = [
+          ...featureIdsToHighlight,
+          ...geojsonHighlights
+        ];
 
-        if (geojsonHighlights.length) {
-          this.mapImp.selectGeoJSONFeatures(geojsonHighlights);
-        }
+        this.mapImp.selectGeoJSONFeatures(allFeaturesToHighlight);
       }
     },
     emitConnectivityGraphError: function (errorData) {
