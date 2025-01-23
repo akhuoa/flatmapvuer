@@ -2157,6 +2157,15 @@ export default {
         if (this.featuresAlert) {
           this.tooltipEntry['featuresAlert'] = this.featuresAlert;
         }
+        // Get connectivity knowledge source | SCKAN release
+        if (this.mapImp.provenance?.connectivity) {
+          const sckanProvenance = this.mapImp.provenance.connectivity;
+          if ('knowledge-source' in sckanProvenance) {
+            this.tooltipEntry['knowledge-source'] = sckanProvenance['knowledge-source'];
+          } else if ('npo' in sckanProvenance) {
+            this.tooltipEntry['knowledge-source'] = `${sckanProvenance.npo.release}-npo`;
+          }
+        }
         this.$emit('connectivity-info-open', this.tooltipEntry);
       }
       if (this.annotationSidebar && this.viewingMode === 'Annotation') {
