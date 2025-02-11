@@ -1637,6 +1637,7 @@ export default {
               provenanceTaxonomy: taxons,
             }
             if (eventType === 'click') {
+              this.setConnectivityDataSource(this.viewingMode, data);
               this.featuresAlert = data.alert
               //The following will be used to track either a feature is selected
               this.statesTracking.activeClick = true
@@ -1678,7 +1679,6 @@ export default {
               // Disable popup when drawing
               !this.activeDrawTool
             ) {
-              this.connectivityDataSource = data.source;
               this.checkAndCreatePopups(payload)
             }
             this.$emit('resource-selected', payload)
@@ -1686,6 +1686,23 @@ export default {
             this.$emit('pan-zoom-callback', data)
           }
         }
+      }
+    },
+    /**
+     * The data for connectivity data source is just a placeholder data
+     * to check which part of the map is clicked, e.g., path or feture or empty area,
+     * based on the viewing mode.
+     * The "connectivity-info-close" event will be emitted based on this data
+     * when there has a click event on map.
+     * @param viewingMode
+     * @param data
+     */
+    setConnectivityDataSource: function (viewingMode, data) {
+      // for Exploration mode, only path click will be used as data source
+      this.connectivityDataSource = data.source;
+      // for other modes, it can be feature or path
+      if (viewingMode === 'Neuron Connection' || viewingMode === 'Annotation') {
+        this.connectivityDataSource = data.featureId;
       }
     },
     /**
