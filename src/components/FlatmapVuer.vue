@@ -1836,16 +1836,22 @@ export default {
       }
     },
     showConnectivitiesByReference: function (resource) {
-      const flatmapKnowledge = sessionStorage.getItem('flatmap-knowledge');
-
-      if (!flatmapKnowledge) {
-        this.highlightReferenceConnectivitiesByAPI(resource);
-      } else {
-        this.highlightReferenceConnectivitiesFromStorage(resource);
-      }
+      this.searchConnectivitiesByReference(resource).then((featureIds) => {
+        this.mapImp.selectFeatures(featureIds);
+      });
     },
-    // Store in storage and highlight
-    highlightReferenceConnectivitiesFromStorage: function (resource) {
+    searchConnectivitiesByReference: async function (resource) {
+      const flatmapKnowledge = sessionStorage.getItem('flatmap-knowledge');
+      let featureIds = [];
+
+      if (flatmapKnowledge) {
+        featureIds = await this.getReferenceConnectivitiesFromStorage(resource);
+      } else {
+        featureIds = await this.getReferenceConnectivitiesByAPI(resource);
+      }
+      return featureIds;
+    },
+    getReferenceConnectivitiesFromStorage: async function (resource) {
       const flatmapKnowledgeRaw = sessionStorage.getItem('flatmap-knowledge');
 
       if (flatmapKnowledgeRaw) {
@@ -1855,23 +1861,21 @@ export default {
 
         if (foundData.length) {
           const featureIds = foundData.map((x) => x.id);
-          this.mapImp.selectFeatures(featureIds);
+          return featureIds;
         }
       }
+      return [];
     },
-    // Directly load from API and highlight
-    highlightReferenceConnectivitiesByAPI: function (resource) {
+    getReferenceConnectivitiesByAPI: async function (resource) {
       const knowledgeSource = this.getKnowledgeSource(this.mapImp);
       const sql = `select knowledge from knowledge
         where source="${knowledgeSource}" and
         knowledge like "%${resource}%" order by source desc`;
-
-      this.flatmapQueries.flatmapQuery(sql).then((response) => {
-        const mappedData = response.values.map((x) => x[0]);
-        const parsedData = mappedData.map((x) => JSON.parse(x));
-        const featureIds = parsedData.map((x) => x.id);
-        this.mapImp.selectFeatures(featureIds);
-      });
+      const response = await this.flatmapQueries.flatmapQuery(sql);
+      const mappedData = response.values.map((x) => x[0]);
+      const parsedData = mappedData.map((x) => JSON.parse(x));
+      const featureIds = parsedData.map((x) => x.id);
+      return featureIds;
     },
     emitConnectivityGraphError: function (errorData) {
       this.$emit('connectivity-graph-error', {
