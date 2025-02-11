@@ -1472,16 +1472,19 @@ export default {
     taxonMouseEnterEmitted: function (payload) {
       if (this.mapImp) {
         if (payload.value) {
+          clearTimeout(this.taxonLeaveDelay)
           let gid = this.mapImp.taxonFeatureIds(payload.key)
           this.mapImp.enableConnectivityByTaxonIds(payload.key, payload.value) // make sure path is visible
           this.mapImp.zoomToGeoJSONFeatures(gid, {noZoomIn: true})
         } else {
-          // reset visibility of paths
-          this.mapImp.unselectGeoJSONFeatures()
-          payload.selections.forEach((item) => {
-            let show = payload.checked.includes(item.taxon)
-            this.mapImp.enableConnectivityByTaxonIds(item.taxon, show)
-          })
+          this.taxonLeaveDelay = setTimeout(() => {
+            // reset visibility of paths
+            this.mapImp.unselectGeoJSONFeatures()
+            payload.selections.forEach((item) => {
+              let show = payload.checked.includes(item.taxon)
+              this.mapImp.enableConnectivityByTaxonIds(item.taxon, show)
+            })
+          }, 1000);
         }
       }
     },
@@ -1493,9 +1496,7 @@ export default {
      */
     checkAllTaxons: function (payload) {
       if (this.mapImp) {
-        payload.keys.forEach((key) =>
-          this.mapImp.enableConnectivityByTaxonIds(key, payload.value)
-        )
+        this.mapImp.enableConnectivityByTaxonIds(payload.keys, payload.value)
       }
     },
     /**
@@ -1677,6 +1678,7 @@ export default {
               // Disable popup when drawing
               !this.activeDrawTool
             ) {
+              this.connectivityDataSource = data.source;
               this.checkAndCreatePopups(payload)
             }
             this.$emit('resource-selected', payload)
@@ -2685,9 +2687,10 @@ export default {
           } else {
             this.statesTracking.activeTerm = ""
           }
-          if (this.tooltipEntry.featureId) {
+          if (!this.connectivityDataSource) {
             this.$emit('connectivity-info-close');
           }
+          this.connectivityDataSource = ''; // reset
         });
       }
     },
@@ -3029,6 +3032,7 @@ export default {
       loading: false,
       flatmapMarker: flatmapMarker,
       tooltipEntry: createUnfilledTooltipData(),
+      connectivityDataSource: '',
       connectivityTooltipVisible: false,
       drawerOpen: false,
       featuresAlert: undefined,
@@ -3093,6 +3097,7 @@ export default {
         activeClick: false,
         activeTerm: "",
       }),
+      taxonLeaveDelay: undefined,
     }
   },
   computed: {
