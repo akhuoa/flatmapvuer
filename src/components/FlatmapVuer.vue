@@ -621,6 +621,11 @@ import flatmapMarker from '../icons/flatmap-marker'
 import {
   FlatmapQueries,
   findTaxonomyLabels,
+  getKnowledgeSource,
+  getReferenceConnectivitiesByAPI,
+  getReferenceConnectivitiesFromStorage,
+  loadAndStoreKnowledge,
+  refreshFlatmapKnowledgeCache,
 } from '../services/flatmapQueries.js'
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
@@ -633,7 +638,6 @@ import { DrawToolbar, Tooltip, TreeControls } from '@abi-software/map-utilities'
 import '@abi-software/map-utilities/dist/style.css'
 
 const ERROR_MESSAGE = 'cannot be found on the map.';
-const CACHE_LIFETIME = 24 * 60 * 60 * 1000; // One day
 
 const centroid = (geometry) => {
   let featureGeometry = { lng: 0, lat: 0, }
@@ -1862,36 +1866,10 @@ export default {
       let featureIds = [];
 
       if (flatmapKnowledge) {
-        featureIds = await this.getReferenceConnectivitiesFromStorage(resource);
+        featureIds = await getReferenceConnectivitiesFromStorage(resource);
       } else {
-        featureIds = await this.getReferenceConnectivitiesByAPI(resource);
+        featureIds = await getReferenceConnectivitiesByAPI(this.mapImp, resource, this.flatmapQueries);
       }
-      return featureIds;
-    },
-    getReferenceConnectivitiesFromStorage: async function (resource) {
-      const flatmapKnowledgeRaw = sessionStorage.getItem('flatmap-knowledge');
-
-      if (flatmapKnowledgeRaw) {
-        const flatmapKnowledge = JSON.parse(flatmapKnowledgeRaw);
-        const dataWithRefs = flatmapKnowledge.filter((x) => x.references && x.references.length);
-        const foundData = dataWithRefs.filter((x) => x.references.includes(resource));
-
-        if (foundData.length) {
-          const featureIds = foundData.map((x) => x.id);
-          return featureIds;
-        }
-      }
-      return [];
-    },
-    getReferenceConnectivitiesByAPI: async function (resource) {
-      const knowledgeSource = this.getKnowledgeSource(this.mapImp);
-      const sql = `select knowledge from knowledge
-        where source="${knowledgeSource}" and
-        knowledge like "%${resource}%" order by source desc`;
-      const response = await this.flatmapQueries.flatmapQuery(sql);
-      const mappedData = response.values.map((x) => x[0]);
-      const parsedData = mappedData.map((x) => JSON.parse(x));
-      const featureIds = parsedData.map((x) => x.id);
       return featureIds;
     },
     emitConnectivityGraphError: function (errorData) {
@@ -1949,7 +1927,7 @@ export default {
         let results =
           await this.flatmapQueries.retrieveFlatmapKnowledgeForEvent(this.mapImp, data)
         // load and store knowledge
-        this.loadAndStoreKnowledge(this.mapImp);
+        loadAndStoreKnowledge(this.mapImp, this.flatmapQueries);
         // The line below only creates the tooltip if some data was found on the path
         // the pubmed URLs are in knowledge response.references
         if (
@@ -1961,58 +1939,6 @@ export default {
           this.createTooltipFromNeuronCuration(data)
         }
       }
-    },
-    removeAllCacheData: function () {
-      const keys = [
-        'flatmap-knowledge',
-        'flatmap-knowledge-expiry',
-      ];
-      keys.forEach((key) => {
-        sessionStorage.removeItem(key);
-      });
-    },
-    refreshCache: function () {
-      const expiry = sessionStorage.getItem('flatmap-knowledge-expiry');
-      const now = new Date();
-
-      if (now.getTime() > expiry) {
-        this.removeAllCacheData();
-      }
-    },
-    updateCacheExpiry: function () {
-      const now = new Date();
-      const expiry = now.getTime() + CACHE_LIFETIME;
-
-      sessionStorage.setItem('flatmap-knowledge-expiry', expiry);
-    },
-    loadAndStoreKnowledge: function (mapImp) {
-      const knowledgeSource = this.getKnowledgeSource(mapImp);
-      const sql = `select knowledge from knowledge
-        where source="${knowledgeSource}"
-        order by source desc`;
-      const flatmapKnowledge = sessionStorage.getItem('flatmap-knowledge');
-
-      if (!flatmapKnowledge) {
-        this.flatmapQueries.flatmapQuery(sql).then((response) => {
-          const mappedData = response.values.map(x => x[0]);
-          const parsedData = mappedData.map(x => JSON.parse(x));
-          sessionStorage.setItem('flatmap-knowledge', JSON.stringify(parsedData));
-          this.updateCacheExpiry();
-        });
-      }
-    },
-    getKnowledgeSource: function (mapImp) {
-      let mapKnowledgeSource = '';
-      if (mapImp.provenance?.connectivity) {
-        const sckanProvenance = mapImp.provenance.connectivity;
-        if ('knowledge-source' in sckanProvenance) {
-          mapKnowledgeSource = sckanProvenance['knowledge-source'];
-        } else if ('npo' in sckanProvenance) {
-          mapKnowledgeSource = `${sckanProvenance.npo.release}-npo`;
-        }
-      }
-
-      return mapKnowledgeSource;
     },
     /**
      * A hack to remove flatmap tooltips while popup is open
@@ -2275,7 +2201,7 @@ export default {
         }
         // Get connectivity knowledge source | SCKAN release
         if (this.mapImp.provenance?.connectivity) {
-          this.tooltipEntry['knowledge-source'] = this.getKnowledgeSource(this.mapImp);
+          this.tooltipEntry['knowledge-source'] = getKnowledgeSource(this.mapImp);
         }
         this.$emit('connectivity-info-open', this.tooltipEntry);
       }
@@ -3273,7 +3199,7 @@ export default {
     } else if (this.renderAtMounted) {
       this.createFlatmap()
     }
-    this.refreshCache();
+    refreshFlatmapKnowledgeCache();
   },
 }
 </script>
