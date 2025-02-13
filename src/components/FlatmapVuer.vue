@@ -621,12 +621,14 @@ import flatmapMarker from '../icons/flatmap-marker'
 import {
   FlatmapQueries,
   findTaxonomyLabels,
-  getKnowledgeSource,
-  getReferenceConnectivitiesByAPI,
+} from '../services/flatmapQueries.js'
+import {
   getReferenceConnectivitiesFromStorage,
   loadAndStoreKnowledge,
   refreshFlatmapKnowledgeCache,
-} from '../services/flatmapQueries.js'
+  getKnowledgeSource,
+  getReferenceConnectivitiesByAPI,
+} from '../services/flatmapKnowledge.js'
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
