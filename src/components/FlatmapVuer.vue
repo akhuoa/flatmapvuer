@@ -1926,8 +1926,7 @@ export default {
         }
       } else {
         //require data.resource && data.feature.source
-        let results =
-          await this.flatmapQueries.retrieveFlatmapKnowledgeForEvent(this.mapImp, data)
+        let results = await this.flatmapQueries.retrieveFlatmapKnowledgeForEvent(this.mapImp, data)
         // load and store knowledge
         loadAndStoreKnowledge(this.mapImp, this.flatmapQueries);
         // The line below only creates the tooltip if some data was found on the path
@@ -2433,22 +2432,10 @@ export default {
         if (state.background) this.backgroundChangeCallback(state.background)
         if (state.searchTerm) {
           const searchTerm = state.searchTerm
-          this.searchAndShowResult(searchTerm, true)
           if (state.viewingMode === "Neuron Connection") {
             this.highlightConnectedPaths([searchTerm])
           } else {
-            const geoID = this.mapImp.modelFeatureIds(searchTerm)
-            if (geoID.length > 0) {
-              const feature = this.mapImp.featureProperties(geoID[0])
-              this.searchAndShowResult(searchTerm, true)
-              const data = {
-                resource: [feature.source],
-                feature,
-                label: feature.label,
-                provenanceTaxonomy: feature.taxons
-              }
-              this.checkAndCreatePopups(data)
-            }
+            this.searchAndShowResult(searchTerm, true)
           }
         }
         this.setVisibilityState(state)
@@ -2599,6 +2586,7 @@ export default {
       if (this.mapImp.options?.style === 'functional') {
         this.isFC = true
       }
+      console.log(this.mapImp)
       this.mapImp.setBackgroundOpacity(1)
       this.backgroundChangeCallback(this.currentBackground)
       this.pathways = this.mapImp.pathTypes()
@@ -2664,45 +2652,53 @@ export default {
     /**
      * @public
      * Function to display features with annotation matching the provided term,
-     * with the option to display the label using displayLabel flag.
+     * with the option to display the label/connectivity information using displayInfo flag.
      * @arg {String} `term`,
-     * @arg {String} `displayLabel`
+     * @arg {String} `displayInfo`
      */
-    searchAndShowResult: function (term, displayLabel) {
+    searchAndShowResult: function (term, displayInfo) {
       if (this.mapImp) {
         if (term === undefined || term === '') {
           this.mapImp.clearSearchResults()
+          if (this.viewingMode === "Exploration") {
+            this.$emit('connectivity-info-close');
+          } else if (this.viewingMode === "Annotation") {
+            this.manualAbortedOnClose()
+          }
           this.statesTracking.activeTerm = ""
           return true
         } else {
           const searchResults = this.mapImp.search(term)
-          if (
-            searchResults &&
-            searchResults.results &&
-            searchResults.results.length > 0
-          ) {
+          if (searchResults?.results?.length) {
             this.statesTracking.activeTerm = term
             this.mapImp.showSearchResults(searchResults)
-            if (
-              displayLabel &&
-              searchResults.results
-            ) {
-              let annotation = undefined;
+            if (displayInfo) {
               let featureId = undefined;
-              for (let i = 0; i < searchResults.results.length && !(annotation?.label); i++) {
+              for (let i = 0; i < searchResults.results.length; i++) {
                 featureId = searchResults.results[i].featureId
-                annotation = this.mapImp.annotation(featureId)
+                const annotation = this.mapImp.annotation(featureId)
+                if (featureId && annotation?.label) break;
               }
-              if (annotation?.label) {
-                this.mapImp.showPopup(
-                  featureId,
-                  capitalise(annotation.label),
-                  {
-                    className: 'custom-popup',
-                    positionAtLastClick: false,
-                    preserveSelection: true,
-                  }
-                )
+              if (featureId) {
+                const feature = this.mapImp.featureProperties(featureId)
+                const data = {
+                  resource: [feature.source],
+                  feature: {...feature, models: feature.models || feature.source},
+                  label: feature.label,
+                  provenanceTaxonomy: feature.taxons,
+                }
+                if (this.viewingMode === "Exploration" || this.viewingMode === "Annotation") {
+                  this.checkAndCreatePopups(data)
+                } else if (this.viewingMode === 'Neuron Connection') {
+                  setTimeout(() => {
+                    this.highlightConnectedPaths(data.resource)
+                  }, 1000)
+                }
+                this.mapImp.showPopup(featureId, capitalise(feature.label), {
+                  className: 'custom-popup',
+                  positionAtLastClick: false,
+                  preserveSelection: true,
+                })
               }
             }
             return true
