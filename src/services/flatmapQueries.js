@@ -125,6 +125,18 @@ let FlatmapQueries = function () {
     return tooltipData
   }
 
+  this.updateTooltipData = function (tooltipEntry) {
+    return {
+      ...tooltipEntry,
+      origins: this.origins,
+      originsWithDatasets: this.originsWithDatasets,
+      components: this.components,
+      componentsWithDatasets: this.componentsWithDatasets,
+      destinations: this.destinations,
+      destinationsWithDatasets: this.destinationsWithDatasets,
+    };
+  }
+
   this.createComponentsLabelList = function (components, lookUp) {
     let labelList = []
     components.forEach((n) => {
@@ -248,14 +260,22 @@ let FlatmapQueries = function () {
     this.rawURLs = []
     if (!keastIds || keastIds.length == 0 || !keastIds[0]) return
 
-    let prom1 = this.queryForConnectivityNew(mapImp, keastIds, signal) // This on returns a promise so dont need 'await'
+    // set connectivity source if available
+    const connectivitySource = localStorage.getItem('connectivity-source');
+
+    let prom1 = this.queryForConnectivityNew(mapImp, keastIds, signal, connectivitySource) // This on returns a promise so dont need 'await'
     let results = await Promise.all([prom1])
     return results
   }
 
-  this.queryForConnectivityNew = function (mapImp, keastIds, signal, processConnectivity=true) {
+  this.queryForConnectivityNew = function (mapImp, keastIds, signal, connectivitySource, processConnectivity=true) {
     return new Promise((resolve) => {
-      mapImp.queryKnowledge(keastIds[0])
+      const mapuuid = mapImp.provenance.uuid;
+      const queryAPI = connectivitySource === 'map'
+                        ? this.queryMapConnectivity(mapuuid, keastIds[0])
+                        : mapImp.queryKnowledge(keastIds[0]);
+
+      queryAPI
         .then((response) => {
           if (this.checkConnectivityExists(response)) {
             let connectivity = response;
@@ -289,6 +309,21 @@ let FlatmapQueries = function () {
         })
     })
   }
+
+  this.queryMapConnectivity = async function (mapuuid, pathId) {
+    const url = this.flatmapApi + `flatmap/${mapuuid}/connectivity/${pathId}`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw new Error(error);
+    }
+  },
 
   this.queryForConnectivity = function (mapImp, keastIds, signal, processConnectivity=true) {
     const data = { sql: this.buildConnectivitySqlStatement(keastIds) }
