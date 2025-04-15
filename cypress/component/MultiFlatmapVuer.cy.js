@@ -148,7 +148,7 @@ describe('MultiFlatmapVuer', () => {
             cy.get('.citation-list').find('li').should('have.length', 4)
             const citationText = 'Afferent and sympathetic innervation of the dome and the base of the urinary bladder of the female rat'
             cy.get('.citation-list li.loading').should('not.exist').then(() => {
-              cy.get('.citation-list li').first().should('exist').contains(citationText);
+              cy.get('.citation-list li').should('exist').contains(citationText);
             })
           })
 

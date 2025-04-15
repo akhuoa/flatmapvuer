@@ -283,6 +283,10 @@ export default {
           taxo: 'FunctionalConnectivity',
           displayWarning: true,
         },
+        Test: {
+          "taxo": "NCBITaxon:1",
+          "displayWarning": true
+        },
       },
       tooltipContent: undefined,
       tStyle: {
