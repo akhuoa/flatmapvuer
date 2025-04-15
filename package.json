@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@abi-software/flatmap-viewer": "3.2.13",
-    "@abi-software/map-utilities": "^1.4.3-beta.0",
+    "@abi-software/map-utilities": "^1.4.3-beta.1",
     "@abi-software/sparc-annotation": "0.3.2",
     "@abi-software/svg-sprite": "^1.0.1",
     "@element-plus/icons-vue": "^2.3.1",
