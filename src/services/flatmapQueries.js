@@ -75,6 +75,24 @@ const inArray = function (ar1, ar2) {
   return as1.indexOf(as2) !== -1
 }
 
+const compareNames = (a, b) => {
+  // to make it work for both string name and obj.name
+  const _nameA = a.name ?? a;
+  const _nameB = b.name ?? b;
+  const nameA = _nameA.toUpperCase();
+  const nameB = _nameB.toUpperCase();
+
+  if (nameA < nameB) {
+    return -1;
+  }
+
+  if (nameA > nameB) {
+    return 1;
+  }
+
+  return 0;
+}
+
 let FlatmapQueries = function () {
   this.initialise = function (flatmapApi) {
     this.flatmapApi = flatmapApi
@@ -427,13 +445,13 @@ let FlatmapQueries = function () {
     // Filter for the anatomy which is annotated on datasets
     this.originsWithDatasets = this.uberons.filter(
       (ub) => dendritesFlat.indexOf(ub.id) !== -1
-    )
+    ).sort(compareNames);
     this.componentsWithDatasets = this.uberons.filter(
       (ub) => componentsFlat.indexOf(ub.id) !== -1
-    )
+    ).sort(compareNames);
     this.destinationsWithDatasets = this.uberons.filter(
       (ub) => axonsFlat.indexOf(ub.id) !== -1
-    )
+    ).sort(compareNames);
   }
 
   this.processConnectivity = function (mapImp, connectivity) {
@@ -472,13 +490,13 @@ let FlatmapQueries = function () {
       this.createLabelLookup(mapImp, conIds).then((lookUp) => {
         this.origins = dendrites.map((d) =>
           this.createLabelFromNeuralNode(d, lookUp)
-        )
+        ).sort(compareNames);
         this.components = components.map((c) =>
           this.createLabelFromNeuralNode(c, lookUp)
-        )
+        ).sort(compareNames);
         this.destinations = axons.map((a) =>
           this.createLabelFromNeuralNode(a, lookUp)
-        )
+        ).sort(compareNames);
         this.flattenAndFindDatasets(dendrites, components, axons)
         resolve({
           ids: {
