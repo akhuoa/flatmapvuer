@@ -46,12 +46,14 @@ function loadAndStoreKnowledge(mapImp, flatmapQueries) {
     where source="${knowledgeSource}"
     order by source desc`;
   const flatmapKnowledge = sessionStorage.getItem('flatmap-knowledge');
+  const flatmapKnowledgeSource = sessionStorage.getItem('flatmap-knowledge-source');
 
-  if (!flatmapKnowledge) {
+  if (!flatmapKnowledge || flatmapKnowledgeSource !== knowledgeSource) {
     flatmapQueries.flatmapQuery(sql).then((response) => {
       const mappedData = response.values.map(x => x[0]);
       const parsedData = mappedData.map(x => JSON.parse(x));
       sessionStorage.setItem('flatmap-knowledge', JSON.stringify(parsedData));
+      sessionStorage.setItem('flatmap-knowledge-source', knowledgeSource);
       updateFlatmapKnowledgeCache();
     });
   }
@@ -69,6 +71,7 @@ function removeFlatmapKnowledgeCache() {
   const keys = [
     'flatmap-knowledge',
     'flatmap-knowledge-expiry',
+    'flatmap-knowledge-source',
   ];
   keys.forEach((key) => {
     sessionStorage.removeItem(key);
