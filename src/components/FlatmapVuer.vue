@@ -1287,8 +1287,8 @@ export default {
     /**
      * @public
      * Function to highlight the connected paths
-     * by providing path model identifier, ``pathId``.
-     * @arg {String} `pathId`
+     * by providing an array of path model identifiers, ``pathId``s.
+     * @arg {Array} `[pathIds]`
      */
     highlightConnectedPaths: async function (payload) {
       if (this.mapImp) {
