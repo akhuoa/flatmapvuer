@@ -449,7 +449,7 @@ Please use `const` to assign meaningful names to them...
               {{ modeDescription }}
             </el-row>
             <el-row v-if="viewingMode === 'Annotation' && offlineAnnotationEnabled" class="viewing-mode-description">
-              (Offline annotate)
+              (Anonymous annotate)
             </el-row>
           </el-row>
           <template v-if="viewingMode === 'Annotation' && authorisedUser">
@@ -941,14 +941,14 @@ export default {
     commitAnnotationEvent: function (annotation) {
       if (this.mapImp) {
         if (this.offlineAnnotationEnabled) {
-          this.offlineAnnotations = JSON.parse(sessionStorage.getItem('offline-annotation')) || []
+          this.offlineAnnotations = JSON.parse(sessionStorage.getItem('anonymous-annotation')) || []
           this.offlineAnnotations.push(annotation)
           if (this.annotationEntry.type === 'deleted') {
             this.offlineAnnotations = this.offlineAnnotations.filter((offline) => {
               return offline.resource !== this.serverURL || offline.item.id !== annotation.item.id
             })
           }
-          sessionStorage.setItem('offline-annotation', JSON.stringify(this.offlineAnnotations))
+          sessionStorage.setItem('anonymous-annotation', JSON.stringify(this.offlineAnnotations))
         }
         if (['created', 'updated', 'deleted'].includes(this.annotationEntry.type)) {
           this.featureAnnotationSubmitted = true
@@ -974,7 +974,7 @@ export default {
     fetchAnnotatedItemIds: async function (userId = undefined, participated = undefined) {
       let annotatedItemIds
       if (this.offlineAnnotationEnabled) {
-        this.offlineAnnotations = JSON.parse(sessionStorage.getItem('offline-annotation')) || []
+        this.offlineAnnotations = JSON.parse(sessionStorage.getItem('anonymous-annotation')) || []
         annotatedItemIds = this.offlineAnnotations.filter((offline) => {
           return offline.resource === this.serverURL
         }).map(offline => offline.item.id)
@@ -1006,7 +1006,7 @@ export default {
     fetchDrawnFeatures: async function (userId, participated) {
       let drawnFeatures
       if (this.offlineAnnotationEnabled) {
-        this.offlineAnnotations = JSON.parse(sessionStorage.getItem('offline-annotation')) || []
+        this.offlineAnnotations = JSON.parse(sessionStorage.getItem('anonymous-annotation')) || []
         drawnFeatures = this.offlineAnnotations.filter((offline) => {
           return offline.feature && offline.resource === this.serverURL
         }).map(offline => offline.feature)
@@ -2423,7 +2423,7 @@ export default {
         state['outlinesRadio'] = this.outlinesRadio
         state['background'] = this.currentBackground
         if (this.offlineAnnotationEnabled) {
-          state['offlineAnnotations'] = sessionStorage.getItem('offline-annotation')
+          state['offlineAnnotations'] = sessionStorage.getItem('anonymous-annotation')
         }
         this.getVisibilityState(state)
         return state
@@ -2460,7 +2460,7 @@ export default {
       if (state) {
         if (state.viewport) this.mapImp.setState(state.viewport)
         if (state.offlineAnnotations) {
-          sessionStorage.setItem('offline-annotation', state.offlineAnnotations)
+          sessionStorage.setItem('anonymous-annotation', state.offlineAnnotations)
         }
         if (state.viewingMode) this.changeViewingMode(state.viewingMode)
         //The following three are boolean

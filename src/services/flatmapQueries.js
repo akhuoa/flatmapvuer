@@ -480,6 +480,7 @@ let FlatmapQueries = function () {
         if (connectivity.dendrites && connectivity.dendrites.length > 0) {
           dendrites.push(...connectivity.dendrites)
         }
+        dendrites = removeDuplicates(dendrites)
         somas = connectivity.somas
       }
 
