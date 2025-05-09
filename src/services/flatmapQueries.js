@@ -94,8 +94,8 @@ const compareNames = (a, b) => {
 }
 
 let FlatmapQueries = function () {
-  this.initialise = function (flatmapApi) {
-    this.flatmapApi = flatmapApi
+  this.initialise = function (flatmapAPI) {
+    this.flatmapAPI = flatmapAPI
     this.destinations = []
     this.origins = []
     this.components = []
@@ -103,6 +103,7 @@ let FlatmapQueries = function () {
     this.controller = undefined
     this.uberons = []
     this.lookUp = []
+    this.connectivitySource = 'sckan'
   }
 
   this.createTooltipData = async function (mapImp, eventData) {
@@ -118,12 +119,16 @@ let FlatmapQueries = function () {
     let taxonomyLabel = undefined
     if (eventData.provenanceTaxonomy) {
       taxonomyLabel = []
-      const entityLabels = await findTaxonomyLabels(mapImp, eventData.provenanceTaxonomy);
-      if (entityLabels.length) {
-        entityLabels.forEach((entityLabel) => {
-          const { label } = entityLabel;
-          taxonomyLabel.push(label);
-        });
+      try {
+        const entityLabels = await findTaxonomyLabels(mapImp, eventData.provenanceTaxonomy);
+        if (entityLabels.length) {
+          entityLabels.forEach((entityLabel) => {
+            const { label } = entityLabel;
+            taxonomyLabel.push(label);
+          });
+        }
+      } catch (error) {
+        console.log(error)
       }
     }
 
@@ -139,8 +144,22 @@ let FlatmapQueries = function () {
       hyperlinks: hyperlinks,
       provenanceTaxonomy: eventData.provenanceTaxonomy,
       provenanceTaxonomyLabel: taxonomyLabel,
+      connectivitySource: this.connectivitySource
     }
     return tooltipData
+  }
+
+  this.updateTooltipData = function (tooltipEntry) {
+    return {
+      ...tooltipEntry,
+      origins: this.origins,
+      originsWithDatasets: this.originsWithDatasets,
+      components: this.components,
+      componentsWithDatasets: this.componentsWithDatasets,
+      destinations: this.destinations,
+      destinationsWithDatasets: this.destinationsWithDatasets,
+      connectivitySource: this.connectivitySource
+    };
   }
 
   this.createComponentsLabelList = function (components, lookUp) {
@@ -264,16 +283,21 @@ let FlatmapQueries = function () {
     this.origins = []
     this.components = []
     this.rawURLs = []
-    if (!keastIds || keastIds.length == 0 || !keastIds[0]) return
+    if (!keastIds || keastIds.length === 0 || !keastIds[0]) return
 
-    let prom1 = this.queryForConnectivityNew(mapImp, keastIds, signal) // This on returns a promise so dont need 'await'
+    let prom1 = this.queryForConnectivityNew(mapImp, keastIds[0]) // This on returns a promise so dont need 'await'
     let results = await Promise.all([prom1])
     return results
   }
 
-  this.queryForConnectivityNew = function (mapImp, keastIds, signal, processConnectivity=true) {
+  this.queryForConnectivityNew = function (mapImp, keastId, connectivitySource = 'sckan', processConnectivity = true) {
+    this.connectivitySource = connectivitySource
     return new Promise((resolve) => {
-      mapImp.queryKnowledge(keastIds[0])
+      const queryAPI = connectivitySource === 'map'
+        ? this.queryMapConnectivity(mapImp.provenance.uuid, keastId)
+        : mapImp.queryKnowledge(keastId);
+
+      queryAPI
         .then((response) => {
           if (this.checkConnectivityExists(response)) {
             let connectivity = response;
@@ -283,11 +307,8 @@ let FlatmapQueries = function () {
                 if (response.references) {
                   // with publications from both PubMed and Others
                   this.rawURLs = [...response.references];
-                  resolve(processedConnectivity)
-                } else {
-                  // without publications
-                  resolve(processedConnectivity)
                 }
+                resolve(processedConnectivity)
               })
             }
             else resolve(connectivity)
@@ -301,11 +322,40 @@ let FlatmapQueries = function () {
           } else {
             // console.error('Error:', error)
             // TODO: to update after queryKnowledge method update
-            console.warn(`Unable to get the knowledge for the entity ${keastIds[0]}.`)
+            console.warn(`Unable to get the knowledge for the entity ${keastId}.`)
           }
           resolve(false)
         })
     })
+  }
+
+  this.queryMapConnectivity = async function (mapuuid, pathId) {
+    const url = this.flatmapAPI + `flatmap/${mapuuid}/connectivity/${pathId}`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  this.queryMapPaths =  async function (mapuuid) {
+    const url = this.flatmapAPI + `flatmap/${mapuuid}/pathways`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   this.queryForConnectivity = function (mapImp, keastIds, signal, processConnectivity=true) {
@@ -319,7 +369,7 @@ let FlatmapQueries = function () {
       ...(signal ? { signal: signal } : {}), // add signal to header if it exists
     }
     return new Promise((resolve) => {
-      fetch(`${this.flatmapApi}knowledge/query/`, headers)
+      fetch(`${this.flatmapAPI}knowledge/query/`, headers)
         .then((response) => response.json())
         .then((data) => {
           if (this.connectivityExists(data)) {
@@ -498,7 +548,7 @@ let FlatmapQueries = function () {
 
   this.flatmapQuery = function (sql) {
     const data = { sql: sql }
-    return fetch(`${this.flatmapApi}knowledge/query/`, {
+    return fetch(`${this.flatmapAPI}knowledge/query/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

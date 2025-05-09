@@ -231,7 +231,7 @@ export default {
         if (this.mapManager) {
           this.mapManagerRef = this.mapManager;
         } else {
-          this.mapManagerRef = markRaw(new flatmap.MapManager(this.flatmapAPI));
+          this.mapManagerRef = markRaw(new flatmap.MapViewer(this.flatmapAPI, { container: undefined }));
           /**
            * The event emitted after a new mapManager is loaded.
            * This mapManager can be used to create new flatmaps.
@@ -436,7 +436,7 @@ export default {
               if (mapState.biologicalSex)
                 identifier['biologicalSex'] = mapState.biologicalSex
               this.mapManagerRef
-                .findMap_(identifier)
+                .findMap(identifier)
                 .then((map) => {
                   if (map.uuid !== mapState.uuid) {
                     return this.createLegacyEntry(
