@@ -68,7 +68,7 @@
       :connectivityInfoSidebar="connectivityInfoSidebar"
       @connectivity-info-open="onConnectivityInfoOpen"
       @connectivity-info-close="onConnectivityInfoClose"
-      @connectivity-graph-error="onConnectivityGraphError"
+      @connectivity-error="onConnectivityError"
       @open-map="$emit('open-map', $event)"
       @pathway-selection-changed="onSelectionsDataChanged"
       :minZoom="minZoom"
@@ -295,8 +295,8 @@ export default {
     onConnectivityInfoOpen: function (entryData) {
       this.$emit('connectivity-info-open', entryData);
     },
-    onConnectivityGraphError: function (errorInfo) {
-      this.$emit('connectivity-graph-error', errorInfo);
+    onConnectivityError: function (errorInfo) {
+      this.$emit('connectivity-error', errorInfo);
     },
     onSelectionsDataChanged: function (data) {
       this.$emit('pathway-selection-changed', data);

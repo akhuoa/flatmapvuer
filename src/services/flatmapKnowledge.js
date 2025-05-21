@@ -27,9 +27,13 @@ async function getReferenceConnectivitiesByAPI(mapImp, resource, flatmapQueries)
 }
 
 function getKnowledgeSource(mapImp) {
+  return getKnowledgeSourceFromProvenance(mapImp.provenance);
+}
+
+function getKnowledgeSourceFromProvenance(provenance) {
   let mapKnowledgeSource = '';
-  if (mapImp.provenance?.connectivity) {
-    const sckanProvenance = mapImp.provenance.connectivity;
+  if (provenance?.connectivity) {
+    const sckanProvenance = provenance.connectivity;
     if ('knowledge-source' in sckanProvenance) {
       mapKnowledgeSource = sckanProvenance['knowledge-source'];
     } else if ('npo' in sckanProvenance) {
@@ -97,5 +101,6 @@ export {
   getReferenceConnectivitiesByAPI,
   loadAndStoreKnowledge,
   getKnowledgeSource,
+  getKnowledgeSourceFromProvenance,
   refreshFlatmapKnowledgeCache,
 }
