@@ -20,6 +20,15 @@ import './commands'
 // require('./commands')
 
 import { mount } from 'cypress/vue'
+import { addCompareSnapshotCommand } from 'cypress-visual-regression/dist/command';
+
+addCompareSnapshotCommand({
+  capture: 'fullPage', // cypress screenshot option
+  errorThreshold: 0.5, // plugin threshold option
+  pixelmatchOptions: {
+    threshold: 0.1 // pixelmatch threshold option
+  }
+})
 
 Cypress.Commands.add('mount', (...args) => {
   return mount(...args).then(({ wrapper }) => {
