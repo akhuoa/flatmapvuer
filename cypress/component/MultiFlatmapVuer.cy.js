@@ -93,32 +93,48 @@ describe('MultiFlatmapVuer', () => {
         cy.get('.maplibregl-popup-close-button').click();
         cy.get('.flatmapvuer-popover').should('not.exist');
 
+          // Check if alert exist in test flatmap
+        cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas').as('canvas')
+        cy.get('.checkall-display-text').then(($label) => {
+          expect($label, 'Alter filter should exist').to.contain('Alert')
+          // Take a screenshot of no path flatmap
+          cy.get(':nth-child(4) > :nth-child(1) > :nth-child(2) > .el-checkbox').click()
+          cy.get('.pathway-location > .drawer-button:visible').click()
+          // CLI
+          cy.get('@canvas').screenshot('base/cypress/component/MultiFlatmapVuer.cy.js/mapalert')
+          // UI
+          cy.get('@canvas').screenshot('MultiFlatmapVuer.cy.js/base/cypress/component/MultiFlatmapVuer.cy.js/mapalert')
+          // Compare previous screenshot with alter paths displayed flatmap
+          cy.get('.pathway-location > .drawer-button:visible').click()
+          cy.get('[label="alert"] > .checkbox-container > .el-checkbox:visible').click()
+          cy.get('.pathway-location > .drawer-button:visible').click()
+          cy.get('@canvas').compareSnapshot('mapalert').then(comparisonResults => {
+            expect(comparisonResults.percentage).to.greaterThan(0)
+          })
+        })
       // Check the metadata for path exploration is loading correctly
       }).then(() => {
         let flatmapVuer = window.Cypress.flatmapVuer
         console.log('flatmapVuer', flatmapVuer)
         let fmEventCallback = flatmapVuer.eventCallback()
-        fmEventCallback('click', {
-          "id": "ilxtr_neuron-type-keast-4",
-          "featureId": 28,
-          "kind": "symp-post",
-          "label": "sympathetic chain ganglion neuron (kblad)",
-          "models": "ilxtr:neuron-type-keast-4",
-          "source": "https://apinatomy.org/uris/models/keast-bladder",
-          "taxons": "[\"NCBITaxon:10116\"]",
-          "type": "feature",
-          "mapUUID": "dbd2fe65-ef1e-5fd1-8614-e26498d00ffb"
-        }, [])
+        fmEventCallback(
+          "click",
+          {
+            id: "ilxtr_neuron-type-keast-10",
+            featureId: 26,
+            kind: "sensory",
+            label: "neuron type kblad 10",
+            models: "ilxtr:neuron-type-keast-10",
+            source: "ilxtr:neuron-type-keast-10",
+            taxons: '["NCBITaxon:10116"]',
+            completeness: true,
+            type: "feature",
+            mapUUID: "7f003862-6dbd-5871-8e8e-9a33c7ccefc5",
+          },
+          []
+        );
 
-        // Check the pop up has the same information as when the test was created
-        cy.get('.subtitle').should('exist').contains('Studied in Rattus norvegicus species')
-        cy.get('[origin-item-label="Twelfth thoracic ganglion"]').should('exist')
-        cy.get('[component-item-label="connective tissue, neck of urinary bladder"]').should('exist')
-        cy.get('[destination-item-label="wall of blood vessel, Arteriole in connective tissue of bladder dome"]').should('exist')
-
-
-
-        cy.get('.flatmapvuer-popover').should('exist').contains('Sympathetic chain ganglion neuron (kblad)').then(() => {
+        cy.get('.flatmapvuer-popover').should('exist').contains('Neuron type kblad 10').then(() => {
 
           // Set the tooltip to be visible (this is needed as the css hack does not work in testing for some reason)
           document.querySelector('#tooltip-container').style.display = 'block'
@@ -126,8 +142,15 @@ describe('MultiFlatmapVuer', () => {
           cy.get('#tooltip-container').invoke('css', 'display').then((display) => {
             expect(display).to.equal('block')
           }).then(() => {
+            // Check the pop up has the same information as when the test was created
+            cy.get('.subtitle').should('exist').contains('Studied in Rattus norvegicus species')
+
             // Open the 'show more' section
             cy.get('#show-path-info').should('exist').click()
+
+            cy.get('[origin-item-label="first sacral dorsal root ganglion"]').should('exist')
+            cy.get('[component-item-label="connective tissue, fundus of urinary bladder"]').should('exist')
+            cy.get('[destination-item-label="bladder nerve"]').should('exist')
 
             // Click on the dendrites button
             cy.get('#open-dendrites-button').should('exist').click()
@@ -145,8 +168,8 @@ describe('MultiFlatmapVuer', () => {
             // References
             cy.get('.resource-container').should('exist')
             cy.get('.citation-list').should('exist')
-            cy.get('.citation-list').find('li').should('have.length', 4)
-            const citationText = 'Afferent and sympathetic innervation of the dome and the base of the urinary bladder of the female rat'
+            cy.get('.citation-list').find('li').should('have.length', 6)
+            const citationText = 'Afferent and sympathetic innervation of the dome and the base of the urinary bladder of the female rat.'
             cy.get('.citation-list li.loading').should('not.exist').then(() => {
               cy.get('.citation-list li').should('exist').contains(citationText);
             })
