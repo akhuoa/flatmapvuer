@@ -1711,6 +1711,7 @@ export default {
                 }
               }
               const clickedItem = singleSelection ? data : data[0]
+              this.setConnectivityDataSource(this.viewingMode, clickedItem);
               if (this.viewingMode === 'Neuron Connection') {
                 this.retrieveConnectedPaths([clickedItem.models]).then((paths) => {
                   this.zoomToFeatures(paths)
@@ -1758,6 +1759,23 @@ export default {
             this.$emit('pan-zoom-callback', data)
           }
         }
+      }
+    },
+    /**
+     * The data for connectivity data source is just a placeholder data
+     * to check which part of the map is clicked, e.g., path or feture or empty area,
+     * based on the viewing mode.
+     * The "connectivity-info-close" event will be emitted based on this data
+     * when there has a click event on map.
+     * @param viewingMode
+     * @param data
+     */
+    setConnectivityDataSource: function (viewingMode, data) {
+      // for Exploration mode, only path click will be used as data source
+      this.connectivityDataSource = data.source;
+      // for other modes, it can be feature or path
+      if (viewingMode === 'Neuron Connection' || viewingMode === 'Annotation') {
+        this.connectivityDataSource = data.featureId;
       }
     },
     /**
@@ -2679,12 +2697,29 @@ export default {
       this.loading = false
       this.computePathControlsMaximumHeight()
       this.mapResize()
+      this.handleMapClick();
       this.setInitMapState();
       /**
        * This is ``onFlatmapReady`` event.
        * @arg ``this`` (Component Vue Instance)
        */
       this.$emit('ready', this)
+    },
+    /**
+     * @public
+     * Function to handle mouse click on map area
+     * after the map is loaded.
+     */
+    handleMapClick: function () {
+      const _map = this.mapImp.map;
+      if (_map) {
+        _map.on('click', (e) => {
+          if (!this.connectivityDataSource) {
+            this.$emit('connectivity-info-close');
+          }
+          this.connectivityDataSource = ''; // reset
+        });
+      }
     },
     /**
      * @public
