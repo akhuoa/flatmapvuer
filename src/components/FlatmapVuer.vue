@@ -1934,16 +1934,18 @@ export default {
       return false
     },
     changeConnectivitySource: async function (payload) {
-      const { featureId, connectivitySource } = payload;
-      await this.flatmapQueries.queryForConnectivityNew(this.mapImp, featureId[0], connectivitySource);
-      this.tooltipEntry = this.tooltipEntry.map((tooltip) => {
-        if (tooltip.featureId[0] === featureId[0]) {
-          return this.flatmapQueries.updateTooltipData(tooltip);
+      const { entry, connectivitySource } = payload;
+      if (entry.mapId === this.mapImp.id) {        
+        await this.flatmapQueries.queryForConnectivityNew(this.mapImp, entry.featureId[0], connectivitySource);
+        this.tooltipEntry = this.tooltipEntry.map((tooltip) => {
+          if (tooltip.featureId[0] === entry.featureId[0]) {
+            return this.flatmapQueries.updateTooltipData(tooltip);
+          }
+          return tooltip;
+        })
+        if (this.checkConnectivityTooltipEntry(this.tooltipEntry)) {
+          this.$emit('connectivity-info-open', this.tooltipEntry);
         }
-        return tooltip;
-      })
-      if (this.checkConnectivityTooltipEntry(this.tooltipEntry)) {
-        this.$emit('connectivity-info-open', this.tooltipEntry);
       }
     },
     /**
