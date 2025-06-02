@@ -87,6 +87,7 @@
       :flatmapAPI="flatmapAPI"
       :sparcAPI="sparcAPI"
       :showLocalSettings="showLocalSettings"
+      :showOpenMapButton="showOpenMapButton"
     />
   </div>
 </template>
@@ -768,6 +769,13 @@ export default {
      * (background colour, flight path, viewing mode, etc.)
      */
     showLocalSettings: {
+      type: Boolean,
+      default: true,
+    },
+    /**
+     * The option to show open new map button
+     */
+    showOpenMapButton: {
       type: Boolean,
       default: true,
     },
