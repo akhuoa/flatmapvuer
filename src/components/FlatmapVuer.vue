@@ -533,7 +533,7 @@ Please use `const` to assign meaningful names to them...
         :class="{ open: drawerOpen, close: !drawerOpen }"
         v-show="!disableUI"
       >
-        <el-row>
+        <el-row v-if="showOpenMapButton">
           <el-popover
             :visible="hoverVisibilities[4].value"
             content="Open new map"
@@ -1935,7 +1935,7 @@ export default {
     },
     changeConnectivitySource: async function (payload) {
       const { entry, connectivitySource } = payload;
-      if (entry.mapId === this.mapImp.id) {        
+      if (entry.mapId === this.mapImp.id) {
         await this.flatmapQueries.queryForConnectivityNew(this.mapImp, entry.featureId[0], connectivitySource);
         this.tooltipEntry = this.tooltipEntry.map((tooltip) => {
           if (tooltip.featureId[0] === entry.featureId[0]) {
@@ -3018,6 +3018,13 @@ export default {
      * (background colour, flight path, viewing mode, etc.)
      */
     showLocalSettings: {
+      type: Boolean,
+      default: true,
+    },
+    /**
+     * The option to show open new map button
+     */
+    showOpenMapButton: {
       type: Boolean,
       default: true,
     },
