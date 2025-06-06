@@ -1059,6 +1059,12 @@ export default {
       }
     },
     /**
+     * Function to emit offline annotation enabled status
+     */
+    emitOfflineAnnotationUpdate: function () {
+      this.$emit('update-offline-annotation-enabled', this.offlineAnnotationEnabled);
+    },
+    /**
      * @public
      * Function to switch from 2D to 3D
      * @arg {Boolean} `flag`
@@ -3245,6 +3251,7 @@ export default {
             this.authorisedUser = undefined
             this.offlineAnnotationEnabled = true
           }
+          this.emitOfflineAnnotationUpdate();
           this.setFeatureAnnotated()
           this.addAnnotationFeature()
           this.loading = false
