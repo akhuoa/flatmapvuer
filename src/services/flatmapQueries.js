@@ -478,11 +478,15 @@ let FlatmapQueries = function () {
         const sourceKey = ["ilxtr:hasSomaLocatedIn"]
         const destinationKey = ["ilxtr:hasAxonPresynapticElementIn", "ilxtr:hasAxonSensorySubcellularElementIn"]
         sourceKey.forEach((key)=>{
-          dendrites.push(...connectivity["node-phenotypes"][key])
+          if (key in connectivity["node-phenotypes"]) {
+            dendrites.push(...connectivity["node-phenotypes"][key])
+          }
         })
         dendrites = removeDuplicates(dendrites)
         destinationKey.forEach((key)=>{
-          axons.push(...connectivity["node-phenotypes"][key])
+          if (key in connectivity["node-phenotypes"]) {
+            axons.push(...connectivity["node-phenotypes"][key])
+          }
         })
         axons = removeDuplicates(axons)
       } else {

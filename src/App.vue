@@ -277,6 +277,7 @@ export default {
         },
         Vagus: {
           taxo: 'UBERON:0001759',
+          uuid: "0ea568ec-538d-52f3-a8e7-0437d844e1cf",
         },
         Sample: { taxo: 'NCBITaxon:1', displayWarning: true },
         'Functional Connectivity': {
