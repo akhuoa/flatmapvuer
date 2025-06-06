@@ -3489,7 +3489,8 @@ export default {
   max-width: 330px !important;
 }
 
-:deep(.flatmap-tooltip-popup) {
+:deep(.flatmap-tooltip-popup),
+:deep(.custom-popup) {
   &.maplibregl-popup-anchor-bottom {
     .maplibregl-popup-content {
       margin-bottom: 12px;
@@ -4014,77 +4015,14 @@ export default {
 }
 
 :deep(.custom-popup) {
-  .maplibregl-popup-tip {
-    display: none;
-  }
   .maplibregl-popup-content {
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    pointer-events: none;
-    display: none;
-    background: #fff;
     font-family: 'Asap', sans-serif;
     font-size: 12pt;
     color: $app-primary-color;
-    border: 1px solid $app-primary-color;
-    padding-left: 6px;
     padding-right: 6px;
     padding-top: 6px;
-    padding-bottom: 6px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    &::after,
-    &::before {
-      content: '';
-      display: block;
-      position: absolute;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      flex-shrink: 0;
-    }
     .maplibregl-popup-close-button {
       display: none;
-    }
-  }
-  &.maplibregl-popup-anchor-bottom {
-    .maplibregl-popup-content {
-      margin-bottom: 12px;
-      &::after,
-      &::before {
-        top: 100%;
-        border-width: 12px;
-      }
-      /* this border color controlls the color of the triangle (what looks like the fill of the triangle) */
-      &::after {
-        margin-top: -1px;
-        border-color: rgb(255, 255, 255) transparent transparent transparent;
-      }
-      /* this border color controlls the outside, thin border */
-      &::before {
-        margin: 0 auto;
-        border-color: $app-primary-color transparent transparent transparent;
-      }
-    }
-  }
-  &.maplibregl-popup-anchor-top {
-    .maplibregl-popup-content {
-      margin-top: 18px;
-      &::after,
-      &::before {
-        top: calc(-100% + 6px);
-        border-width: 12px;
-      }
-      /* this border color controlls the color of the triangle (what looks like the fill of the triangle) */
-      &::after {
-        margin-top: 1px;
-        border-color: transparent transparent rgb(255, 255, 255) transparent;
-      }
-      &::before {
-        margin: 0 auto;
-        border-color: transparent transparent $app-primary-color transparent;
-      }
     }
   }
 }
