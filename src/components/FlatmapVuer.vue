@@ -740,6 +740,20 @@ export default {
   },
   methods: {
     /**
+     * 
+     * @param filter format should follow #makeStyleFilter (flatmap-viewer)
+     */
+    setVisibilityFilter: function (filter) {
+      // More filter options -> this.mapImp.featureFilterRanges()
+      if (this.mapImp) {
+        if (filter) {
+          this.mapImp.setVisibilityFilter(filter);
+        } else {
+          this.mapImp.clearVisibilityFilter();
+        }
+      }
+    },
+    /**
      * @public
      * Function to manually send aborted signal when annotation tooltip popup or sidebar tab closed.
      */
