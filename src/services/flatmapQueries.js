@@ -344,20 +344,6 @@ let FlatmapQueries = function () {
     }
   }
 
-  this.queryMapPaths =  async function (mapuuid) {
-    const url = this.flatmapAPI + `flatmap/${mapuuid}/pathways`;
-
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Response status: ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      throw new Error(error);
-    }
-  }
-
   this.queryForConnectivity = function (mapImp, keastIds, signal, processConnectivity=true) {
     const data = { sql: this.buildConnectivitySqlStatement(keastIds) }
     const headers = {
@@ -478,11 +464,15 @@ let FlatmapQueries = function () {
         const sourceKey = ["ilxtr:hasSomaLocatedIn"]
         const destinationKey = ["ilxtr:hasAxonPresynapticElementIn", "ilxtr:hasAxonSensorySubcellularElementIn"]
         sourceKey.forEach((key)=>{
-          dendrites.push(...connectivity["node-phenotypes"][key])
+          if (key in connectivity["node-phenotypes"]) {
+            dendrites.push(...connectivity["node-phenotypes"][key])
+          }
         })
         dendrites = removeDuplicates(dendrites)
         destinationKey.forEach((key)=>{
-          axons.push(...connectivity["node-phenotypes"][key])
+          if (key in connectivity["node-phenotypes"]) {
+            axons.push(...connectivity["node-phenotypes"][key])
+          }
         })
         axons = removeDuplicates(axons)
       } else {
