@@ -65,6 +65,7 @@
       :annotationSidebar="annotationSidebar"
       @annotation-open="onAnnotationOpen"
       @annotation-close="onAnnotationClose"
+      @update-offline-annotation-enabled="updateOfflineAnnotationEnabled"
       :connectivityInfoSidebar="connectivityInfoSidebar"
       @connectivity-info-open="onConnectivityInfoOpen"
       @connectivity-info-close="onConnectivityInfoClose"
@@ -291,6 +292,9 @@ export default {
     },
     onAnnotationOpen: function (payload) {
       this.$emit('annotation-open', payload);
+    },
+    updateOfflineAnnotationEnabled: function (payload) {
+      this.$emit('update-offline-annotation-enabled', payload);
     },
     onConnectivityInfoClose: function () {
       this.$emit('connectivity-info-close');
