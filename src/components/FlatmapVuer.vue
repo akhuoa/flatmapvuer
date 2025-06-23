@@ -1073,6 +1073,12 @@ export default {
       }
     },
     /**
+     * Function to emit offline annotation enabled status
+     */
+    emitOfflineAnnotationUpdate: function () {
+      this.$emit('update-offline-annotation-enabled', this.offlineAnnotationEnabled);
+    },
+    /**
      * @public
      * Function to switch from 2D to 3D
      * @arg {Boolean} `flag`
@@ -1178,7 +1184,7 @@ export default {
     setColour: function (flag) {
       this.colourRadio = flag
       if (this.mapImp) {
-        this.mapImp.setPaint({ colour: flag, outline: this.outlinesRadio })
+        this.mapImp.setPaint({ coloured: flag, outlined: this.outlinesRadio })
       }
     },
     /**
@@ -1190,7 +1196,7 @@ export default {
     setOutlines: function (flag) {
       this.outlinesRadio = flag
       if (this.mapImp) {
-        this.mapImp.setPaint({ colour: this.colourRadio, outline: flag })
+        this.mapImp.setPaint({ coloured: this.colourRadio, outlined: flag })
       }
     },
     setInitMapState: function () {
@@ -2023,12 +2029,7 @@ export default {
         // Emit placeholders first.
         // This may contain invalid connectivity.
         this.tooltipEntry = data
-          .filter((tooltip) => {
-            return (
-              tooltip.resource[0] &&
-              this.mapImp.pathModelNodes(tooltip.resource).length > 0
-            )
-          })
+          .filter(tooltip => tooltip.resource[0] in this.mapImp.pathways.paths)
           .map((tooltip) => {
             return { title: tooltip.label, featureId: tooltip.resource, ready: false }
           })
@@ -2767,7 +2768,10 @@ export default {
               if (pathway) {
                 main.children.push({
                   key: `${main.key}.${facet}`,
-                  label: pathway.label
+                  label: pathway.label,
+                  colour: pathway.colour,
+                  colourStyle: 'line',
+                  dashed: pathway.dashed,
                 })
               }
             }
@@ -3377,6 +3381,7 @@ export default {
             this.authorisedUser = undefined
             this.offlineAnnotationEnabled = true
           }
+          this.emitOfflineAnnotationUpdate();
           this.setFeatureAnnotated()
           this.addAnnotationFeature()
           this.loading = false
@@ -3621,7 +3626,8 @@ export default {
   max-width: 330px !important;
 }
 
-:deep(.flatmap-tooltip-popup) {
+:deep(.flatmap-tooltip-popup),
+:deep(.custom-popup) {
   &.maplibregl-popup-anchor-bottom {
     .maplibregl-popup-content {
       margin-bottom: 12px;
@@ -4146,77 +4152,14 @@ export default {
 }
 
 :deep(.custom-popup) {
-  .maplibregl-popup-tip {
-    display: none;
-  }
   .maplibregl-popup-content {
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    pointer-events: none;
-    display: none;
-    background: #fff;
     font-family: 'Asap', sans-serif;
     font-size: 12pt;
     color: $app-primary-color;
-    border: 1px solid $app-primary-color;
-    padding-left: 6px;
     padding-right: 6px;
     padding-top: 6px;
-    padding-bottom: 6px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    &::after,
-    &::before {
-      content: '';
-      display: block;
-      position: absolute;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      flex-shrink: 0;
-    }
     .maplibregl-popup-close-button {
       display: none;
-    }
-  }
-  &.maplibregl-popup-anchor-bottom {
-    .maplibregl-popup-content {
-      margin-bottom: 12px;
-      &::after,
-      &::before {
-        top: 100%;
-        border-width: 12px;
-      }
-      /* this border color controlls the color of the triangle (what looks like the fill of the triangle) */
-      &::after {
-        margin-top: -1px;
-        border-color: rgb(255, 255, 255) transparent transparent transparent;
-      }
-      /* this border color controlls the outside, thin border */
-      &::before {
-        margin: 0 auto;
-        border-color: $app-primary-color transparent transparent transparent;
-      }
-    }
-  }
-  &.maplibregl-popup-anchor-top {
-    .maplibregl-popup-content {
-      margin-top: 18px;
-      &::after,
-      &::before {
-        top: calc(-100% + 6px);
-        border-width: 12px;
-      }
-      /* this border color controlls the color of the triangle (what looks like the fill of the triangle) */
-      &::after {
-        margin-top: 1px;
-        border-color: transparent transparent rgb(255, 255, 255) transparent;
-      }
-      &::before {
-        margin: 0 auto;
-        border-color: transparent transparent $app-primary-color transparent;
-      }
     }
   }
 }

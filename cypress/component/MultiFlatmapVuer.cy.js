@@ -149,8 +149,8 @@ describe('MultiFlatmapVuer', () => {
             cy.get('#show-path-info').should('exist').click()
 
             cy.get('[origin-item-label="first sacral dorsal root ganglion"]').should('exist')
-            cy.get('[component-item-label="connective tissue, fundus of urinary bladder"]').should('exist')
-            cy.get('[destination-item-label="bladder nerve"]').should('exist')
+            cy.get('[component-item-label="bladder nerve"]').should('exist')
+            cy.get('[destination-item-label="connective tissue, neck of urinary bladder"]').should('exist')
 
             // Click on the dendrites button
             cy.get('#open-dendrites-button').should('exist').click()
