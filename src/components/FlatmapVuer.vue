@@ -636,7 +636,7 @@ import {
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
-import * as flatmap from '@abi-software/flatmap-viewer'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.5/+esm'
 import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
@@ -739,6 +739,11 @@ export default {
     return { annotator }
   },
   methods: {
+    enableFeatureResetOnClick: function (enable) {
+      if (this.mapImp) {
+        this.mapImp.enableFeatureResetOnClick(enable)
+      }
+    },
     /**
      * 
      * @param filter format should follow #makeStyleFilter (flatmap-viewer)
