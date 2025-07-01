@@ -70,6 +70,8 @@
       @connectivity-info-open="onConnectivityInfoOpen"
       @connectivity-info-close="onConnectivityInfoClose"
       @connectivity-error="onConnectivityError"
+      @neuron-connection-click="onNeuronConnectionClick"
+      @neuron-connection-feature-click="onNeuronConnectionFeatureClick"
       @open-map="$emit('open-map', $event)"
       @pathway-selection-changed="onSelectionsDataChanged"
       :minZoom="minZoom"
@@ -304,6 +306,12 @@ export default {
     },
     onConnectivityError: function (errorInfo) {
       this.$emit('connectivity-error', errorInfo);
+    },
+    onNeuronConnectionClick: function (payload) {
+      this.$emit('neuron-connection-click', payload);
+    },
+    onNeuronConnectionFeatureClick: function (payload) {
+      this.$emit('neuron-connection-feature-click', payload);
     },
     onSelectionsDataChanged: function (data) {
       this.$emit('pathway-selection-changed', data);
@@ -556,6 +564,10 @@ export default {
     changeViewingMode: function (modeName) {
       let map = this.getCurrentFlatmap()
       map.changeViewingMode(modeName)
+    },
+    setConnectionType: function (type) {
+      let map = this.getCurrentFlatmap();
+      map.setConnectionType(type);
     },
   },
   props: {
