@@ -1,3 +1,9 @@
+import {
+  findPathsByOriginItem,
+  findPathsByDestinationItem,
+  findPathsByViaItem,
+} from '@abi-software/map-utilities';
+
 async function getReferenceConnectivitiesFromStorage(resource) {
   const flatmapKnowledgeRaw = sessionStorage.getItem('flatmap-knowledge');
 
@@ -24,6 +30,43 @@ async function getReferenceConnectivitiesByAPI(mapImp, resource, flatmapQueries)
   const parsedData = mappedData.map((x) => JSON.parse(x));
   const featureIds = parsedData.map((x) => x.id);
   return featureIds;
+}
+
+function getFlatmapKnowledge() {
+  const flatmapKnowledgeRaw = sessionStorage.getItem('flatmap-knowledge');
+
+  if (flatmapKnowledgeRaw) {
+    const flatmapKnowledge = JSON.parse(flatmapKnowledgeRaw);
+    return flatmapKnowledge;
+  }
+  return [];
+}
+
+async function filterPathsByOriginFromKnowledge(resource) {
+  const flatmapKnowledge = getFlatmapKnowledge();
+  const results = findPathsByOriginItem(flatmapKnowledge, resource);
+  if (Array.isArray(results)) {
+    return results.map(x => x.id);
+  }
+  return [];
+}
+
+async function filterPathsByDestinationFromKnowledge(resource) {
+  const flatmapKnowledge = getFlatmapKnowledge();
+  const results = findPathsByDestinationItem(flatmapKnowledge, resource);
+  if (Array.isArray(results)) {
+    return results.map(x => x.id);
+  }
+  return [];
+}
+
+async function filterPathsByViaFromKnowledge(resource) {
+  const flatmapKnowledge = getFlatmapKnowledge();
+  const results = findPathsByViaItem(flatmapKnowledge, resource);
+  if (Array.isArray(results)) {
+    return results.map(x => x.id);
+  }
+  return [];
 }
 
 function getKnowledgeSource(mapImp) {
@@ -103,4 +146,7 @@ export {
   getKnowledgeSource,
   getKnowledgeSourceFromProvenance,
   refreshFlatmapKnowledgeCache,
+  filterPathsByOriginFromKnowledge,
+  filterPathsByDestinationFromKnowledge,
+  filterPathsByViaFromKnowledge,
 }

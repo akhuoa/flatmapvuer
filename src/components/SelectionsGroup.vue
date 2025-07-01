@@ -20,7 +20,7 @@
       </el-col>
       <el-col :span="12">
         <el-checkbox
-          v-if="selections && selections.length > 1"
+          v-if="selections && selections.length > 1 && !showAsLegend"
           class="all-checkbox"
           :indeterminate="isIndeterminate"
           v-model="checkAll"
@@ -31,6 +31,7 @@
       </el-col>
     </el-row>
     <el-checkbox-group
+      :class="{ 'show-as-legend': showAsLegend }"
       v-model="checkedItems"
       size="small"
       class="checkbox-group"
@@ -256,6 +257,10 @@ export default {
         return []
       },
     },
+    showAsLegend: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     isIndeterminate: function () {
@@ -381,6 +386,14 @@ export default {
       border-color: $app-primary-color;
       background-color: #ffffff;
     }
+  }
+}
+
+.show-as-legend {
+  cursor: default;
+  pointer-events: none;
+  :deep(.el-checkbox__input) {
+    display: none;
   }
 }
 </style>
