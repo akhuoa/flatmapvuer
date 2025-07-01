@@ -2001,7 +2001,7 @@ export default {
      * _checkNeuronClicked shows a neuron path pop up if a path was recently clicked._
      * @arg {Object} `data`
      */
-    checkAndCreatePopups: async function (data) {
+    checkAndCreatePopups: async function (data, connectivityExplorerClicked) {
       // Call flatmap database to get the connection data
       if (this.viewingMode === 'Annotation') {
         const features = data.filter(d => d.feature).map(d => d.feature)
@@ -2048,7 +2048,10 @@ export default {
         } else {
           this.annotation = {}
         }
-      } if (this.viewingMode === 'Neuron Connection') {
+      }
+      // clicking on a connectivity explorer card will be same as exploration mode
+      // since the card should be opened
+      else if (this.viewingMode === 'Neuron Connection' && !connectivityExplorerClicked) {
         const resources = data.map(tooltip => tooltip.resource[0]);
         let pathsQueryAPI = this.retrieveConnectedPaths(resources); // TODO: to replace with queryAllConnectedPaths
 
@@ -3037,7 +3040,7 @@ export default {
      * @arg {String} `term`,
      * @arg {String} `displayInfo`
      */
-    searchAndShowResult: function (term, displayInfo) {
+    searchAndShowResult: function (term, displayInfo, connectivityExplorerClicked) {
       if (this.mapImp) {
         if (term === undefined || term === '') {
           this.mapImp.clearSearchResults()
@@ -3069,7 +3072,7 @@ export default {
                   alert: feature.alert,
                 }
                 // Show popup for all modes
-                this.checkAndCreatePopups([data])
+                this.checkAndCreatePopups([data], connectivityExplorerClicked)
                 this.mapImp.showPopup(featureId, capitalise(feature.label), {
                   className: 'custom-popup',
                   positionAtLastClick: false,
