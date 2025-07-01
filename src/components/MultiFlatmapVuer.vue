@@ -89,6 +89,7 @@
       :sparcAPI="sparcAPI"
       :showLocalSettings="showLocalSettings"
       :showOpenMapButton="showOpenMapButton"
+      :showPathwayFilter="showPathwayFilter"
     />
   </div>
 </template>
@@ -98,7 +99,7 @@
 import { markRaw } from 'vue'
 import EventBus from './EventBus'
 import FlatmapVuer from './FlatmapVuer.vue'
-import * as flatmap from '@abi-software/flatmap-viewer'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.5/+esm'
 import {
   ElCol as Col,
   ElOption as Option,
@@ -780,6 +781,13 @@ export default {
      * The option to show open new map button
      */
     showOpenMapButton: {
+      type: Boolean,
+      default: true,
+    },
+    /**
+     * The option to show pathway drawer
+     */
+    showPathwayFilter: {
       type: Boolean,
       default: true,
     },

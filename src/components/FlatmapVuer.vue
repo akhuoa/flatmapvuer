@@ -318,7 +318,7 @@ Please use `const` to assign meaningful names to them...
                 ref="treeControls"
               />
               <selections-group
-                v-if="containsAlert && alertOptions"
+                v-if="containsAlert && alertOptions && showPathwayFilter"
                 title="Alert"
                 labelKey="label"
                 identifierKey="key"
@@ -357,7 +357,7 @@ Please use `const` to assign meaningful names to them...
                 />
               -->
               <selections-group
-                v-if="pathways && pathways.length > 0"
+                v-if="pathways && pathways.length > 0 & showPathwayFilter"
                 title="Pathways"
                 labelKey="label"
                 identifierKey="type"
@@ -370,7 +370,7 @@ Please use `const` to assign meaningful names to them...
                 key="pathwaysSelection"
               />
               <selections-group
-                v-if="taxonConnectivity && taxonConnectivity.length > 0"
+                v-if="taxonConnectivity && taxonConnectivity.length > 0 && showPathwayFilter"
                 title="Studied in"
                 labelKey="label"
                 identifierKey="taxon"
@@ -636,7 +636,7 @@ import {
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
-import * as flatmap from '@abi-software/flatmap-viewer'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.5/+esm'
 import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
@@ -739,6 +739,25 @@ export default {
     return { annotator }
   },
   methods: {
+    enableFeatureResetOnClick: function (enable) {
+      if (this.mapImp) {
+        this.mapImp.enableFeatureResetOnClick(enable)
+      }
+    },
+    /**
+     * 
+     * @param filter format should follow #makeStyleFilter (flatmap-viewer)
+     */
+    setVisibilityFilter: function (filter) {
+      // More filter options -> this.mapImp.featureFilterRanges()
+      if (this.mapImp) {
+        if (filter) {
+          this.mapImp.setVisibilityFilter(filter);
+        } else {
+          this.mapImp.clearVisibilityFilter();
+        }
+      }
+    },
     /**
      * @public
      * Function to manually send aborted signal when annotation tooltip popup or sidebar tab closed.
@@ -1170,7 +1189,7 @@ export default {
     setColour: function (flag) {
       this.colourRadio = flag
       if (this.mapImp) {
-        this.mapImp.setPaint({ colour: flag, outline: this.outlinesRadio })
+        this.mapImp.setPaint({ coloured: flag, outlined: this.outlinesRadio })
       }
     },
     /**
@@ -1182,7 +1201,7 @@ export default {
     setOutlines: function (flag) {
       this.outlinesRadio = flag
       if (this.mapImp) {
-        this.mapImp.setPaint({ colour: this.colourRadio, outline: flag })
+        this.mapImp.setPaint({ coloured: this.colourRadio, outlined: flag })
       }
     },
     setInitMapState: function () {
@@ -2015,12 +2034,7 @@ export default {
         // Emit placeholders first.
         // This may contain invalid connectivity.
         this.tooltipEntry = data
-          .filter((tooltip) => {
-            return (
-              tooltip.resource[0] &&
-              this.mapImp.pathModelNodes(tooltip.resource).length > 0
-            )
-          })
+          .filter(tooltip => tooltip.resource[0] in this.mapImp.pathways.paths)
           .map((tooltip) => {
             return { title: tooltip.label, featureId: tooltip.resource, ready: false }
           })
@@ -2694,6 +2708,120 @@ export default {
         console.error('Map resize error')
       }
     },
+    getFilterSources: function () {
+      const FILTER_PROPERTIES = ['kind', 'taxons']
+      let withAlert = new Set()
+      let withoutAlert = new Set()
+      let filterSourcesMap = new Map()
+      for (const annotation of this.mapImp.annotations.values()) {
+        if (annotation.source) {
+          if ("alert" in annotation) {
+            withAlert.add(annotation.source)
+          } else {
+            withoutAlert.add(annotation.source)
+          }
+          for (const [key, value] of Object.entries(annotation)) {
+            if (FILTER_PROPERTIES.includes(key)) {
+              if (!filterSourcesMap.has(key)) {
+                filterSourcesMap.set(key, new Map())
+              }
+              const sourceMap = filterSourcesMap.get(key)
+              const addToSourceMap = (val) => {
+                const setKey = val
+                if (!sourceMap.has(setKey)) {
+                  sourceMap.set(setKey, new Set())
+                }
+                sourceMap.get(setKey).add(`${annotation.source}`)
+              };
+              if (Array.isArray(value)) {
+                value.forEach(addToSourceMap)
+              } else {
+                addToSourceMap(value)
+              }
+            }
+          }
+        }
+      }
+      let filterSources = {
+        'alert': {
+          'with': [...withAlert],
+          'without': [...withoutAlert]
+        }
+      }
+      for (const [key, value] of filterSourcesMap.entries()) {
+        filterSources[key] = {}
+        for (const [key1, value1] of value.entries()) {
+          filterSources[key][key1] = [...value1.values()]
+        }
+      }
+      return filterSources
+    },
+    getFilterOptions: async function () {
+      if (this.mapImp) {
+        let filterOptions = []
+        const filterRanges = this.mapImp.featureFilterRanges()
+        for (const [key, value] of Object.entries(filterRanges)) {
+          let main = {
+            key: `flatmap.connectivity.${key}`,
+            label: "",
+            children: []
+          }
+          if (key === "kind") {
+            main.label = "Pathways"
+            for (const facet of value) {
+              const pathway = this.pathways.find(p => p.type !== "centreline" && p.type === facet)
+              if (pathway) {
+                main.children.push({
+                  key: `${main.key}.${facet}`,
+                  label: pathway.label,
+                  colour: pathway.colour,
+                  colourStyle: 'line',
+                  dashed: pathway.dashed,
+                })
+              }
+            }
+          } else if (key === "taxons") {
+            main.label = "Studied in"
+            const entityLabels = await findTaxonomyLabels(this.mapImp, this.mapImp.taxonIdentifiers)
+            if (entityLabels.length) {
+              for (const facet of value) {
+                const taxon = entityLabels.find(p => p.taxon === facet)
+                if (taxon) {
+                  main.children.push({
+                    key: `${main.key}.${facet}`,
+                    label: taxon.label
+                  })
+                }
+              }
+            }
+          } else if (key === "alert") {
+            main.label = "Alert"
+            for (const facet of ["with", "without"]) {
+              main.children.push({
+                key: `${main.key}.${facet}`,
+                label: `${facet} alerts`
+              })
+            }
+          }
+          if (main.label && main.children.length) {
+            filterOptions.push(main)
+          }
+        }
+        // let hardcode = {
+        //   key: "flatmap.connectivity.source",
+        //   label: "Connectivity",
+        //   children: []
+        // }
+        // for (const facet of ["Origins", "Components", "Destinations"]) {
+        //   hardcode.children.push({
+        //     key: `flatmap.connectivity.source.${facet}`,
+        //     label: facet
+        //   })
+        // }
+        // filterOptions.push(hardcode)
+        return filterOptions
+      }
+    },
     /**
      * @public
      * This function is used for functions that need to run immediately after the flatmap is loaded.
@@ -3043,6 +3171,13 @@ export default {
      * The option to show open new map button
      */
     showOpenMapButton: {
+      type: Boolean,
+      default: true,
+    },
+    /**
+     * The option to show pathway drawer
+     */
+    showPathwayFilter: {
       type: Boolean,
       default: true,
     },
