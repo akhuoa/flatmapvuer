@@ -2986,6 +2986,23 @@ export default {
         }
         const connectionFilters = [];
         const flatmapKnowledge = _flatmapKnowledge || this.getFlatmapKnowledge();
+        const mapKnowledge = this.mapImp.pathways.paths;
+        flatmapKnowledge.forEach((knowledge) => {
+          const id = knowledge.id;
+          if (id) {
+            const matchObj = mapKnowledge[id];
+            if (matchObj) {
+              const mapConnectivity = matchObj.connectivity;
+              const mapNodePhenotypes = matchObj['node-phenotypes'];
+              knowledge.connectivity = [...knowledge.connectivity, ...mapConnectivity];
+              for (let key in knowledge['node-phenotypes']) {
+                if (mapNodePhenotypes[key]) {
+                  knowledge['node-phenotypes'][key].push(...mapNodePhenotypes[key]);
+                }
+              }
+            }
+          }
+        })
         const originItems = await extractOriginItems(this.flatmapAPI, flatmapKnowledge);
         const viaItems = await extractViaItems(this.flatmapAPI, flatmapKnowledge);
         const destinationItems = await extractDestinationItems(this.flatmapAPI, flatmapKnowledge);
@@ -2994,7 +3011,7 @@ export default {
           const key = JSON.stringify(item.key);
           return {
             key: `flatmap.connectivity.source.${facet}.${key}`,
-            label: item.label
+            label: item.label || key
           };
         }
 
@@ -3007,6 +3024,18 @@ export default {
           } else if (facet === 'destination') {
             childrenList = destinationItems.map((item) => transformItem(facet, item));
           }
+
+          // Those without label but key should be below
+          childrenList = childrenList.sort((a, b) => {
+            const isAlpha = (str) => /^[a-zA-Z]/.test(str);
+            const aAlpha = isAlpha(a.label);
+            const bAlpha = isAlpha(b.label);
+
+            if (aAlpha && !bAlpha) return -1;
+            if (!aAlpha && bAlpha) return 1;
+
+            return a.label.localeCompare(b.label);
+          });
 
           connectionFilters.push({
             key: `flatmap.connectivity.source.${facet}`,
