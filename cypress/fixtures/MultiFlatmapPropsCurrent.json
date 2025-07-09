@@ -1,0 +1,40 @@
+{
+  "minZoom": 4,
+  "availableSpecies": {
+    "Human Female": {
+      "taxo": "NCBITaxon:9606",
+      "biologicalSex": "PATO:0000383",
+      "iconClass": "mapicon-icon_human"
+    },
+    "Human Male": {
+      "taxo": "NCBITaxon:9606",
+      "biologicalSex": "PATO:0000384",
+      "iconClass": "mapicon-icon_human"
+    },
+    "Rat": {
+      "taxo": "NCBITaxon:10114",
+      "iconClass": "mapicon-icon_rat"
+    },
+    "Mouse": {
+      "taxo": "NCBITaxon:10090",
+      "iconClass": "mapicon-icon_mouse"
+    },
+    "Pig": {
+      "taxo": "NCBITaxon:9823",
+      "iconClass": "mapicon-icon_pig"
+    },
+    "Cat": {
+      "taxo": "NCBITaxon:9685",
+      "iconClass": "mapicon-icon_cat"
+    }
+  },
+  "displayCloseButton": false,
+  "initial": "Human Female",
+  "displayMinimap": false,
+  "helpMode": false,
+  "pathControls": true,
+  "mapSettings": [],
+  "flatmapAPI": "https://mapcore-demo.org/current/flatmap/v3/",
+  "featureInfo": true,
+  "layerControl": true
+}
