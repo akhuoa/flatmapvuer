@@ -2,15 +2,22 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
 name: FlatmapVuer CI
+
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      debug_mode:
+        description: Use Cypress Cloud for debugging (requires Cypress ENVs)
+        type: boolean
+        default: false
 
 jobs:
-  build:
-
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
 
     strategy:
@@ -19,12 +26,37 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build --if-present
+
+      - name: Run Cypress tests
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.debug_mode }}" = "true" ]; then
+            echo "Running in Cypress Cloud..."
+            npm run cypress:record
+          else
+            echo "Running component tests..."
+            npm run cypress:component
+          fi
+        env:
+          CYPRESS_PROJECT_ID: ${{ secrets.CYPRESS_PROJECT_ID }}
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          HUMAN_FEMALE_UUID: ${{ secrets.HUMAN_FEMALE_UUID }}
+          HUMAN_MALE_UUID: ${{ secrets.HUMAN_MALE_UUID }}
+          RAT_UUID: ${{ secrets.RAT_UUID }}
+          MOUSE_UUID: ${{ secrets.MOUSE_UUID }}
+          PIG_UUID: ${{ secrets.PIG_UUID }}
+          CAT_UUID: ${{ secrets.CAT_UUID }}
+          ERROR_TOLERANCE: ${{ secrets.ERROR_TOLERANCE }}

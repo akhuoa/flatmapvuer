@@ -4,22 +4,26 @@
 /* eslint-disable no-alert, no-console */
 // import { FlatmapVuer, MultiFlatmapVuer } from '../../src/components/index.js';
 
-import CypressComponentWrapper from './CypressComponentWrapper.vue'
-import { createPinia, setActivePinia } from 'pinia';
+const flatmapServers = ['@stagingProps', '@currentProps']
+const availableSpecies = [
+  { name: "Human Female" },
+  { name: "Human Male" },
+  { name: "Rat" },
+  { name: "Mouse" },
+  { name: "Pig" },
+  { name: "Cat" }
+]
+const organTypes = ['color', 'grayscale']
+const ERROR_TOLERANCE = parseFloat(Cypress.env('ERROR_TOLERANCE'))
 
 describe('MultiFlatmapVuer', () => {
 
-  Cypress.on('uncaught:exception', (err) => {
-    // returning false here prevents Cypress from
-    // failing the test
-    if (err.message.includes('Source "markers" already exists.'))
-      return false
-    return true
-  })
-
   beforeEach(() => {
     cy.viewport(1920, 1080);
-    cy.fixture('MultiFlatmapProps.json').as('props');
+    cy.fixture('MultiFlatmapPropsCurrent.json').as('currentProps');
+    cy.fixture('MultiFlatmapPropsDevel.json').as('develProps');
+    cy.fixture('MultiFlatmapPropsReference.json').as('referenceProps');
+    cy.fixture('MultiFlatmapPropsStaging.json').as('stagingProps');
   });
 
 
@@ -31,74 +35,29 @@ describe('MultiFlatmapVuer', () => {
   })
 
   it('Workflow testing', () => {
-
-    const readySpy = cy.spy().as('readySpy')
-    // const resourceSelectedSpy = cy.spy().as('resourceSelectedSpy')
-    cy.get('@props').then((props) => {
-      console.log('flatmapAPI', props)
-      cy.mount(CypressComponentWrapper, {
-        propsData: {
-          component: 'MultiFlatmapVuer',
-          props: props,
-          events: {
-            ready: readySpy
-          }
-        },
-        global: {
-          plugins: setActivePinia(createPinia())
-        }
-      }).then((vm) => {
-        cy.wrap(vm).as('vm')
-        window.vm = vm
-
-      }).get('@vue').should('exist')
-
-      // Now that we have the vue wrapper, check that the ready event is fired
-      .then(() => {
-        cy.get('@vue').should(wrapper => {
-          expect(wrapper.emitted('ready')).to.be.ok
-          Cypress.multiFlatmapVuerWrapper = wrapper
-        })
-      })
-
-    })
-
-    Cypress.on('uncaught:exception', (err) => {
-      // returning false here prevents Cypress from
-      // failing the test
-      if (err.message.includes("this.facets.at is not a function"))
-        return false
-      return true
-    })
-
+    cy.loadMultiFlatmap('@develProps')
 
     //Check if the minimap is visible
     cy.get('#maplibre-minimap > .maplibregl-canvas-container > .maplibregl-canvas').should('exist');
 
-    //Check if the ready event is fired
-    // *** Commenting this out until we can figure out why it's not working
-    // cy.get('@readySpy').should('have.been.calledWith', true)
-
     // Check if flatmap emits ready event
-    cy.get('@vue').should(wrapper => {
-      expect(wrapper.emitted('ready')).to.be.ok
-    }).then(() => {
-
+    cy.get('@readySpy').should('have.been.calledWith').then(() => {
       // Create a pop up and ensure it shows
-      let mapImp = window.Cypress.multiFlatmapVuer.getCurrentFlatmap()
-      console.log('flatmap', mapImp)
-      mapImp.showPopup(45,'Test', { className: 'flatmapvuer-popover', positionAtLastClick: true })
+      const mapImp = window.Cypress.multiFlatmapVuer.getCurrentFlatmap()
+      console.log('flatmapImp', mapImp)
+      mapImp.showPopup(45, 'Test', { className: 'flatmapvuer-popover', positionAtLastClick: true })
+
       cy.get('.flatmapvuer-popover').should('exist').contains('Test').then(() => {
         // Close the pop up
         cy.get('.maplibregl-popup-close-button').click();
         cy.get('.flatmapvuer-popover').should('not.exist');
 
-          // Check if alert exist in test flatmap
+        // Check if alert exist in test flatmap
         cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas').as('canvas')
         cy.get('.checkall-display-text').then(($label) => {
           expect($label, 'Alter filter should exist').to.contain('Alert')
           // Take a screenshot of no path flatmap
-          cy.get(':nth-child(4) > :nth-child(1) > :nth-child(2) > .el-checkbox').click()
+          cy.get('.pathway-location > .pathway-container:visible').contains('Alert').parent().siblings().children('.el-checkbox').click()
           cy.get('.pathway-location > .drawer-button:visible').click()
           // CLI
           cy.get('@canvas').screenshot('base/cypress/component/MultiFlatmapVuer.cy.js/mapalert')
@@ -112,7 +71,7 @@ describe('MultiFlatmapVuer', () => {
             expect(comparisonResults.percentage).to.greaterThan(0)
           })
         })
-      // Check the metadata for path exploration is loading correctly
+        // Check the metadata for path exploration is loading correctly
       }).then(() => {
         let flatmapVuer = window.Cypress.flatmapVuer
         console.log('flatmapVuer', flatmapVuer)
@@ -156,10 +115,8 @@ describe('MultiFlatmapVuer', () => {
             cy.get('#open-dendrites-button').should('exist').click()
 
             // Check that the resource selected event is emitted
-            cy.get('@vue').should(wrapper => {
-              expect(wrapper.emitted('resource-selected')).to.be.ok
-            })
-
+            cy.get('@resourceSelectedSpy').should('have.been.calledWith')
+            
             // create a single stub we will use
             cy.window().then(win => {
               cy.stub(win, 'open').as('Open')
@@ -178,7 +135,7 @@ describe('MultiFlatmapVuer', () => {
           // Close the pop up
           cy.get('.maplibregl-popup-close-button').should('exist')
 
-        // Test the search
+          // Test the search
         }).then(() => {
           flatmapVuer.searchAndShowResult('body proper', true)
           cy.get('.maplibregl-popup').should('exist').contains('Body proper')
@@ -191,97 +148,124 @@ describe('MultiFlatmapVuer', () => {
   })
 
   it('change different species', () => {
-
-    // const resourceSelectedSpy = cy.spy().as('resourceSelectedSpy')
-    cy.get('@props').then((props) => {
-      console.log('flatmapAPI', props)
-      cy.mount(CypressComponentWrapper, {
-        propsData: {
-          component: 'MultiFlatmapVuer',
-          props: props,
-        },
-        global: {
-          plugins: setActivePinia(createPinia())
-        }
-      }).then((vm) => {
-        cy.wrap(vm).as('vm')
-        window.vm = vm
-
-      }).get('@vue').should('exist')
-
-      // Now that we have the vue wrapper, check that the ready event is fired
-      .then(() => {
-        cy.get('@vue').should(wrapper => {
-          expect(wrapper.emitted('ready')).to.be.ok
-          Cypress.multiFlatmapVuerWrapper = wrapper
-        })
-      })
-
-    })
-
-    Cypress.on('uncaught:exception', (err) => {
-      // returning false here prevents Cypress from
-      // failing the test
-      if (err.message.includes("Cannot read properties of null (reading '$el')"))
-        return false
-      return true
-    })
+    cy.loadMultiFlatmap('@develProps')
 
     // Check if flatmap emits ready event
-    cy.get('@vue').should(wrapper => {
-      expect(wrapper.emitted('ready')).to.be.ok
-    }).then(() => {
+    cy.get('@readySpy').should('have.been.calledWith').then(() => {
       const multiFlatmapVuer = window.Cypress.multiFlatmapVuer
-      const speciesList = [
-        {
-          name: 'Human Female',
-          taxon: 'NCBITaxon:9606'
-        },
-        {
-          name: "Human Male",
-          taxon: "NCBITaxon:9606"
-        },
-        {
-          name: 'Functional Connectivity',
-          taxon: 'FunctionalConnectivity'
+
+      cy.get('@develProps').then((props) => {
+        const availableSpecies = []
+        for (const [key, value] of Object.entries(props.availableSpecies)) {
+          availableSpecies.push({ name: key, taxon: value.taxo })
         }
-      ]
 
-      // Switching species
-      const switchSpeciesAndTest = (speciesId, speciesTaxo) => {
-        multiFlatmapVuer.setSpecies(
-          speciesId,
-          multiFlatmapVuer.state ? multiFlatmapVuer.state.state : undefined,
-          1
-        )
-      }
+        availableSpecies.forEach((species) => {
+          cy.then(() => {
+            multiFlatmapVuer.setSpecies(
+              species.name,
+              multiFlatmapVuer.state ? multiFlatmapVuer.state.state : undefined,
+              1
+            )
 
-      // Human Female
-      switchSpeciesAndTest(speciesList[0].name, speciesList[0].taxon)
-      expect(multiFlatmapVuer.activeSpecies).to.eq(speciesList[0].name)
-      cy.get('#maplibre-minimap > .maplibregl-canvas-container > .maplibregl-canvas').should('exist');
-      cy.get('.maplibregl-map').should('exist');
-      cy.get('.pathway-location').should('exist');
+            expect(multiFlatmapVuer.activeSpecies).to.eq(species.name)
+            cy.get('#maplibre-minimap > .maplibregl-canvas-container > .maplibregl-canvas').should('exist');
+            cy.get('.maplibregl-map').should('exist');
+            cy.get('.pathway-location').should('exist');
 
-      cy.wait(8000)
-
-      // Rat (NPO)
-      switchSpeciesAndTest(speciesList[1].name, speciesList[1].taxon)
-      expect(multiFlatmapVuer.activeSpecies).to.eq(speciesList[1].name)
-      cy.get('#maplibre-minimap > .maplibregl-canvas-container > .maplibregl-canvas').should('exist');
-      cy.get('.maplibregl-map').should('exist');
-      cy.get('.pathway-location').should('exist');
-
-      cy.wait(8000)
-
-      // Functional Connectivity
-      switchSpeciesAndTest(speciesList[2].name, speciesList[2].taxon)
-      expect(multiFlatmapVuer.activeSpecies).to.eq(speciesList[2].name)
-      cy.get('#maplibre-minimap > .maplibregl-canvas-container > .maplibregl-canvas').should('exist');
-      cy.get('.maplibregl-map').should('exist');
-      cy.get('.pathway-location').should('exist');
+            cy.wait(8000)
+          })
+        })
+      })
     })
+  })
 
+  it('prepare reference images', () => {
+    cy.loadMultiFlatmap('@referenceProps')
+
+    cy.get('@readySpy').should('have.been.calledWith').then(() => {
+      const multiFlatmapVuer = window.Cypress.multiFlatmapVuer
+
+      cy.get('@referenceProps').then((props) => {
+        const availableSpecies = []
+        for (const [key, value] of Object.entries(props.availableSpecies)) {
+          availableSpecies.push({ name: key, taxon: value.taxo })
+        }
+
+        availableSpecies.forEach((species) => {
+          cy.then(() => {
+            multiFlatmapVuer.setSpecies(
+              species.name,
+              multiFlatmapVuer.state ? multiFlatmapVuer.state.state : undefined,
+              1
+            )
+            cy.wait(1000)
+            cy.get('.el-loading-mask', { timeout: 30000 }).should('not.exist')
+            expect(multiFlatmapVuer.activeSpecies).to.eq(species.name)
+            const flatmapVuer = multiFlatmapVuer.$refs[species.name][0]
+            // hide pathways
+            cy.get('.pathway-location > .pathway-container:visible').contains('Pathways').parent().siblings().children('.el-checkbox').click()
+            // hide drawer
+            cy.get('.pathway-location > .drawer-button:visible').click()
+            cy.wait(2000)
+
+            cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas:visible').as('canvas')
+            organTypes.forEach((type) => {
+              cy.then(() => {
+                if (type === 'grayscale') {
+                  flatmapVuer.mapImp.setPaint({ coloured: false })
+                  cy.wait(3000)
+                }
+                // CLI
+                cy.get('@canvas').screenshot(`base/cypress/component/MultiFlatmapVuer.cy.js/${species.name}_${type}`)
+                // UI
+                cy.get('@canvas').screenshot(`MultiFlatmapVuer.cy.js/base/cypress/component/MultiFlatmapVuer.cy.js/${species.name}_${type}`)
+              })
+            })
+          })
+        })
+      })
+    })
+  })
+
+  flatmapServers.forEach((entry) => {
+    availableSpecies.forEach((species) => {
+      it(`image rendering for ${entry}-${species.name}`, () => {
+        cy.loadMultiFlatmap(entry, species.name)
+
+        cy.get('@readySpy').should('have.been.calledWith').then(() => {
+          const multiFlatmapVuer = window.Cypress.multiFlatmapVuer
+          const flatmapVuer = multiFlatmapVuer.$refs[species.name][0]
+
+          cy.then(() => {
+            cy.wait(1000)
+            cy.get('.el-loading-mask', { timeout: 30000 }).should('not.exist')
+            expect(multiFlatmapVuer.activeSpecies, `Active species should be ${species.name}`).to.eq(species.name)
+            // hide pathways
+            cy.get('.pathway-location > .pathway-container:visible').contains('Pathways').parent().siblings().children('.el-checkbox').click()
+            // hide drawer
+            cy.get('.pathway-location > .drawer-button:visible').click()
+            cy.wait(2000)
+
+            cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas:visible').as('canvas')
+            cy.log(`THE LATEST ${entry} ${species.name} MAP UUID IS ${flatmapVuer.mapImp.uuid}`)
+            organTypes.forEach((type) => {
+              cy.then(() => {
+                if (type === 'grayscale') {
+                  flatmapVuer.mapImp.setPaint({ coloured: false })
+                  cy.wait(3000)
+                }
+                cy.get('@canvas').compareSnapshot(`${species.name}_${type}`).then(comparisonResults => {
+                  // Percentage of minor pixel changes usually very small
+                  // Assume it will not have lot of pixel update in normal case
+                  expect(comparisonResults.percentage, `${species.name}_color maps should be almost identical`).to.be.lessThan(ERROR_TOLERANCE)
+                })
+              })
+            })
+          })
+        })
+      })
+    })
   })
 
 });

@@ -1,6 +1,6 @@
 {
   "name": "@abi-software/flatmapvuer",
-  "version": "1.10.1-beta.2",
+  "version": "1.10.2",
   "license": "Apache-2.0",
   "files": [
     "dist/*",
@@ -17,8 +17,9 @@
     "serve": "vite --host --force",
     "build-bundle": "vite build",
     "build-static": "vite build -c vite.static-build.js",
-    "test": "cypress run --component",
     "cypress:open": "cypress open",
+    "cypress:component": "cypress run --component",
+    "cypress:record": "cypress run --component --record",
     "release:beta": "npm version prerelease --preid=beta; npm publish --tag beta",
     "release:minor": "npm version minor; npm publish",
     "release:patch": "npm version patch;  npm publish",

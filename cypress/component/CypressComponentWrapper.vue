@@ -39,8 +39,10 @@ export default {
     },
     flatmapReady() {
       console.log('Flatmap ready!')
-      window.Cypress.flatmapVuer = this.$refs.component.$refs.Test[0]
-      console.log('window.Cypress.flatmapVuer', window.Cypress.flatmapVuer)
+      if ('Test' in this.$refs.component.$refs) {
+        window.Cypress.flatmapVuer = this.$refs.component.$refs.Test[0]
+        console.log('window.Cypress.flatmapVuer', window.Cypress.flatmapVuer)
+      }
       this.$emit('ready', true)
     },
     resourceSelected(resource) {
