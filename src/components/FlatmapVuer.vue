@@ -651,6 +651,7 @@ import {
   extractOriginItems,
   extractDestinationItems,
   extractViaItems,
+  fetchLabels,
   queryAllConnectedPaths,
   DrawToolbar,
   Tooltip,
@@ -2046,11 +2047,13 @@ export default {
           this.annotation = {}
         }
       }
-      // clicking on a connectivity explorer card will be same as exploration mode
-      // since the card should be opened
+      // clicking on a connectivity explorer card will be the same as exploration mode
+      // the card should be opened without doing other functions
       else if (this.viewingMode === 'Neuron Connection' && !connectivityExplorerClicked) {
         const resources = data.map(tooltip => tooltip.resource[0]);
-        let pathsQueryAPI = this.retrieveConnectedPaths(resources); // TODO: to replace with queryAllConnectedPaths
+        // TODO: to remove pathsQueryAPI
+        // the new query, queryPathsByRoute, is used in mapviewer for CQ
+        // let pathsQueryAPI = this.retrieveConnectedPaths(resources); // TODO: to replace with queryAllConnectedPaths
 
         // filter out paths
         const featureId = resources.find(resource => !resource.startsWith('ilxtr:'));
@@ -2066,33 +2069,61 @@ export default {
           const anatomicalNodes = annotation?.['anatomical-nodes'];
           const uniqueResource = anatomicalNodes ? JSON.parse(anatomicalNodes[0]) : transformResources;
 
-          if (this.connectionType === 'Origin') {
+          // if (this.connectionType === 'Origin') {
             // Competency Query API
             // pathsQueryAPI = queryPathsByOrigin(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
 
             // search by unique placement before competency API is ready for this
-            pathsQueryAPI = filterPathsByOriginFromKnowledge(uniqueResource);
-          } else if (this.connectionType === 'Via') {
+            // pathsQueryAPI = filterPathsByOriginFromKnowledge(uniqueResource);
+          // } else if (this.connectionType === 'Via') {
             // Competency Query API
             // pathsQueryAPI = queryPathsByViaLocation(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
 
             // search by unique placement before competency API is ready for this
-            pathsQueryAPI = filterPathsByViaFromKnowledge(uniqueResource);
-          } else if (this.connectionType === 'Destination') {
+            // pathsQueryAPI = filterPathsByViaFromKnowledge(uniqueResource);
+          // } else if (this.connectionType === 'Destination') {
             // Competency Query API
             // pathsQueryAPI = queryPathsByDestination(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
 
             // search by unique placement before competency API is ready for this
-            pathsQueryAPI = filterPathsByDestinationFromKnowledge(uniqueResource);
-          } else {
-            pathsQueryAPI = queryAllConnectedPaths(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
+            // pathsQueryAPI = filterPathsByDestinationFromKnowledge(uniqueResource);
+          // } else {
+            // pathsQueryAPI = queryAllConnectedPaths(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
+          // }
+          const terms = uniqueResource.flat(Infinity);
+          const uniqueTerms = [...new Set(terms)];
+          const fetchResults = await fetchLabels(this.flatmapAPI, uniqueTerms);
+          const objectResults = fetchResults.reduce((arr, item) => {
+            const id = item[0];
+            const valObj = JSON.parse(item[1]);
+            if (valObj.source === this.mapImp.knowledgeSource) {
+              arr.push({ id, label: valObj.label });
+            }
+            return arr;
+          }, []);
+          const labels = [];
+          for (let i = 0; i < uniqueTerms.length; i++) {
+            const foundObj = objectResults.find((obj) => obj.id === uniqueTerms[i])
+            if (foundObj) {
+              labels.push(foundObj.label);
+            }
           }
-          this.connectivityfilters.push({
+          const filterItemLabel = capitalise(labels.join(', '));
+          const newConnectivityfilter = {
             facet: JSON.stringify(uniqueResource),
             facetPropPath: `flatmap.connectivity.source.${this.connectionType.toLowerCase()}`,
-            label: JSON.stringify(uniqueResource),
+            tagLabel: filterItemLabel, // used tagLabel here instead of label since the label and value are different
             term: this.connectionType
-          })
+          };
+          // check for existing item
+          const isNewFilterItemExist = this.connectivityfilters.some((connectivityfilter) => (
+            connectivityfilter.facet === newConnectivityfilter.facet &&
+            connectivityfilter.facetPropPath === newConnectivityfilter.facetPropPath
+          ));
+
+          if (!isNewFilterItemExist) {
+            this.connectivityfilters.push(newConnectivityfilter);
+          }
           // TODO: to remove "neuron-connection-click"
           this.$emit('neuron-connection-feature-click', this.connectivityfilters);
         }
@@ -2170,8 +2201,30 @@ export default {
         }
       }
     },
-    resetConnectivityfilters: function () {
-      this.connectivityfilters = [];
+    /**
+     * Updates the connectivity filters in flatmap when there are changes in the sidebar.
+     * @public
+     * @param {Array} payload - The array of filter items to update.
+     */
+    updateConnectivityFilters: function (payload) {
+      if (!payload.length) return;
+      this.connectivityfilters = payload.filter((filterItem) => (
+        filterItem.facet.toLowerCase() !== 'show all'
+      ));
+    },
+    resetConnectivityfilters: function (payload) {
+      if (payload.length) {
+        // remove not found items
+        this.connectivityfilters = this.connectivityfilters.filter((connectivityfilter) =>
+          payload.some((notFoundItem) => (
+            notFoundItem.facetPropPath === connectivityfilter.facetPropPath &&
+            notFoundItem.facet !== connectivityfilter.facet
+          ))
+        )
+      } else {
+        // full reset
+        this.connectivityfilters = [];
+      }
     },
     getKnowledgeTooltip: async function (data) {
       //require data.resource && data.feature.source
@@ -2876,9 +2929,9 @@ export default {
       }
       return filterSources
     },
-    getFilterOptions: async function () {
+    getFilterOptions: async function (_flatmapKnowledge) {
+      let filterOptions = [];
       if (this.mapImp) {
-        let filterOptions = []
         const filterRanges = this.mapImp.featureFilterRanges()
         for (const [key, value] of Object.entries(filterRanges)) {
           let main = {
@@ -2932,16 +2985,16 @@ export default {
           }
         }
         const connectionFilters = [];
-        const flatmapKnowledge = this.getFlatmapKnowledge();
-        const originItems = extractOriginItems(flatmapKnowledge);
-        const viaItems = extractViaItems(flatmapKnowledge);
-        const destinationItems = extractDestinationItems(flatmapKnowledge);
+        const flatmapKnowledge = _flatmapKnowledge || this.getFlatmapKnowledge();
+        const originItems = await extractOriginItems(this.flatmapAPI, flatmapKnowledge);
+        const viaItems = await extractViaItems(this.flatmapAPI, flatmapKnowledge);
+        const destinationItems = await extractDestinationItems(this.flatmapAPI, flatmapKnowledge);
 
         const transformItem = (facet, item) => {
-          const label = JSON.stringify(item);
+          const key = JSON.stringify(item.key);
           return {
-            key: `flatmap.connectivity.source.${facet}.${label}`,
-            label: label
+            key: `flatmap.connectivity.source.${facet}.${key}`,
+            label: item.label
           };
         }
 
@@ -2963,8 +3016,8 @@ export default {
         }
 
         filterOptions.push(...connectionFilters)
-        return filterOptions
       }
+      return filterOptions;
     },
     /**
      * @public
