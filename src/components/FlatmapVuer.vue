@@ -3013,9 +3013,10 @@ export default {
             }
           }
         })
-        const originItems = await extractOriginItems(this.flatmapAPI, flatmapKnowledge);
-        const viaItems = await extractViaItems(this.flatmapAPI, flatmapKnowledge);
-        const destinationItems = await extractDestinationItems(this.flatmapAPI, flatmapKnowledge);
+        const knowledgeSource = this.mapImp.knowledgeSource;
+        const originItems = await extractOriginItems(this.flatmapAPI, knowledgeSource, flatmapKnowledge);
+        const viaItems = await extractViaItems(this.flatmapAPI, knowledgeSource, flatmapKnowledge);
+        const destinationItems = await extractDestinationItems(this.flatmapAPI, knowledgeSource, flatmapKnowledge);
 
         const transformItem = (facet, item) => {
           const key = JSON.stringify(item.key);
