@@ -2067,7 +2067,17 @@ export default {
           const featureId = data[0].feature?.featureId;
           const annotation = this.mapImp.annotations.get(featureId);
           const anatomicalNodes = annotation?.['anatomical-nodes'];
-          const uniqueResource = anatomicalNodes ? JSON.parse(anatomicalNodes[0]) : transformResources;
+          let anatomicalNode;
+          let uniqueResource = transformResources;
+          const models = annotation?.['models'];
+          if (anatomicalNodes?.length) {
+            anatomicalNode = anatomicalNodes[anatomicalNodes.length - 1];
+          }
+          if (anatomicalNode) {
+            uniqueResource = JSON.parse(anatomicalNode);
+          } else if (models) {
+            uniqueResource = [models, []];
+          }
 
           // if (this.connectionType === 'Origin') {
             // Competency Query API
