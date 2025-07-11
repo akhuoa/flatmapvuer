@@ -2051,9 +2051,6 @@ export default {
       // the card should be opened without doing other functions
       else if (this.viewingMode === 'Neuron Connection' && !connectivityExplorerClicked) {
         const resources = data.map(tooltip => tooltip.resource[0]);
-        // TODO: to remove pathsQueryAPI
-        // the new query, queryPathsByRoute, is used in mapviewer for CQ
-        // let pathsQueryAPI = this.retrieveConnectedPaths(resources); // TODO: to replace with queryAllConnectedPaths
 
         // filter out paths
         const featureId = resources.find(resource => !resource.startsWith('ilxtr:'));
@@ -2079,27 +2076,6 @@ export default {
             uniqueResource = [models, []];
           }
 
-          // if (this.connectionType === 'Origin') {
-            // Competency Query API
-            // pathsQueryAPI = queryPathsByOrigin(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
-
-            // search by unique placement before competency API is ready for this
-            // pathsQueryAPI = filterPathsByOriginFromKnowledge(uniqueResource);
-          // } else if (this.connectionType === 'Via') {
-            // Competency Query API
-            // pathsQueryAPI = queryPathsByViaLocation(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
-
-            // search by unique placement before competency API is ready for this
-            // pathsQueryAPI = filterPathsByViaFromKnowledge(uniqueResource);
-          // } else if (this.connectionType === 'Destination') {
-            // Competency Query API
-            // pathsQueryAPI = queryPathsByDestination(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
-
-            // search by unique placement before competency API is ready for this
-            // pathsQueryAPI = filterPathsByDestinationFromKnowledge(uniqueResource);
-          // } else {
-            // pathsQueryAPI = queryAllConnectedPaths(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
-          // }
           const terms = uniqueResource.flat(Infinity);
           const uniqueTerms = [...new Set(terms)];
           const fetchResults = await fetchLabels(this.flatmapAPI, uniqueTerms);
@@ -2134,56 +2110,8 @@ export default {
           if (!isNewFilterItemExist) {
             this.connectivityfilters.push(newConnectivityfilter);
           }
-          // TODO: to remove "neuron-connection-click"
           this.$emit('neuron-connection-feature-click', this.connectivityfilters);
         }
-
-        // TODO: to clean up after verification
-        // pathsQueryAPI.then(async (paths) => {
-        //   if (paths.length) {
-        //     const filteredPaths = paths.filter(path => (path in this.mapImp.pathways.paths))
-        //     const filteredPathsWithData = [];
-        //     let prom1 = [];
-        //     let prom2 = [];
-
-        //     for (let i = 0; i < filteredPaths.length; i++) {
-        //       const path = filteredPaths[i];
-        //       const modelFeatureIds = this.mapImp.modelFeatureIds(path);
-        //       const feature = this.mapImp.featureProperties(modelFeatureIds[0]);
-        //       if (feature) {
-        //         const pathData = {
-        //           resource: [feature.models],
-        //           feature: feature,
-        //           label: feature.label,
-        //           provenanceTaxonomy: feature.taxons,
-        //           alert: feature.alert,
-        //         };
-        //         filteredPathsWithData.push(pathData);
-        //         prom1.push({
-        //           title: pathData.label,
-        //           featureId: [path]
-        //         })
-        //       }
-        //     }
-        //     this.tooltipEntry = await Promise.all(prom1)
-        //     // Emit placeholders first.
-        //     this.$emit('connectivity-info-open', this.tooltipEntry);
-
-        //     /**
-        //      * This event is emitted to highlight the same paths on other display maps.
-        //      */
-        //     this.$emit('neuron-connection-click', paths);
-
-        //     // loading data
-        //     for (let i = 0; i < filteredPathsWithData.length; i++) {
-        //       const pathData = filteredPathsWithData[i];
-        //       const tooltipEntryData = await this.getKnowledgeTooltip(pathData);
-        //       prom2.push(tooltipEntryData)
-        //     }
-        //     this.tooltipEntry = await Promise.all(prom2)
-        //     this.displayTooltip(filteredPaths)
-        //   }
-        // })
       } else {
         // load and store knowledge
         loadAndStoreKnowledge(this.mapImp, this.flatmapQueries);
