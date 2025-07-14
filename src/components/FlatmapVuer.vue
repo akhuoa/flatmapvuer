@@ -2867,7 +2867,7 @@ export default {
       }
       return filterSources
     },
-    getFilterOptions: async function (_flatmapKnowledge) {
+    getFilterOptions: async function (providedKnowledge) {
       let filterOptions = [];
       if (this.mapImp) {
         const filterRanges = this.mapImp.featureFilterRanges()
@@ -2923,24 +2923,29 @@ export default {
           }
         }
         const connectionFilters = [];
-        const flatmapKnowledge = _flatmapKnowledge || this.getFlatmapKnowledge();
+        const baseFlatmapKnowledge = providedKnowledge || this.getFlatmapKnowledge();
         const mapKnowledge = this.mapImp.pathways.paths;
-        flatmapKnowledge.forEach((knowledge) => {
+        const flatmapKnowledge = baseFlatmapKnowledge.reduce((arr, knowledge) => {
           const id = knowledge.id;
           if (id) {
-            const matchObj = mapKnowledge[id];
-            if (matchObj) {
-              const mapConnectivity = matchObj.connectivity;
-              const mapNodePhenotypes = matchObj['node-phenotypes'];
-              knowledge.connectivity = [...knowledge.connectivity, ...mapConnectivity];
+            const mapKnowledgeObj = mapKnowledge[id];
+            if (mapKnowledgeObj) {
+              const mapConnectivity = mapKnowledgeObj.connectivity;
+              const mapNodePhenotypes = mapKnowledgeObj['node-phenotypes'];
+              // take only map connectivity
+              knowledge.connectivity = [...mapConnectivity];
               for (let key in knowledge['node-phenotypes']) {
                 if (mapNodePhenotypes[key]) {
-                  knowledge['node-phenotypes'][key].push(...mapNodePhenotypes[key]);
+                  // take only map node-phenotypes
+                  knowledge['node-phenotypes'][key] = [...mapNodePhenotypes[key]];
                 }
               }
+              // to avoid mutation
+              arr.push(JSON.parse(JSON.stringify(knowledge)));
             }
           }
-        })
+          return arr;
+        }, []);
         const knowledgeSource = this.mapImp.knowledgeSource;
         const originItems = await extractOriginItems(this.flatmapAPI, knowledgeSource, flatmapKnowledge);
         const viaItems = await extractViaItems(this.flatmapAPI, knowledgeSource, flatmapKnowledge);
