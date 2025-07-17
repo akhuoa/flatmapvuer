@@ -103,7 +103,7 @@ let FlatmapQueries = function () {
     this.controller = undefined
     this.uberons = []
     this.lookUp = []
-    this.connectivitySource = 'sckan'
+    this.connectivitySource = 'map' // 'sckan'
   }
 
   this.createTooltipData = async function (mapImp, eventData) {
@@ -290,7 +290,7 @@ let FlatmapQueries = function () {
     return results
   }
 
-  this.queryForConnectivityNew = function (mapImp, keastId, connectivitySource = 'sckan', processConnectivity = true) {
+  this.queryForConnectivityNew = function (mapImp, keastId, connectivitySource = 'map', processConnectivity = true) {
     this.connectivitySource = connectivitySource
     return new Promise((resolve) => {
       const queryAPI = connectivitySource === 'map'
