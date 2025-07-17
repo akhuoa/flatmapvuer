@@ -2110,7 +2110,25 @@ export default {
           if (!isNewFilterItemExist) {
             this.connectivityfilters.push(newConnectivityfilter);
           }
-          this.$emit('neuron-connection-feature-click', this.connectivityfilters);
+
+          if (this.connectionType.toLowerCase() === 'all') {
+            const searchTerms = uniqueTerms.join();
+            this.$emit('neuron-connection-feature-click', {
+              filters: [],
+              search: searchTerms,
+            });
+          } else {
+            this.$emit('neuron-connection-feature-click', {
+              filters: this.connectivityfilters,
+              search: '',
+            });
+          }
+        } else {
+          const searchTerms = resources.join();
+          this.$emit('neuron-connection-feature-click', {
+            filters: [],
+            search: searchTerms,
+          });
         }
       } else {
         // load and store knowledge
