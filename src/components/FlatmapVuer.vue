@@ -1948,7 +1948,18 @@ export default {
         this.emitConnectivityError(errorData);
 
         // highlight all available features
-        const featureIdsToHighlight = this.mapImp.modelFeatureIdList(featuresToHighlight);
+        const connectivityFeatures = featuresToHighlight.reduce((arr, path) => {
+          const connectivityObj = this.mapImp.pathways.paths[path];
+          const connectivities = connectivityObj ? connectivityObj.connectivity : null;
+          if (connectivities) {
+            const flatFeatures = connectivities.flat(Infinity);
+            arr.push(...flatFeatures);
+          }
+          return arr;
+        }, []);
+        const uniqueConnectivityFeatures = [...new Set(connectivityFeatures)];
+        const combinedFeatures = [...featuresToHighlight, ...uniqueConnectivityFeatures];
+        const featureIdsToHighlight = this.mapImp.modelFeatureIdList(combinedFeatures);
         const allFeaturesToHighlight = [
           ...featureIdsToHighlight,
           ...geojsonHighlights
