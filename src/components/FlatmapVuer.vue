@@ -260,8 +260,17 @@ Please use `const` to assign meaningful names to them...
               :style="{ 'max-height': pathwaysMaxHeight + 'px' }"
               v-popover:checkBoxPopover
             >
-              <svg-legends v-if="!isFC" class="svg-legends-container" />
-              <template v-if="showStarInLegend">
+              <!-- <svg-legends v-if="!isFC" class="svg-legends-container" /> -->
+              <dynamic-legends
+                v-if="!isFC"
+                identifierKey="prompt"
+                colourKey="colour"
+                styleKey="style"
+                :legends="flatmapLegends"
+                :showStarInLegend="showStarInLegend"
+                class="svg-legends-container"
+              />
+              <!-- <template v-if="showStarInLegend">
                 <el-popover
                   content="Location of the featured dataset"
                   placement="right"
@@ -283,7 +292,7 @@ Please use `const` to assign meaningful names to them...
                     ></div>
                   </template>
                 </el-popover>
-              </template>
+              </template> -->
               <!-- The line below places the yellowstar svg on the left, and the text "Featured markers on the right" with css so they are both centered in the div -->
               <el-popover
                 content="Find these markers for data. The number inside the markers is the number of datasets available for each marker."
@@ -611,6 +620,7 @@ import SelectionsGroup from './SelectionsGroup.vue'
 import { MapSvgIcon, MapSvgSpriteColor } from '@abi-software/svg-sprite'
 import '@abi-software/svg-sprite/dist/style.css'
 import SvgLegends from './legends/SvgLegends.vue'
+import DynamicLegends from './legends/DynamicLegends.vue'
 import {
   ElButton as Button,
   ElCol as Col,
@@ -633,25 +643,19 @@ import {
   refreshFlatmapKnowledgeCache,
   getKnowledgeSource,
   getReferenceConnectivitiesByAPI,
-  filterPathsByOriginFromKnowledge,
-  filterPathsByDestinationFromKnowledge,
-  filterPathsByViaFromKnowledge,
 } from '../services/flatmapKnowledge.js'
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.8/+esm'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.10/+esm'
 import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
 import {
-  queryPathsByOrigin,
-  queryPathsByViaLocation,
-  queryPathsByDestination,
   extractOriginItems,
   extractDestinationItems,
   extractViaItems,
-  queryAllConnectedPaths,
+  fetchLabels,
   DrawToolbar,
   Tooltip,
   TreeControls
@@ -1332,6 +1336,7 @@ export default {
      * @arg {string} `pathId` or `anatomicalId`
      */
     retrieveConnectedPaths: async function (payload, options = {}) {
+      // query all connected paths from flatmap
       if (this.mapImp) {
         let connectedPaths = [];
         let connectedTarget = options.target?.length ? options.target : [];
@@ -1930,7 +1935,18 @@ export default {
         this.emitConnectivityError(errorData);
 
         // highlight all available features
-        const featureIdsToHighlight = this.mapImp.modelFeatureIdList(featuresToHighlight);
+        const connectivityFeatures = featuresToHighlight.reduce((arr, path) => {
+          const connectivityObj = this.mapImp.pathways.paths[path];
+          const connectivities = connectivityObj ? connectivityObj.connectivity : null;
+          if (connectivities) {
+            const flatFeatures = connectivities.flat(Infinity);
+            arr.push(...flatFeatures);
+          }
+          return arr;
+        }, []);
+        const uniqueConnectivityFeatures = [...new Set(connectivityFeatures)];
+        const combinedFeatures = [...featuresToHighlight, ...uniqueConnectivityFeatures];
+        const featureIdsToHighlight = this.mapImp.modelFeatureIdList(combinedFeatures);
         const allFeaturesToHighlight = [
           ...featureIdsToHighlight,
           ...geojsonHighlights
@@ -2046,11 +2062,10 @@ export default {
           this.annotation = {}
         }
       }
-      // clicking on a connectivity explorer card will be same as exploration mode
-      // since the card should be opened
+      // clicking on a connectivity explorer card will be the same as exploration mode
+      // the card should be opened without doing other functions
       else if (this.viewingMode === 'Neuron Connection' && !connectivityExplorerClicked) {
         const resources = data.map(tooltip => tooltip.resource[0]);
-        let pathsQueryAPI = this.retrieveConnectedPaths(resources); // TODO: to replace with queryAllConnectedPaths
 
         // filter out paths
         const featureId = resources.find(resource => !resource.startsWith('ilxtr:'));
@@ -2064,85 +2079,74 @@ export default {
           const featureId = data[0].feature?.featureId;
           const annotation = this.mapImp.annotations.get(featureId);
           const anatomicalNodes = annotation?.['anatomical-nodes'];
-          const uniqueResource = anatomicalNodes ? JSON.parse(anatomicalNodes[0]) : transformResources;
-
-          if (this.connectionType === 'Origin') {
-            // Competency Query API
-            // pathsQueryAPI = queryPathsByOrigin(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
-
-            // search by unique placement before competency API is ready for this
-            pathsQueryAPI = filterPathsByOriginFromKnowledge(uniqueResource);
-          } else if (this.connectionType === 'Via') {
-            // Competency Query API
-            // pathsQueryAPI = queryPathsByViaLocation(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
-
-            // search by unique placement before competency API is ready for this
-            pathsQueryAPI = filterPathsByViaFromKnowledge(uniqueResource);
-          } else if (this.connectionType === 'Destination') {
-            // Competency Query API
-            // pathsQueryAPI = queryPathsByDestination(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
-
-            // search by unique placement before competency API is ready for this
-            pathsQueryAPI = filterPathsByDestinationFromKnowledge(uniqueResource);
-          } else {
-            pathsQueryAPI = queryAllConnectedPaths(this.flatmapAPI, this.mapImp.knowledgeSource, resources);
+          const annotationModels = annotation?.['models'];
+          let anatomicalNode;
+          let uniqueResource = transformResources;
+          const models = annotation?.['models'];
+          if (anatomicalNodes?.length) {
+            // get the node which match the feature in a location
+            // [feature, location]
+            anatomicalNode = anatomicalNodes.find((node) =>
+              JSON.parse(node)[0] === annotationModels
+            );
           }
-          this.connectivityfilters.push({
+          if (anatomicalNode) {
+            uniqueResource = JSON.parse(anatomicalNode);
+          } else if (models) {
+            uniqueResource = [models, []];
+          }
+
+          const terms = uniqueResource.flat(Infinity);
+          const uniqueTerms = [...new Set(terms)];
+          const fetchResults = await fetchLabels(this.flatmapAPI, uniqueTerms);
+          const objectResults = fetchResults.reduce((arr, item) => {
+            const id = item[0];
+            const valObj = JSON.parse(item[1]);
+            if (valObj.source === this.mapImp.knowledgeSource) {
+              arr.push({ id, label: valObj.label });
+            }
+            return arr;
+          }, []);
+          const labels = [];
+          for (let i = 0; i < uniqueTerms.length; i++) {
+            const foundObj = objectResults.find((obj) => obj.id === uniqueTerms[i])
+            if (foundObj) {
+              labels.push(foundObj.label);
+            }
+          }
+          const filterItemLabel = capitalise(labels.join(', '));
+          const newConnectivityfilter = {
             facet: JSON.stringify(uniqueResource),
             facetPropPath: `flatmap.connectivity.source.${this.connectionType.toLowerCase()}`,
-            label: JSON.stringify(uniqueResource),
+            tagLabel: filterItemLabel, // used tagLabel here instead of label since the label and value are different
             term: this.connectionType
-          })
-          // TODO: to remove "neuron-connection-click"
-          this.$emit('neuron-connection-feature-click', this.connectivityfilters);
+          };
+          // check for existing item
+          const isNewFilterItemExist = this.connectivityFilters.some((connectivityfilter) => (
+            connectivityfilter.facet === newConnectivityfilter.facet &&
+            connectivityfilter.facetPropPath === newConnectivityfilter.facetPropPath
+          ));
+
+          if (!isNewFilterItemExist) {
+            this.connectivityFilters.push(newConnectivityfilter);
+          }
+
+          this.$emit('neuron-connection-feature-click', {
+            filters: this.connectivityFilters,
+            search: '',
+          });
+        } else {
+          // clicking on paths
+          // do nothing for origin, destination, via
+          const searchTerms = resources.join();
+
+          if (this.connectionType.toLowerCase() === 'all') {
+            this.$emit('neuron-connection-feature-click', {
+              filters: [],
+              search: searchTerms,
+            });
+          }
         }
-
-        // TODO: to clean up after verification
-        // pathsQueryAPI.then(async (paths) => {
-        //   if (paths.length) {
-        //     const filteredPaths = paths.filter(path => (path in this.mapImp.pathways.paths))
-        //     const filteredPathsWithData = [];
-        //     let prom1 = [];
-        //     let prom2 = [];
-
-        //     for (let i = 0; i < filteredPaths.length; i++) {
-        //       const path = filteredPaths[i];
-        //       const modelFeatureIds = this.mapImp.modelFeatureIds(path);
-        //       const feature = this.mapImp.featureProperties(modelFeatureIds[0]);
-        //       if (feature) {
-        //         const pathData = {
-        //           resource: [feature.models],
-        //           feature: feature,
-        //           label: feature.label,
-        //           provenanceTaxonomy: feature.taxons,
-        //           alert: feature.alert,
-        //         };
-        //         filteredPathsWithData.push(pathData);
-        //         prom1.push({
-        //           title: pathData.label,
-        //           featureId: [path]
-        //         })
-        //       }
-        //     }
-        //     this.tooltipEntry = await Promise.all(prom1)
-        //     // Emit placeholders first.
-        //     this.$emit('connectivity-info-open', this.tooltipEntry);
-
-        //     /**
-        //      * This event is emitted to highlight the same paths on other display maps.
-        //      */
-        //     this.$emit('neuron-connection-click', paths);
-
-        //     // loading data
-        //     for (let i = 0; i < filteredPathsWithData.length; i++) {
-        //       const pathData = filteredPathsWithData[i];
-        //       const tooltipEntryData = await this.getKnowledgeTooltip(pathData);
-        //       prom2.push(tooltipEntryData)
-        //     }
-        //     this.tooltipEntry = await Promise.all(prom2)
-        //     this.displayTooltip(filteredPaths)
-        //   }
-        // })
       } else {
         // load and store knowledge
         loadAndStoreKnowledge(this.mapImp, this.flatmapQueries);
@@ -2170,8 +2174,30 @@ export default {
         }
       }
     },
-    resetConnectivityfilters: function () {
-      this.connectivityfilters = [];
+    /**
+     * Updates the connectivity filters in flatmap when there are changes in the sidebar.
+     * @public
+     * @param {Array} payload - The array of filter items to update.
+     */
+    updateConnectivityFilters: function (payload) {
+      if (!payload.length) return;
+      this.connectivityFilters = payload.filter((filterItem) => (
+        filterItem.facet.toLowerCase() !== 'show all'
+      ));
+    },
+    resetConnectivityfilters: function (payload) {
+      if (payload.length) {
+        // remove not found items
+        this.connectivityFilters = this.connectivityFilters.filter((connectivityfilter) =>
+          payload.some((notFoundItem) => (
+            notFoundItem.facetPropPath === connectivityfilter.facetPropPath &&
+            notFoundItem.facet !== connectivityfilter.facet
+          ))
+        )
+      } else {
+        // full reset
+        this.connectivityFilters = [];
+      }
     },
     getKnowledgeTooltip: async function (data) {
       //require data.resource && data.feature.source
@@ -2876,9 +2902,9 @@ export default {
       }
       return filterSources
     },
-    getFilterOptions: async function () {
+    getFilterOptions: async function (providedKnowledge) {
+      let filterOptions = [];
       if (this.mapImp) {
-        let filterOptions = []
         const filterRanges = this.mapImp.featureFilterRanges()
         for (const [key, value] of Object.entries(filterRanges)) {
           let main = {
@@ -2932,20 +2958,43 @@ export default {
           }
         }
         const connectionFilters = [];
-        const flatmapKnowledge = this.getFlatmapKnowledge();
-        const originItems = extractOriginItems(flatmapKnowledge);
-        const viaItems = extractViaItems(flatmapKnowledge);
-        const destinationItems = extractDestinationItems(flatmapKnowledge);
+        const baseFlatmapKnowledge = providedKnowledge || this.getFlatmapKnowledge();
+        const mapKnowledge = this.mapImp.pathways.paths;
+        const flatmapKnowledge = baseFlatmapKnowledge.reduce((arr, knowledge) => {
+          const id = knowledge.id;
+          if (id) {
+            const mapKnowledgeObj = mapKnowledge[id];
+            if (mapKnowledgeObj && mapKnowledgeObj.connectivity && mapKnowledgeObj['node-phenotypes']) {
+              const mapConnectivity = mapKnowledgeObj.connectivity;
+              const mapNodePhenotypes = mapKnowledgeObj['node-phenotypes'];
+              // take only map connectivity
+              knowledge.connectivity = [...mapConnectivity];
+              for (let key in knowledge['node-phenotypes']) {
+                if (mapNodePhenotypes[key]) {
+                  // take only map node-phenotypes
+                  knowledge['node-phenotypes'][key] = [...mapNodePhenotypes[key]];
+                }
+              }
+              // to avoid mutation
+              arr.push(JSON.parse(JSON.stringify(knowledge)));
+            }
+          }
+          return arr;
+        }, []);
+        const knowledgeSource = this.mapImp.knowledgeSource;
+        const originItems = await extractOriginItems(this.flatmapAPI, knowledgeSource, flatmapKnowledge);
+        const viaItems = await extractViaItems(this.flatmapAPI, knowledgeSource, flatmapKnowledge);
+        const destinationItems = await extractDestinationItems(this.flatmapAPI, knowledgeSource, flatmapKnowledge);
 
         const transformItem = (facet, item) => {
-          const label = JSON.stringify(item);
+          const key = JSON.stringify(item.key);
           return {
-            key: `flatmap.connectivity.source.${facet}.${label}`,
-            label: label
+            key: `flatmap.connectivity.source.${facet}.${key}`,
+            label: item.label || key
           };
         }
 
-        for (const facet of ["origin", "via", "destination"]) {
+        for (const facet of ["origin", "via", "destination", "all"]) {
           let childrenList = []
           if (facet === 'origin') {
             childrenList = originItems.map((item) => transformItem(facet, item));
@@ -2953,18 +3002,48 @@ export default {
             childrenList = viaItems.map((item) => transformItem(facet, item));
           } else if (facet === 'destination') {
             childrenList = destinationItems.map((item) => transformItem(facet, item));
+          } else {
+            // All is the combination of origin, via, destination
+            const allList = [
+              ...originItems.map((item) => transformItem(facet, item)),
+              ...viaItems.map((item) => transformItem(facet, item)),
+              ...destinationItems.map((item) => transformItem(facet, item))
+            ];
+            // Generate unique list since the same feature can be in origin, via, and destination
+            const seenKeys = new Set();
+            childrenList = allList.filter(item => {
+              if (seenKeys.has(item.key)) return false;
+              seenKeys.add(item.key);
+              return true;
+            });
           }
 
-          connectionFilters.push({
-            key: `flatmap.connectivity.source.${facet}`,
-            label: facet,
-            children: childrenList,
-          })
+          // Those without label but key should be below
+          childrenList = childrenList.sort((a, b) => {
+            const isAlpha = (str) => /^[a-zA-Z]/.test(str);
+            const aAlpha = isAlpha(a.label);
+            const bAlpha = isAlpha(b.label);
+
+            if (aAlpha && !bAlpha) return -1;
+            if (!aAlpha && bAlpha) return 1;
+
+            return a.label.localeCompare(b.label);
+          });
+
+          if (childrenList.length) {
+            connectionFilters.push({
+              key: `flatmap.connectivity.source.${facet}`,
+              label: facet,
+              children: childrenList,
+            })
+          }
         }
 
-        filterOptions.push(...connectionFilters)
-        return filterOptions
+        if (connectionFilters.length) {
+          filterOptions.push(...connectionFilters)
+        }
       }
+      return filterOptions;
     },
     /**
      * @public
@@ -2988,6 +3067,7 @@ export default {
       //Async, pass the state for checking
       this.processTaxon(this.mapImp.taxonIdentifiers, state ? state['taxonSelection'] : undefined)
       this.containsAlert = "alert" in this.mapImp.featureFilterRanges()
+      this.flatmapLegends = this.mapImp.flatmapLegend
       this.addResizeButtonToMinimap()
       this.loading = false
       this.computePathControlsMaximumHeight()
@@ -3465,7 +3545,8 @@ export default {
       }),
       searchTerm: "",
       taxonLeaveDelay: undefined,
-      connectivityfilters: [],
+      connectivityFilters: [],
+      flatmapLegends: [],
     }
   },
   computed: {

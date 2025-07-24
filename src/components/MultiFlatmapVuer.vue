@@ -70,7 +70,6 @@
       @connectivity-info-open="onConnectivityInfoOpen"
       @connectivity-info-close="onConnectivityInfoClose"
       @connectivity-error="onConnectivityError"
-      @neuron-connection-click="onNeuronConnectionClick"
       @neuron-connection-feature-click="onNeuronConnectionFeatureClick"
       @open-map="$emit('open-map', $event)"
       @pathway-selection-changed="onSelectionsDataChanged"
@@ -101,7 +100,7 @@
 import { markRaw } from 'vue'
 import EventBus from './EventBus'
 import FlatmapVuer from './FlatmapVuer.vue'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.8/+esm'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.10/+esm'
 import {
   ElCol as Col,
   ElOption as Option,
@@ -306,9 +305,6 @@ export default {
     },
     onConnectivityError: function (errorInfo) {
       this.$emit('connectivity-error', errorInfo);
-    },
-    onNeuronConnectionClick: function (payload) {
-      this.$emit('neuron-connection-click', payload);
     },
     onNeuronConnectionFeatureClick: function (payload) {
       this.$emit('neuron-connection-feature-click', payload);

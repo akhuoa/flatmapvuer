@@ -31,10 +31,9 @@
       </el-col>
     </el-row>
     <el-checkbox-group
-      :class="{ 'show-as-legend': showAsLegend }"
+      :class="{ 'show-as-legend': showAsLegend, 'checkbox-group': !showAsLegend }"
       v-model="checkedItems"
       size="small"
-      class="checkbox-group"
       @change="handleCheckedItemsChange"
     >
       <div class="checkbox-group-inner">
@@ -394,6 +393,9 @@ export default {
   pointer-events: none;
   :deep(.el-checkbox__input) {
     display: none;
+  }
+  .checkbox-group-inner {
+    padding: 5px;
   }
 }
 </style>
