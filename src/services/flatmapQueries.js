@@ -104,6 +104,7 @@ let FlatmapQueries = function () {
     this.uberons = []
     this.lookUp = []
     this.connectivitySource = 'map' // 'sckan'
+    this.noMapConnectivity = false
   }
 
   this.createTooltipData = async function (mapImp, eventData) {
@@ -144,7 +145,8 @@ let FlatmapQueries = function () {
       hyperlinks: hyperlinks,
       provenanceTaxonomy: eventData.provenanceTaxonomy,
       provenanceTaxonomyLabel: taxonomyLabel,
-      connectivitySource: this.connectivitySource
+      connectivitySource: this.connectivitySource,
+      noMapConnectivity: this.noMapConnectivity,
     }
     return tooltipData
   }
@@ -158,7 +160,8 @@ let FlatmapQueries = function () {
       componentsWithDatasets: this.componentsWithDatasets,
       destinations: this.destinations,
       destinationsWithDatasets: this.destinationsWithDatasets,
-      connectivitySource: this.connectivitySource
+      connectivitySource: this.connectivitySource,
+      noMapConnectivity: this.noMapConnectivity,
     };
   }
 
@@ -300,6 +303,9 @@ let FlatmapQueries = function () {
       queryAPI
         .then((response) => {
           if (this.checkConnectivityExists(response)) {
+            if (connectivitySource === 'map') {
+              this.noMapConnectivity = false;
+            }
             let connectivity = response;
             if (processConnectivity) {
               this.processConnectivity(mapImp, connectivity).then((processedConnectivity) => {
@@ -312,6 +318,32 @@ let FlatmapQueries = function () {
               })
             }
             else resolve(connectivity)
+          } else if (connectivitySource === 'map') {
+            // switch to SCKAN
+            // when there has no connectivity data from Map
+            // and add the noMapConnectivity flag to disable the option
+            this.connectivitySource = 'sckan';
+            this.noMapConnectivity = true;
+            mapImp.queryKnowledge(keastId)
+              .then((fallbackResponse) => {
+                if (this.checkConnectivityExists(fallbackResponse)) {
+                  let connectivity = fallbackResponse;
+                  if (processConnectivity) {
+                    this.processConnectivity(mapImp, connectivity).then((processedConnectivity) => {
+                      // response.references is publication urls
+                      if (fallbackResponse.references) {
+                        // with publications from both PubMed and Others
+                        this.rawURLs = [...fallbackResponse.references];
+                      }
+                      resolve(processedConnectivity)
+                    })
+                  }
+                  else resolve(connectivity)
+                } else {
+                  resolve(false)
+                }
+              })
+              .catch(() => resolve(false));
           } else {
             resolve(false)
           }

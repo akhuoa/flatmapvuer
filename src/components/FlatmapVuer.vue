@@ -643,9 +643,6 @@ import {
   refreshFlatmapKnowledgeCache,
   getKnowledgeSource,
   getReferenceConnectivitiesByAPI,
-  filterPathsByOriginFromKnowledge,
-  filterPathsByDestinationFromKnowledge,
-  filterPathsByViaFromKnowledge,
 } from '../services/flatmapKnowledge.js'
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
@@ -655,14 +652,10 @@ import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
 import {
-  queryPathsByOrigin,
-  queryPathsByViaLocation,
-  queryPathsByDestination,
   extractOriginItems,
   extractDestinationItems,
   extractViaItems,
   fetchLabels,
-  queryAllConnectedPaths,
   DrawToolbar,
   Tooltip,
   TreeControls
@@ -1343,12 +1336,6 @@ export default {
      * @arg {string} `pathId` or `anatomicalId`
      */
     retrieveConnectedPaths: async function (payload, options = {}) {
-      // query all connected paths CQ
-      if (this.viewingMode === 'Neuron Connection' && this.connectionType.toLowerCase() === 'all') {
-        const sourceId = this.mapImp.uuid;
-        const connectedPaths = await queryAllConnectedPaths(this.flatmapAPI, sourceId, payload);
-        return connectedPaths;
-      }
       // query all connected paths from flatmap
       if (this.mapImp) {
         let connectedPaths = [];
@@ -2092,11 +2079,16 @@ export default {
           const featureId = data[0].feature?.featureId;
           const annotation = this.mapImp.annotations.get(featureId);
           const anatomicalNodes = annotation?.['anatomical-nodes'];
+          const annotationModels = annotation?.['models'];
           let anatomicalNode;
           let uniqueResource = transformResources;
           const models = annotation?.['models'];
           if (anatomicalNodes?.length) {
-            anatomicalNode = anatomicalNodes[anatomicalNodes.length - 1];
+            // get the node which match the feature in a location
+            // [feature, location]
+            anatomicalNode = anatomicalNodes.find((node) =>
+              JSON.parse(node)[0] === annotationModels
+            );
           }
           if (anatomicalNode) {
             uniqueResource = JSON.parse(anatomicalNode);
@@ -2139,18 +2131,10 @@ export default {
             this.connectivityFilters.push(newConnectivityfilter);
           }
 
-          if (this.connectionType.toLowerCase() === 'all') {
-            const searchTerms = uniqueTerms.join();
-            this.$emit('neuron-connection-feature-click', {
-              filters: [],
-              search: searchTerms,
-            });
-          } else {
-            this.$emit('neuron-connection-feature-click', {
-              filters: this.connectivityFilters,
-              search: '',
-            });
-          }
+          this.$emit('neuron-connection-feature-click', {
+            filters: this.connectivityFilters,
+            search: '',
+          });
         } else {
           // clicking on paths
           // do nothing for origin, destination, via
@@ -2980,7 +2964,7 @@ export default {
           const id = knowledge.id;
           if (id) {
             const mapKnowledgeObj = mapKnowledge[id];
-            if (mapKnowledgeObj) {
+            if (mapKnowledgeObj && mapKnowledgeObj.connectivity && mapKnowledgeObj['node-phenotypes']) {
               const mapConnectivity = mapKnowledgeObj.connectivity;
               const mapNodePhenotypes = mapKnowledgeObj['node-phenotypes'];
               // take only map connectivity
@@ -3010,7 +2994,7 @@ export default {
           };
         }
 
-        for (const facet of ["origin", "via", "destination"]) {
+        for (const facet of ["origin", "via", "destination", "all"]) {
           let childrenList = []
           if (facet === 'origin') {
             childrenList = originItems.map((item) => transformItem(facet, item));
@@ -3018,6 +3002,20 @@ export default {
             childrenList = viaItems.map((item) => transformItem(facet, item));
           } else if (facet === 'destination') {
             childrenList = destinationItems.map((item) => transformItem(facet, item));
+          } else {
+            // All is the combination of origin, via, destination
+            const allList = [
+              ...originItems.map((item) => transformItem(facet, item)),
+              ...viaItems.map((item) => transformItem(facet, item)),
+              ...destinationItems.map((item) => transformItem(facet, item))
+            ];
+            // Generate unique list since the same feature can be in origin, via, and destination
+            const seenKeys = new Set();
+            childrenList = allList.filter(item => {
+              if (seenKeys.has(item.key)) return false;
+              seenKeys.add(item.key);
+              return true;
+            });
           }
 
           // Those without label but key should be below
@@ -3032,14 +3030,18 @@ export default {
             return a.label.localeCompare(b.label);
           });
 
-          connectionFilters.push({
-            key: `flatmap.connectivity.source.${facet}`,
-            label: facet,
-            children: childrenList,
-          })
+          if (childrenList.length) {
+            connectionFilters.push({
+              key: `flatmap.connectivity.source.${facet}`,
+              label: facet,
+              children: childrenList,
+            })
+          }
         }
 
-        filterOptions.push(...connectionFilters)
+        if (connectionFilters.length) {
+          filterOptions.push(...connectionFilters)
+        }
       }
       return filterOptions;
     },
