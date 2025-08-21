@@ -91,6 +91,7 @@
       :showLocalSettings="showLocalSettings"
       :showOpenMapButton="showOpenMapButton"
       :showPathwayFilter="showPathwayFilter"
+      @trackEvent="trackEvent"
     />
   </div>
 </template>
@@ -564,6 +565,19 @@ export default {
     setConnectionType: function (type) {
       let map = this.getCurrentFlatmap();
       map.setConnectionType(type);
+    },
+    /**
+     * @public
+     * Function to track events.
+     * @arg {Object} `data`
+     */
+    trackEvent: function (data) {
+      const taggingData = {
+        'event': 'interaction_event',
+        'location': 'flatmap',
+        ...data,
+      };
+      this.$emit('trackEvent', taggingData);
     },
   },
   props: {
