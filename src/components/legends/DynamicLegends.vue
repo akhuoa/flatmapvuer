@@ -7,10 +7,25 @@
       :label="item[identifierKey]"
     >
       <div class="legend-item" v-if="legendStyle(item)">
-        <div
+        <template v-if="clipPathLegends.includes(legendStyle(item))">
+          <div
+            :class="legendStyle(item)"
+            :style="customClipPathStyle(item, true)"
+          >
+            <div
+              :class="legendStyle(item)"
+              :style="customClipPathStyle(item, false)"
+            >
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <div
           :class="legendStyle(item)"
-          :style="{ 'background-color': item[colourKey] }"
-        ></div>
+          :style="customStyle(item)"
+          >
+          </div>
+        </template>
         <div class="label">{{ capitalise(item[identifierKey]) }}</div>
       </div>
     </div>
@@ -18,6 +33,7 @@
 </template>
 
 <script>
+const starTemplate = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="<fillColor>" stroke="<borderColor>" stroke-width="<borderWidth>" d="M11.0748 3.25583C11.4141 2.42845 12.5859 2.42845 12.9252 3.25583L14.6493 7.45955C14.793 7.80979 15.1221 8.04889 15.4995 8.07727L20.0303 8.41798C20.922 8.48504 21.2841 9.59942 20.6021 10.1778L17.1369 13.1166C16.8482 13.3614 16.7225 13.7483 16.8122 14.1161L17.8882 18.5304C18.1 19.3992 17.152 20.0879 16.3912 19.618L12.5255 17.2305C12.2034 17.0316 11.7966 17.0316 11.4745 17.2305L7.60881 19.618C6.84796 20.0879 5.90001 19.3992 6.1118 18.5304L7.18785 14.1161C7.2775 13.7483 7.1518 13.3614 6.86309 13.1166L3.3979 10.1778C2.71588 9.59942 3.07796 8.48504 3.96971 8.41798L8.50046 8.07727C8.87794 8.04889 9.20704 7.80979 9.35068 7.45955L11.0748 3.25583Z"/></svg>'
 /* eslint-disable no-alert, no-console */
 export default {
   name: "DynamicLegends",
@@ -25,10 +41,6 @@ export default {
     identifierKey: {
       type: String,
       default: "id",
-    },
-    colourKey: {
-      type: String,
-      default: "colour",
     },
     styleKey: {
       type: String,
@@ -49,9 +61,42 @@ export default {
       default: false,
     },
   },
+  computed: {
+    clipPathLegends: function () {
+      return ['exoid', 'hexagon'];
+    },
+  },
   methods: {
     capitalise: function (label) {
       return label.charAt(0).toUpperCase() + label.slice(1).toLowerCase();
+    },
+    customStyle: function(item) {
+      const specifiedColour = item["color"] ? item["color"] : item["colour"];
+      let colour = specifiedColour ? specifiedColour : "transparent";
+      let borderColour = item.border ? item.border : "black";
+      if (specifiedColour && !item.border) {
+        borderColour = colour;
+      } 
+      if (item[this.styleKey] === 'star') {
+        let star = starTemplate.replace('<fillColor>', colour);
+        star = star.replace('<borderColor>', borderColour);
+        star = star.replace('<borderWidth>', borderColour ? '2' : '0');
+        star = 'data:image/svg+xml,' + encodeURIComponent(star);
+        return { 'color': colour, 'background-image': `url(${star})` };
+      } else if (item[this.styleKey] === 'line') {
+        return {'color': colour};
+      } else {
+        return { 'background-color': colour, 'border-color': borderColour};
+      }
+    },
+    customClipPathStyle: function(item, isBorder) {
+      const style = this.customStyle(item);
+      if (isBorder) {
+        style['background-color'] = style['border-color'];
+      } else {
+        style.scale = 0.7;
+      }
+      return style;
     },
     legendStyle: function (item) {
       if (item[this.styleKey] === "star") {
@@ -59,12 +104,14 @@ export default {
           if (!this.showStarInLegend) {
             return;
           }
-          return "yellow-star";
-        } else if (item[this.identifierKey] === "Gaglionated nerve plexus") {
-          return "hexagon-star";
         }
+        return 'star';
+      } else if (this.clipPathLegends.includes(item[this.styleKey])) {
+        return item[this.styleKey];
+      } else if (item[this.styleKey] === 'line') {
+        return [item[this.styleKey], item.dashed ? 'dashed' : '', item.arrow ? 'arrow' : ''];
       }
-      return item[this.styleKey];
+      return [item[this.styleKey], 'shape'];
     },
   },
 };
@@ -85,19 +132,63 @@ export default {
   margin: 8px 12.5px;
 }
 
-.circle {
-  height: 20px;
+.line {
+  position: relative;
   width: 20px;
-  background-color: #ffffff;
-  border-radius: 50%;
+  border-top: 2px solid currentColor;
+}
+
+.line.dashed {
+  border-top: 2px dashed currentColor;
+}
+
+.line::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: -5px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  display: none;
+}
+
+.line.arrow::after {
+  display: block;
+}
+
+.shape {
+  height: 16px;
+  width: 16px;
+  border-color: black;
+  border-style: solid;
+  border-width: 2px;
+  background-color: transparent;
   display: inline-block;
 }
 
-.hexagon-star {
+.circle {
+  border-radius: 50%;
+}
+
+.rounded-square {
+  border-radius: 30%;
+}
+
+.hexagon {
+  width: 20px;
+  height: calc(20px * 0.866);
+  background-color: transparent;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  -webkit-clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+.exoid {
   width: 20px;
   height: 25px;
-  background-color: #ffffff;
-  opacity: 0.64;
+  background-color: transparent;
   clip-path: path(
     "M9.96 0.72 c-2.01 3.53 -5.81 5.74 -9.92 5.74 l-0.15 0.23 c1.94 3.42 1.94 7.6 0 11.02 l0.15 0.23 c4.07 0 7.9 2.2 9.92 5.74 c2.01 -3.53 5.81 -5.74 9.92 -5.74 c-2.01 -3.53 -2.01 -7.94 0 -11.55 C15.81 6.5 12.04 4.29 9.96 0.72z"
   );
@@ -106,11 +197,10 @@ export default {
   );
 }
 
-.yellow-star {
+.star {
   width: 25px;
   height: 25px;
-  background-color: #ffffff !important;
-  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20fill%3D%22yellow%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22%20d%3D%22M11.0748%203.25583C11.4141%202.42845%2012.5859%202.42845%2012.9252%203.25583L14.6493%207.45955C14.793%207.80979%2015.1221%208.04889%2015.4995%208.07727L20.0303%208.41798C20.922%208.48504%2021.2841%209.59942%2020.6021%2010.1778L17.1369%2013.1166C16.8482%2013.3614%2016.7225%2013.7483%2016.8122%2014.1161L17.8882%2018.5304C18.1%2019.3992%2017.152%2020.0879%2016.3912%2019.618L12.5255%2017.2305C12.2034%2017.0316%2011.7966%2017.0316%2011.4745%2017.2305L7.60881%2019.618C6.84796%2020.0879%205.90001%2019.3992%206.1118%2018.5304L7.18785%2014.1161C7.2775%2013.7483%207.1518%2013.3614%206.86309%2013.1166L3.3979%2010.1778C2.71588%209.59942%203.07796%208.48504%203.96971%208.41798L8.50046%208.07727C8.87794%208.04889%209.20704%207.80979%209.35068%207.45955L11.0748%203.25583Z%22/%3E%3C/svg%3E");
+  background-color: transparent !important;
   background-repeat: no-repeat;
   background-size: contain;
   display: inline-block;

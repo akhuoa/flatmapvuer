@@ -260,39 +260,35 @@ Please use `const` to assign meaningful names to them...
               :style="{ 'max-height': pathwaysMaxHeight + 'px' }"
               v-popover:checkBoxPopover
             >
-              <!-- <svg-legends v-if="!isFC" class="svg-legends-container" /> -->
-              <dynamic-legends
-                v-if="!isFC"
-                identifierKey="prompt"
-                colourKey="colour"
-                styleKey="style"
-                :legends="flatmapLegends"
-                :showStarInLegend="showStarInLegend"
-                class="svg-legends-container"
-              />
-              <!-- <template v-if="showStarInLegend">
-                <el-popover
-                  content="Location of the featured dataset"
-                  placement="right"
-                  :teleported="true"
-                  trigger="manual"
-                  width="max-content"
-                  :offset="-10"
-                  popper-class="flatmap-popper flatmap-teleport-popper"
-                  :visible="hoverVisibilities[9].value"
-                  ref="featuredMarkerPopover"
-                >
-                  <template #reference>
-                    <div
-                      v-popover:featuredMarkerPopover
-                      class="yellow-star-legend"
-                      v-html="yellowstar"
-                      @mouseover="showTooltip(9)"
-                      @mouseout="hideTooltip(9)"
-                    ></div>
-                  </template>
-                </el-popover>
-              </template> -->
+              <el-popover
+                content="Location of the featured dataset"
+                placement="bottom"
+                :teleported="true"
+                trigger="manual"
+                width="max-content"
+                :offset="-10"
+                popper-class="flatmap-popper flatmap-teleport-popper"
+                :visible="hoverVisibilities[9].value && showStarInLegend"
+                ref="featuredMarkerPopover"
+              >
+                <template #reference>
+                  <div
+                    v-popover:featuredMarkerPopover
+                    @mouseover="showTooltip(9)"
+                    @mouseout="hideTooltip(9)"
+                  >
+                    <dynamic-legends
+                      v-if="legendEntry.length"
+                      identifierKey="prompt"
+                      colourKey="colour"
+                      styleKey="style"
+                      :legends="legendEntry"
+                      :showStarInLegend="true"
+                      class="svg-legends-container"
+                    />
+                  </div>
+                </template>
+              </el-popover>
               <!-- The line below places the yellowstar svg on the left, and the text "Featured markers on the right" with css so they are both centered in the div -->
               <el-popover
                 content="Find these markers for data. The number inside the markers is the number of datasets available for each marker."
@@ -647,7 +643,7 @@ import {
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.10/+esm'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.13/+esm'
 import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
@@ -3311,6 +3307,13 @@ export default {
       type: Boolean,
       default: true,
     },
+    /**
+     * Allow to add and display extra legends to drawer
+     */
+    externalLegends: {
+      type: Array,
+      default: [],
+    },
   },
   provide() {
     return {
@@ -3456,14 +3459,15 @@ export default {
         if ((this.systems?.length > 0) ||
           (this.containsAlert && this.alertOptions) ||
           (this.pathways?.length > 0) ||
-          (this.taxonConnectivity?.length > 0)
+          (this.taxonConnectivity?.length > 0) ||
+          (this.legendEntry?.length > 0)
         ) {
           this.drawerOpen = true
           return true
         }
       }
       this.drawerOpen = false
-      return true
+      return false
     },
     modeDescription: function () {
       let description = this.viewingModes[this.viewingMode]
@@ -3475,6 +3479,9 @@ export default {
       }
       return description
     },
+    legendEntry: function () {
+      return [...this.flatmapLegends, ...this.externalLegends]
+    }
   },
   watch: {
     entry: function () {
@@ -3681,18 +3688,10 @@ export default {
   }
 }
 
-.svg-legends-container {
-  width: 70%;
-  min-width:183px;
-  height: auto;
-  position: relative;
-  max-height: 140px;
-}
-
 .pathway-container {
   float: left;
-  padding-left: 16px;
-  padding-right: 18px;
+  padding-left: 8px;
+  padding-right: 8px;
   text-align: left;
   overflow: auto;
   border: 1px solid rgb(220, 223, 230);
@@ -3703,6 +3702,7 @@ export default {
   overflow-x: hidden;
   scrollbar-width: thin;
   transition: all var(--el-transition-duration);
+  width: 276px;
   &.open {
     opacity: 1;
     position: relative;
