@@ -43,9 +43,9 @@ describe('MultiFlatmapVuer', () => {
     // Check if flatmap emits ready event
     cy.get('@readySpy').should('have.been.calledWith').then(() => {
       // Create a pop up and ensure it shows
-      const mapImp = window.Cypress.multiFlatmapVuer.getCurrentFlatmap()
-      console.log('flatmapImp', mapImp)
-      mapImp.showPopup(45, 'Test', { className: 'flatmapvuer-popover', positionAtLastClick: true })
+      const flatmapVuer = window.Cypress.multiFlatmapVuer.getCurrentFlatmap()
+      const flatmapUUID = flatmapVuer.mapImp.uuid;
+      flatmapVuer.showPopup(39, 'Test', { className: 'flatmapvuer-popover', positionAtLastClick: true })
 
       cy.get('.flatmapvuer-popover').should('exist').contains('Test').then(() => {
         // Close the pop up
@@ -73,27 +73,25 @@ describe('MultiFlatmapVuer', () => {
         })
         // Check the metadata for path exploration is loading correctly
       }).then(() => {
-        let flatmapVuer = window.Cypress.flatmapVuer
-        console.log('flatmapVuer', flatmapVuer)
         let fmEventCallback = flatmapVuer.eventCallback()
         fmEventCallback(
           "click",
           {
-            id: "ilxtr_neuron-type-keast-10",
+            id: "ilxtr:neuron-type-keast-5",
             featureId: 26,
             kind: "sensory",
-            label: "neuron type kblad 10",
-            models: "ilxtr:neuron-type-keast-10",
-            source: "ilxtr:neuron-type-keast-10",
+            label: "neuron type kblad 5",
+            models: "ilxtr:neuron-type-keast-5",
+            source: "ilxtr:neuron-type-keast-5",
             taxons: '["NCBITaxon:10116"]',
             completeness: true,
             type: "feature",
-            mapUUID: "7f003862-6dbd-5871-8e8e-9a33c7ccefc5",
+            mapUUID: flatmapUUID,
           },
           []
         );
 
-        cy.get('.flatmapvuer-popover').should('exist').contains('Neuron type kblad 10').then(() => {
+        cy.get('.flatmapvuer-popover').should('exist').contains('Neuron type kblad 5').then(() => {
 
           // Set the tooltip to be visible (this is needed as the css hack does not work in testing for some reason)
           document.querySelector('#tooltip-container').style.display = 'block'
@@ -107,16 +105,16 @@ describe('MultiFlatmapVuer', () => {
             // Open the 'show more' section
             cy.get('#show-path-info').should('exist').click()
 
-            cy.get('[origin-item-label="first sacral dorsal root ganglion"]').should('exist')
-            cy.get('[component-item-label="bladder nerve"]').should('exist')
-            cy.get('[destination-item-label="connective tissue, neck of urinary bladder"]').should('exist')
+            cy.get('[origin-item-label="lamina VII of gray matter of spinal cord, L6 segment of lumbar spinal cord"]').should('exist')
+            cy.get('[component-item-label="pelvic splanchnic nerve"]').should('exist')
+            cy.get('[destination-item-label="pelvic ganglion"]').should('exist')
 
             // Click on the dendrites button
             cy.get('#open-dendrites-button').should('exist').click()
 
             // Check that the resource selected event is emitted
             cy.get('@resourceSelectedSpy').should('have.been.calledWith')
-            
+
             // create a single stub we will use
             cy.window().then(win => {
               cy.stub(win, 'open').as('Open')
@@ -125,8 +123,8 @@ describe('MultiFlatmapVuer', () => {
             // References
             cy.get('.resource-container').should('exist')
             cy.get('.citation-list').should('exist')
-            cy.get('.citation-list').find('li').should('have.length', 6)
-            const citationText = 'Afferent and sympathetic innervation of the dome and the base of the urinary bladder of the female rat.'
+            cy.get('.citation-list').find('li').should('have.length', 7)
+            const citationText = 'Androgen-sensitive preganglionic neurons innervate the male rat pelvic ganglion.'
             cy.get('.citation-list li.loading').should('not.exist').then(() => {
               cy.get('.citation-list li').should('exist').contains(citationText);
             })

@@ -643,7 +643,7 @@ import {
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.13/+esm'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.0/+esm'
 import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
@@ -3452,19 +3452,14 @@ export default {
         this.drawerOpen = false
         return false
       }
-      if (!this.isFC) {
+      if ((this.systems?.length > 0) ||
+        (this.containsAlert && this.alertOptions) ||
+        (this.pathways?.length > 0) ||
+        (this.taxonConnectivity?.length > 0) ||
+        (this.legendEntry?.length > 0)
+      ) {
         this.drawerOpen = true
         return true
-      } else {
-        if ((this.systems?.length > 0) ||
-          (this.containsAlert && this.alertOptions) ||
-          (this.pathways?.length > 0) ||
-          (this.taxonConnectivity?.length > 0) ||
-          (this.legendEntry?.length > 0)
-        ) {
-          this.drawerOpen = true
-          return true
-        }
       }
       this.drawerOpen = false
       return false
