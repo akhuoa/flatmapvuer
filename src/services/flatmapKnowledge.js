@@ -69,17 +69,17 @@ async function filterPathsByViaFromKnowledge(resource) {
 }
 
 function getKnowledgeSource(mapImp) {
-  return getKnowledgeSourceFromProvenance(mapImp.provenance);
+  return getKnowledgeSourceFromProvenance(mapImp.mapMetadata);
 }
 
-function getKnowledgeSourceFromProvenance(provenance) {
+function getKnowledgeSourceFromProvenance(mapMetadata) {
   let mapKnowledgeSource = '';
-  if (provenance?.connectivity) {
-    const sckanProvenance = provenance.connectivity;
-    if ('knowledge-source' in sckanProvenance) {
-      mapKnowledgeSource = sckanProvenance['knowledge-source'];
-    } else if ('npo' in sckanProvenance) {
-      mapKnowledgeSource = `${sckanProvenance.npo.release}-npo`;
+  if (mapMetadata?.connectivity) {
+    const mapMetadataConnectivity = mapMetadata.connectivity;
+    if ('knowledge-source' in mapMetadataConnectivity) {
+      mapKnowledgeSource = mapMetadataConnectivity['knowledge-source'];
+    } else if ('npo' in mapMetadataConnectivity) {
+      mapKnowledgeSource = `${mapMetadataConnectivity.npo.release}-npo`;
     }
   }
   return mapKnowledgeSource;

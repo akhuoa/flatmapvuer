@@ -297,7 +297,7 @@ let FlatmapQueries = function () {
     this.connectivitySource = connectivitySource
     return new Promise((resolve) => {
       const queryAPI = connectivitySource === 'map'
-        ? this.queryMapConnectivity(mapImp.provenance.uuid, keastId)
+        ? this.queryMapConnectivity(mapImp.mapMetadata.uuid, keastId)
         : mapImp.queryKnowledge(keastId);
 
       queryAPI

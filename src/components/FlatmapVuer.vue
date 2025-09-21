@@ -2215,8 +2215,8 @@ export default {
         tooltip['featuresAlert'] = data.alert;
         tooltip['knowledgeSource'] = getKnowledgeSource(this.mapImp);
         // Map id and uuid to load connectivity information from the map
-        tooltip['mapId'] = this.mapImp.provenance.id;
-        tooltip['mapuuid'] = this.mapImp.provenance.uuid;
+        tooltip['mapId'] = this.mapImp.mapMetadata.id;
+        tooltip['mapuuid'] = this.mapImp.mapMetadata.uuid;
       // } else {
       //   tooltip = {
       //     ...tooltip,
