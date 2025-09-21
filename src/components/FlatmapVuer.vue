@@ -2092,17 +2092,27 @@ export default {
             uniqueResource = [models, []];
           }
 
+          const knowledgeSource = this.mapImp.knowledgeSource;
           const terms = uniqueResource.flat(Infinity);
           const uniqueTerms = [...new Set(terms)];
           const fetchResults = await fetchLabels(this.flatmapAPI, uniqueTerms);
           const objectResults = fetchResults.reduce((arr, item) => {
             const id = item[0];
             const valObj = JSON.parse(item[1]);
-            if (valObj.source === this.mapImp.knowledgeSource) {
-              arr.push({ id, label: valObj.label });
-            }
+            arr.push({ id, label: valObj.label, source: valObj.source });
             return arr;
           }, []);
+
+          // sort matched knowledgeSource items for same id
+          objectResults.sort((a, b) => {
+            if (a.id === b.id) {
+              if (a.source === knowledgeSource && b.source !== knowledgeSource) return -1;
+              if (a.source !== knowledgeSource && b.source === knowledgeSource) return 1;
+              return 0;
+            }
+            return a.id.localeCompare(b.id);
+          });
+
           const labels = [];
           for (let i = 0; i < uniqueTerms.length; i++) {
             const foundObj = objectResults.find((obj) => obj.id === uniqueTerms[i])
