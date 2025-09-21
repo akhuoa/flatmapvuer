@@ -568,19 +568,24 @@ let FlatmapQueries = function () {
     return `select distinct publication from publications where entity = '${model}'`
   }
 
-  this.flatmapQuery = function (sql) {
-    const data = { sql: sql }
-    return fetch(`${this.flatmapAPI}knowledge/query/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
+  this.queryKnowledge = async (sql, params) => {
+    const url = `${this.flatmapAPI}/knowledge/query/`;
+    const query = { sql, params };
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            "Accept": "application/json"
+        },
+        body: JSON.stringify(query),
     })
-      .then((response) => response.json())
-      .catch((error) => {
-        console.error('Error:', error)
-      })
+    if (!response.ok) {
+        throw new Error(`Cannot access ${url}`);
+    }
+    const data = await response.json();
+    if ('error' in data) {
+        throw new TypeError(data.error);
+    }
+    return data.values
   }
 }
 

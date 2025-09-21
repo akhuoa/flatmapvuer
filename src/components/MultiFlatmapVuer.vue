@@ -91,7 +91,11 @@
       :showLocalSettings="showLocalSettings"
       :showOpenMapButton="showOpenMapButton"
       :showPathwayFilter="showPathwayFilter"
+      :externalLegends="externalLegends"
     />
+
+    <!-- multiflatmap-error -->
+    <FlatmapError v-if="multiflatmapError" :flatmapError="multiflatmapError" />
   </div>
 </template>
 
@@ -100,7 +104,7 @@
 import { markRaw } from 'vue'
 import EventBus from './EventBus'
 import FlatmapVuer from './FlatmapVuer.vue'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.10/+esm'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.0/+esm'
 import {
   ElCol as Col,
   ElOption as Option,
@@ -155,6 +159,7 @@ export default {
      * It returns a promise.
      */
     initialise: function () {
+      this.multiflatmapError = null;
       return new Promise((resolve) => {
         if (this.requireInitialisation) {
           //It has not been initialised yet
@@ -162,11 +167,21 @@ export default {
           fetch(this.flatmapAPI)
             .then((response) => response.json())
             .then((data) => {
+              if (data.status_code === 404) {
+                console.error('Flatmap API endpoint is incorrect', data);
+                this.multiflatmapError = {};
+                this.multiflatmapError['title'] = 'MultiFlatmap Error!';
+                this.multiflatmapError['messages'] = [
+                  `Sorry, the component could not be loaded because the specified
+                  flatmap API endpoint is incorrect. Please check the endpoint URL
+                  or contact support if the problem persists.`
+                ];
+              }
               //Check each key in the provided availableSpecies against the one
               Object.keys(this.availableSpecies).forEach((key) => {
                 // FIrst look through the uuid
                 const uuid = this.availableSpecies[key].uuid
-                if (uuid && data.map((e) => e.uuid).indexOf(uuid) > 0) {
+                if (uuid && data.length && data.map((e) => e.uuid).indexOf(uuid) > 0) {
                   this.speciesList[key] = this.availableSpecies[key]
                 } else {
                   for (let i = 0; i < data.length; i++) {
@@ -213,6 +228,21 @@ export default {
                 )
               }
               this.initialised = true
+              resolve()
+              //Resolve all other promises resolve in the list
+              this.resolveList.forEach((other) => {
+                other()
+              })
+            })
+            .catch((error) => {
+              console.error('Error fetching flatmap:', error)
+              this.initialised = true;
+              this.multiflatmapError = {};
+              this.multiflatmapError['title'] = 'MultiFlatmap Error!';
+              this.multiflatmapError['messages'] = [
+                `Sorry, the component could not be loaded due to an unexpected error.
+                Please try again later or contact support if the problem persists.`
+              ];
               resolve()
               //Resolve all other promises resolve in the list
               this.resolveList.forEach((other) => {
@@ -799,6 +829,13 @@ export default {
       type: Boolean,
       default: true,
     },
+    /**
+     * Allow to add and display extra legends to drawer
+     */
+    externalLegends: {
+      type: Array,
+      default: [],
+    },
   },
   data: function () {
     return {
@@ -808,6 +845,7 @@ export default {
       resolveList: markRaw([]),
       initialised: false,
       mapManagerRef: undefined,
+      multiflatmapError: null,
     }
   },
   watch: {

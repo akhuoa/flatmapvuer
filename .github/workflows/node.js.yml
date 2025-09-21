@@ -4,6 +4,8 @@
 name: FlatmapVuer CI
 
 on:
+  schedule:
+    - cron: '30 5 * * 1'
   push:
     branches: ["main"]
   pull_request:

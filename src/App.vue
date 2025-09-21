@@ -62,6 +62,7 @@
     <MultiFlatmapVuer
       ref="multi"
       :availableSpecies="availableSpecies"
+      :externalLegends="externalLegends"
       @resource-selected="FlatmapSelected"
       :minZoom="minZoom"
       @pan-zoom-callback="panZoomcallback"
@@ -313,6 +314,47 @@ export default {
       // flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v1/",
       ElIconSetting: shallowRef(ElIconSetting),
       annotator: markRaw(new AnnotationService(`https://mapcore-demo.org/devel/flatmap/v4/annotator`)),
+      externalLegends: [
+        {
+          prompt: 'Sample Circle',
+          colour: '#FA00C0',
+          border: "green",
+          style: 'circle'
+        },
+        {
+          prompt: 'Sample square',
+          border: '#EA431C',
+          style: 'square'
+        },
+        {
+          prompt: 'Sample rounded square',
+          style: 'rounded-square'
+        },
+        {
+          prompt: 'Sample exoid',
+          colour: '#0AED59',
+          border: 'purple',
+          style: 'exoid'
+        },
+        {
+          prompt: 'Sample line',
+          colour: '#0047AB',
+          style: 'line'
+        },
+        {
+          prompt: 'Sample dashed arrow line',
+          colour: '#099F04',
+          style: 'line',
+          dashed: true,
+          arrow: true
+        },
+        {
+          prompt: 'Sample hexagon',
+          colour: '#34E5EB',
+          style: 'hexagon',
+          border: 'blue',
+        },
+      ]
     }
   },
   mounted: function () {
