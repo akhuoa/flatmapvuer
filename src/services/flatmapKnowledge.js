@@ -25,9 +25,8 @@ async function getReferenceConnectivitiesByAPI(mapImp, resource, flatmapQueries)
   const sql = `select knowledge from knowledge
     where source="${knowledgeSource}" and
     knowledge like "%${resource}%" order by source desc`;
-  const response = await flatmapQueries.flatmapQuery(sql);
-  const mappedData = response.values.map((x) => x[0]);
-  const parsedData = mappedData.map((x) => JSON.parse(x));
+  const response = await flatmapQueries.queryKnowledge(sql);
+  const parsedData = response.map((x) => JSON.parse(x));
   const featureIds = parsedData.map((x) => x.id);
   return featureIds;
 }
@@ -97,9 +96,8 @@ async function loadAndStoreKnowledge(mapImp, flatmapQueries) {
   const flatmapKnowledgeSource = sessionStorage.getItem('flatmap-knowledge-source');
 
   if (!flatmapKnowledge || flatmapKnowledgeSource !== knowledgeSource) {
-    const response = await flatmapQueries.flatmapQuery(sql);
-    const mappedData = response.values.map(x => x[0]);
-    const parsedData = mappedData.map(x => JSON.parse(x));
+    const response = await flatmapQueries.queryKnowledge(sql);
+    const parsedData = response.map(x => JSON.parse(x));
 
     sessionStorage.setItem('flatmap-knowledge', JSON.stringify(parsedData));
     sessionStorage.setItem('flatmap-knowledge-source', knowledgeSource);

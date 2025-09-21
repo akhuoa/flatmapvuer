@@ -10,7 +10,11 @@
     <div
       style="height: 100%; width: 100%; position: relative; overflow-y: none"
     >
-      <div style="height: 100%; width: 100%" ref="display"></div>
+      <!-- flatmap-display -->
+      <div style="height: 100%; width: 100%" ref="display" class="flatmap-display"></div>
+      <!-- flatmap-error -->
+      <FlatmapError v-if="flatmapError" :flatmapError="flatmapError" />
+
       <div class="beta-popovers" v-show="!disableUI">
         <div>
           <el-popover
@@ -260,39 +264,35 @@ Please use `const` to assign meaningful names to them...
               :style="{ 'max-height': pathwaysMaxHeight + 'px' }"
               v-popover:checkBoxPopover
             >
-              <!-- <svg-legends v-if="!isFC" class="svg-legends-container" /> -->
-              <dynamic-legends
-                v-if="!isFC"
-                identifierKey="prompt"
-                colourKey="colour"
-                styleKey="style"
-                :legends="flatmapLegends"
-                :showStarInLegend="showStarInLegend"
-                class="svg-legends-container"
-              />
-              <!-- <template v-if="showStarInLegend">
-                <el-popover
-                  content="Location of the featured dataset"
-                  placement="right"
-                  :teleported="true"
-                  trigger="manual"
-                  width="max-content"
-                  :offset="-10"
-                  popper-class="flatmap-popper flatmap-teleport-popper"
-                  :visible="hoverVisibilities[9].value"
-                  ref="featuredMarkerPopover"
-                >
-                  <template #reference>
-                    <div
-                      v-popover:featuredMarkerPopover
-                      class="yellow-star-legend"
-                      v-html="yellowstar"
-                      @mouseover="showTooltip(9)"
-                      @mouseout="hideTooltip(9)"
-                    ></div>
-                  </template>
-                </el-popover>
-              </template> -->
+              <el-popover
+                content="Location of the featured dataset"
+                placement="bottom"
+                :teleported="true"
+                trigger="manual"
+                width="max-content"
+                :offset="-10"
+                popper-class="flatmap-popper flatmap-teleport-popper"
+                :visible="hoverVisibilities[9].value && showStarInLegend"
+                ref="featuredMarkerPopover"
+              >
+                <template #reference>
+                  <div
+                    v-popover:featuredMarkerPopover
+                    @mouseover="showTooltip(9)"
+                    @mouseout="hideTooltip(9)"
+                  >
+                    <dynamic-legends
+                      v-if="legendEntry.length"
+                      identifierKey="prompt"
+                      colourKey="colour"
+                      styleKey="style"
+                      :legends="legendEntry"
+                      :showStarInLegend="true"
+                      class="svg-legends-container"
+                    />
+                  </div>
+                </template>
+              </el-popover>
               <!-- The line below places the yellowstar svg on the left, and the text "Featured markers on the right" with css so they are both centered in the div -->
               <el-popover
                 content="Find these markers for data. The number inside the markers is the number of datasets available for each marker."
@@ -647,21 +647,20 @@ import {
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.2.10/+esm'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.0/+esm'
 import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
 import {
-  extractOriginItems,
-  extractDestinationItems,
-  extractViaItems,
   fetchLabels,
   DrawToolbar,
   Tooltip,
-  TreeControls
+  TreeControls,
+  getFlatmapFilterOptions
 } from '@abi-software/map-utilities'
 import '@abi-software/map-utilities/dist/style.css'
 import EventBus from './EventBus.js'
+import FlatmapError from './FlatmapError.vue'
 
 const ERROR_MESSAGE = 'cannot be found on the map.';
 
@@ -741,7 +740,8 @@ export default {
     ElIconWarningFilled,
     ElIconArrowDown,
     ElIconArrowLeft,
-    DrawToolbar
+    DrawToolbar,
+    FlatmapError,
   },
   beforeCreate: function () {
     //The state watcher may triggered before
@@ -826,7 +826,7 @@ export default {
             ? this.mapImp.featureProperties(numericId)
             : { feature: this.existDrawnFeatures.find(feature => feature.id === value.trim()) };
           let payload = { feature: featureObject }
-          this.checkAndCreatePopups([payload])
+          this.checkAndCreatePopups([payload], false)
         } else {
           this.closeTooltip()
         }
@@ -838,7 +838,7 @@ export default {
      */
     confirmDrawnFeature: function () {
       if (this.isValidDrawnCreated) {
-        this.checkAndCreatePopups([this.drawnCreatedEvent])
+        this.checkAndCreatePopups([this.drawnCreatedEvent], false)
         // Add connection if exist to annotationEntry
         // Connection will only be added in creating new drawn feature annotation
         // And will not be updated if move drawn features
@@ -1509,7 +1509,7 @@ export default {
      * @arg {String} `models`
      */
     ftuSelected: function (models) {
-      this.searchAndShowResult(models, true)
+      this.searchAndShowResult(models, true, true)
     },
     /**
      * @public
@@ -1635,6 +1635,8 @@ export default {
           this.connectionEntry = {}
           // For exist drawn annotation features
           if (this.selectedDrawnFeature) {
+            // The `id` here is GeoJSONId from AnnotatedFeature
+            // Ref: flatmap-viewer/src/flatmap-types.ts
             const drawnFeature = this.existDrawnFeatures.find(
               (feature) => feature.id === this.selectedDrawnFeature.id
             )
@@ -1672,6 +1674,18 @@ export default {
       if (data.type === 'deleted') this.previousDeletedEvent = data
       else this.previousDeletedEvent = {}
     },
+    getTaxons: function (data) {
+      let taxons = undefined
+      if (data.taxons) {
+        // check if data.taxons is string or array
+        if (typeof data.taxons !== 'object') {
+          taxons = JSON.parse(data.taxons)
+        } else {
+          taxons = data.taxons
+        }
+      }
+      return taxons
+    },
     /**
      * @public
      * A callback function, invoked when events occur with the map.
@@ -1687,118 +1701,98 @@ export default {
             eventType: eventType,
           }
           this.annotationEventCallback(payload, data)
+        } else if (eventType === 'pan-zoom') {
+          this.$emit('pan-zoom-callback', data)
         } else {
-          if (eventType !== 'pan-zoom') {
-            const label = data.label
-            const resource = [data.models]
-            const taxonomy = this.entry
-            const biologicalSex = this.biologicalSex
-            const featuresAlert = data.alert
-            let taxons = undefined
-            if (data.taxons) {
-              // check if data.taxons is string or array
-              if (typeof data.taxons !== 'object') {
-                taxons = JSON.parse(data.taxons)
-              } else {
-                taxons = data.taxons
-              }
-            }
-            let payload = [{
-              dataset: data.dataset,
-              biologicalSex: biologicalSex,
-              taxonomy: taxonomy,
-              resource: resource,
-              label: label,
-              feature: data,
-              userData: args,
-              eventType: eventType,
-              provenanceTaxonomy: taxons,
-              alert: featuresAlert
-            }]
-            if (eventType === 'click') {
-              const singleSelection = Object.keys(data).includes('id')
-              if (!singleSelection) {
-                payload = []
-                const mapuuid = data.mapUUID
-                const seenIds = new Set();
-                for (let [key, value] of Object.entries(data)) {
-                  if (key !== 'mapUUID') {
-                    const id = value.id
-                    const label = value.label
-                    const resource = [value.models]
-                    let taxons = undefined
-                    if (value.taxons) {
-                      // check if data.taxons is string or array
-                      if (typeof value.taxons !== 'object') {
-                        taxons = JSON.parse(value.taxons)
-                      } else {
-                        taxons = value.taxons
-                      }
-                    }
-                    if (seenIds.has(id)) continue;
-                    seenIds.add(id);
-                    payload.push({
-                      dataset: value.dataset,
-                      biologicalSex: biologicalSex,
-                      taxonomy: taxonomy,
-                      resource: resource,
-                      label: label,
-                      feature: value,
-                      userData: args,
-                      eventType: eventType,
-                      provenanceTaxonomy: taxons,
-                      alert: value.alert,
-                      mapUUID: mapuuid
-                    })
-                  }
+          const label = data.label
+          const resource = [data.models]
+          const taxonomy = this.entry
+          const biologicalSex = this.biologicalSex
+          const featuresAlert = data.alert
+          const taxons = this.getTaxons(data)
+          let payload = [{
+            dataset: data.dataset,
+            biologicalSex: biologicalSex,
+            taxonomy: taxonomy,
+            resource: resource,
+            label: label,
+            feature: data,
+            userData: args,
+            eventType: eventType,
+            provenanceTaxonomy: taxons,
+            alert: featuresAlert
+          }]
+          if (eventType === 'click') {
+            // If multiple paths overlap at the click location,
+            // `data` is an object with numeric keys for each feature (e.g., {0: {...}, 1: {...}, ..., mapUUID: '...'}).
+            // If only one feature or path is clicked,
+            // `data` is a single object (e.g., {featureId: '...', mapUUID: '...'}).
+            const singleSelection = !data[0];
+            if (!singleSelection) {
+              payload = []
+              const mapuuid = data.mapUUID
+              const seenIds = new Set();
+              for (let [key, value] of Object.entries(data)) {
+                if (key !== 'mapUUID') {
+                  const id = value.featureId
+                  const label = value.label
+                  const resource = [value.models]
+                  const taxons = this.getTaxons(value)
+                  if (seenIds.has(id)) continue;
+                  seenIds.add(id);
+                  payload.push({
+                    dataset: value.dataset,
+                    biologicalSex: biologicalSex,
+                    taxonomy: taxonomy,
+                    resource: resource,
+                    label: label,
+                    feature: value,
+                    userData: args,
+                    eventType: eventType,
+                    provenanceTaxonomy: taxons,
+                    alert: value.alert,
+                    mapUUID: mapuuid
+                  })
                 }
               }
-              const clickedItem = singleSelection ? data : data[0]
-              this.setConnectivityDataSource(this.viewingMode, clickedItem);
-              if (this.viewingMode === 'Neuron Connection') {
-                // do nothing here
-                // the method to highlight paths is moved to checkAndCreatePopups function
-              } else {
-                this.currentActive = clickedItem.models ? clickedItem.models : '' // This is for FC map
-                // This is for annotation mode - draw connectivity between features/paths
-                if (this.activeDrawTool && !this.isValidDrawnCreated) {
-                  // Check if flatmap features or existing drawn features
-                  const validDrawnFeature = clickedItem.featureId || this.existDrawnFeatures.find(
-                    (feature) => feature.id === clickedItem.id
-                  )
-                  // Only the linestring will have connection
-                  if (this.activeDrawTool === 'LineString' && validDrawnFeature) {
-                    const key = clickedItem.featureId ? clickedItem.featureId : clickedItem.id
-                    const nodeLabel = clickedItem.label ? clickedItem.label : `Feature ${clickedItem.id}`
-                    // Add space before key to make sure properties follows adding order
-                    this.connectionEntry[` ${key}`] = Object.assign(
-                      { label: nodeLabel },
-                      Object.fromEntries(
-                        Object.entries(clickedItem)
-                          .filter(([key]) => ['featureId', 'models'].includes(key))
-                          .map(([key, value]) => [(key === 'featureId') ? 'id' : key, value])))
-                  }
+            }
+            const clickedItem = singleSelection ? data : data[0]
+            this.setConnectivityDataSource(this.viewingMode, clickedItem);
+            if (this.viewingMode === 'Neuron Connection') {
+              // do nothing here
+              // the method to highlight paths is moved to checkAndCreatePopups function
+            } else {
+              this.currentActive = clickedItem.models ? clickedItem.models : '' // This is for FC map
+              // This is for annotation mode - draw connectivity between features/paths
+              if (this.activeDrawTool && !this.isValidDrawnCreated) {
+                // Check if flatmap features or existing drawn features
+                const validDrawnFeature = clickedItem.featureId || this.existDrawnFeatures.find(
+                  (feature) => feature.id === clickedItem.id
+                )
+                // Only the linestring will have connection
+                if (this.activeDrawTool === 'LineString' && validDrawnFeature) {
+                  const key = clickedItem.featureId ? clickedItem.featureId : clickedItem.id
+                  const nodeLabel = clickedItem.label ? clickedItem.label : `Feature ${clickedItem.id}`
+                  // Add space before key to make sure properties follows adding order
+                  this.connectionEntry[` ${key}`] = Object.assign(
+                    { label: nodeLabel },
+                    Object.fromEntries(
+                      Object.entries(clickedItem)
+                        .filter(([key]) => ['featureId', 'models'].includes(key))
+                        .map(([key, value]) => [(key === 'featureId') ? 'id' : key, value])))
                 }
               }
-            } else if (
-              eventType === 'mouseenter' &&
-              !(this.viewingMode === 'Neuron Connection')
-            ) {
-              this.currentHover = data.models ? data.models : ''
             }
-            if (
-              data &&
-              data.type !== 'marker' &&
-              eventType === 'click' &&
-              // Disable popup when drawing
-              !this.activeDrawTool
-            ) {
+
+            // Disable popup when drawing
+            if (data && data.type !== 'marker' && !this.activeDrawTool) {
               this.checkAndCreatePopups(payload)
             }
-            this.$emit('resource-selected', payload)
-          } else {
-            this.$emit('pan-zoom-callback', data)
+          } else if (eventType === 'mouseenter' && this.viewingMode !== 'Neuron Connection') {
+            this.currentHover = data.models ? data.models : ''
           }
+
+          this.$emit('resource-selected', payload)
         }
       }
     },
@@ -1812,11 +1806,13 @@ export default {
      * @param data
      */
     setConnectivityDataSource: function (viewingMode, data) {
-      // for Exploration mode, only path click will be used as data source
-      this.connectivityDataSource = data.source;
-      // for other modes, it can be feature or path
-      if (viewingMode === 'Neuron Connection' || viewingMode === 'Annotation') {
-        this.connectivityDataSource = data.featureId;
+      // Exploration mode, only path click will be used as data source
+      if (viewingMode === 'Exploration') {
+        this.connectivityDataSource = data.models.startsWith('ilxtr:') ? data.models : '';
+      } else {
+        // Other modes, it can be anything
+        // (annotation drawing doesn't have featureId or models)
+        this.connectivityDataSource = data.featureId || data.id;
       }
     },
     /**
@@ -2014,7 +2010,7 @@ export default {
      * _checkNeuronClicked shows a neuron path pop up if a path was recently clicked._
      * @arg {Object} `data`
      */
-    checkAndCreatePopups: async function (data, connectivityExplorerClicked) {
+    checkAndCreatePopups: async function (data, mapclick = true) {
       // Call flatmap database to get the connection data
       if (this.viewingMode === 'Annotation') {
         const features = data.filter(d => d.feature).map(d => d.feature)
@@ -2064,7 +2060,7 @@ export default {
       }
       // clicking on a connectivity explorer card will be the same as exploration mode
       // the card should be opened without doing other functions
-      else if (this.viewingMode === 'Neuron Connection' && !connectivityExplorerClicked) {
+      else if (this.viewingMode === 'Neuron Connection' && mapclick) {
         const resources = data.map(tooltip => tooltip.resource[0]);
 
         // filter out paths
@@ -2488,6 +2484,12 @@ export default {
       if (geometry) {
         featureId = feature
         options.annotationFeatureGeometry = geometry
+        if (this.annotationEntry.length) {
+          options['annotationEvent'] = {
+            type: this.annotationEntry[0].type,
+            feature: this.annotationEntry[0].feature
+          }
+        }
       } else {
         const entry = Array.isArray(feature) ? feature[0] : feature
         if (entry) {
@@ -2717,7 +2719,7 @@ export default {
         if (state.background) this.backgroundChangeCallback(state.background)
         if (state.searchTerm) {
           const searchTerm = state.searchTerm
-          this.searchAndShowResult(searchTerm, true)
+          this.searchAndShowResult(searchTerm, true, true)
         }
         this.setVisibilityState(state)
       }
@@ -2747,6 +2749,7 @@ export default {
     createFlatmap: function (state) {
       if (!this.mapImp && !this.loading) {
         this.loading = true
+        this.flatmapError = null
         let minimap = false
         if (this.displayMinimap) {
           minimap = { position: 'top-right' }
@@ -2815,6 +2818,36 @@ export default {
           const stateToSet = this._stateToBeSet ? this._stateToBeSet : state
           this.onFlatmapReady(stateToSet)
           this.$nextTick(() => this.restoreMapState(stateToSet))
+        }).catch((error) => {
+          console.error('Flatmap loading error:', error)
+          // prepare error object
+          this.flatmapError = {};
+          if (error.message && error.message.indexOf('Unknown map') !== -1) {
+            this.flatmapError['title'] = 'Unknown Map!';
+            this.flatmapError['messages'] = Object.keys(identifier).map(key => {
+              const keyName = key === 'uuid' ? 'UUID' : capitalise(key);
+              return `${keyName}: ${identifier[key]}`
+            });
+          } else {
+            this.flatmapError['title'] = 'Error Loading Map!';
+            this.flatmapError['messages'] = [
+              error.message ? error.message : error.toString(),
+              'Please try again later or contact support if the problem persists.'
+            ];
+          }
+          if (this.$parent?.$refs?.multiContainer) {
+            // if the flatmap is in a multiflatmapvuer
+            // show a button to load default map
+            const multiFlatmapVuer = this.$parent;
+            this.flatmapError['button'] = {
+              text: 'Load Default Map',
+              callback: () => {
+                const defaultSpecies = multiFlatmapVuer.initial;
+                multiFlatmapVuer.setSpecies(defaultSpecies, undefined, 3);
+              }
+            };
+          }
+          this.loading = false;
         })
       } else if (state) {
         this._stateToBeSet = {
@@ -2902,148 +2935,11 @@ export default {
       }
       return filterSources
     },
-    getFilterOptions: async function (providedKnowledge) {
-      let filterOptions = [];
-      if (this.mapImp) {
-        const filterRanges = this.mapImp.featureFilterRanges()
-        for (const [key, value] of Object.entries(filterRanges)) {
-          let main = {
-            key: `flatmap.connectivity.${key}`,
-            label: "",
-            children: []
-          }
-          let children = []
-          if (key === "kind") {
-            main.label = "Pathways"
-            for (const facet of value) {
-              const pathway = this.pathways.find(path => path.type === facet)
-              if (pathway) {
-                children.push({
-                  key: `${main.key}.${facet}`,
-                  label: pathway.label,
-                  colour: pathway.colour,
-                  colourStyle: 'line',
-                  dashed: pathway.dashed,
-                })
-              }
-            }
-          } else if (key === "taxons") {
-            main.label = "Studied in"
-            const entityLabels = await findTaxonomyLabels(this.mapImp, this.mapImp.taxonIdentifiers)
-            if (entityLabels.length) {
-              for (const facet of value) {
-                const taxon = entityLabels.find(p => p.taxon === facet)
-                if (taxon) {
-                  children.push({
-                    key: `${main.key}.${facet}`,
-                    // space added at the end of label to make sure the display name will not be updated
-                    // prevent sidebar searchfilter convertReadableLabel
-                    label: `${taxon.label} `
-                  })
-                }
-              }
-            }
-          } else if (key === "alert") {
-            main.label = "Alert"
-            for (const facet of ["with", "without"]) {
-              children.push({
-                key: `${main.key}.${facet}`,
-                label: `${facet} alerts`
-              })
-            }
-          }
-          main.children = children.sort((a, b) => a.label.localeCompare(b.label));
-          if (main.label && main.children.length) {
-            filterOptions.push(main)
-          }
-        }
-        const connectionFilters = [];
-        const baseFlatmapKnowledge = providedKnowledge || this.getFlatmapKnowledge();
-        const mapKnowledge = this.mapImp.pathways.paths;
-        const flatmapKnowledge = baseFlatmapKnowledge.reduce((arr, knowledge) => {
-          const id = knowledge.id;
-          if (id) {
-            const mapKnowledgeObj = mapKnowledge[id];
-            if (mapKnowledgeObj && mapKnowledgeObj.connectivity && mapKnowledgeObj['node-phenotypes']) {
-              const mapConnectivity = mapKnowledgeObj.connectivity;
-              const mapNodePhenotypes = mapKnowledgeObj['node-phenotypes'];
-              // take only map connectivity
-              knowledge.connectivity = [...mapConnectivity];
-              for (let key in knowledge['node-phenotypes']) {
-                if (mapNodePhenotypes[key]) {
-                  // take only map node-phenotypes
-                  knowledge['node-phenotypes'][key] = [...mapNodePhenotypes[key]];
-                }
-              }
-              // to avoid mutation
-              arr.push(JSON.parse(JSON.stringify(knowledge)));
-            }
-          }
-          return arr;
-        }, []);
-        const knowledgeSource = this.mapImp.knowledgeSource;
-        const originItems = await extractOriginItems(this.flatmapAPI, knowledgeSource, flatmapKnowledge);
-        const viaItems = await extractViaItems(this.flatmapAPI, knowledgeSource, flatmapKnowledge);
-        const destinationItems = await extractDestinationItems(this.flatmapAPI, knowledgeSource, flatmapKnowledge);
-
-        const transformItem = (facet, item) => {
-          const key = JSON.stringify(item.key);
-          return {
-            key: `flatmap.connectivity.source.${facet}.${key}`,
-            label: item.label || key
-          };
-        }
-
-        for (const facet of ["origin", "via", "destination", "all"]) {
-          let childrenList = []
-          if (facet === 'origin') {
-            childrenList = originItems.map((item) => transformItem(facet, item));
-          } else if (facet === 'via') {
-            childrenList = viaItems.map((item) => transformItem(facet, item));
-          } else if (facet === 'destination') {
-            childrenList = destinationItems.map((item) => transformItem(facet, item));
-          } else {
-            // All is the combination of origin, via, destination
-            const allList = [
-              ...originItems.map((item) => transformItem(facet, item)),
-              ...viaItems.map((item) => transformItem(facet, item)),
-              ...destinationItems.map((item) => transformItem(facet, item))
-            ];
-            // Generate unique list since the same feature can be in origin, via, and destination
-            const seenKeys = new Set();
-            childrenList = allList.filter(item => {
-              if (seenKeys.has(item.key)) return false;
-              seenKeys.add(item.key);
-              return true;
-            });
-          }
-
-          // Those without label but key should be below
-          childrenList = childrenList.sort((a, b) => {
-            const isAlpha = (str) => /^[a-zA-Z]/.test(str);
-            const aAlpha = isAlpha(a.label);
-            const bAlpha = isAlpha(b.label);
-
-            if (aAlpha && !bAlpha) return -1;
-            if (!aAlpha && bAlpha) return 1;
-
-            return a.label.localeCompare(b.label);
-          });
-
-          if (childrenList.length) {
-            connectionFilters.push({
-              key: `flatmap.connectivity.source.${facet}`,
-              label: facet,
-              children: childrenList,
-            })
-          }
-        }
-
-        if (connectionFilters.length) {
-          filterOptions.push(...connectionFilters)
-        }
-      }
-      return filterOptions;
+    getFilterOptions: async function (mapImp, _providedKnowledge) {
+      const providedKnowledge = _providedKnowledge || this.getFlatmapKnowledge();
+      const providedPathways = this.pathways;
+      const flatmapFilterOptions = await getFlatmapFilterOptions(this.flatmapAPI, mapImp, providedKnowledge, providedPathways);
+      return flatmapFilterOptions;
     },
     /**
      * @public
@@ -3120,8 +3016,9 @@ export default {
      * with the option to display the label/connectivity information using displayInfo flag.
      * @arg {String} `term`,
      * @arg {String} `displayInfo`
+     * @arg {String} `mapclick` Similate the event as it is triggered by an user click
      */
-    searchAndShowResult: function (term, displayInfo, connectivityExplorerClicked) {
+    searchAndShowResult: function (term, displayInfo, mapclick = true) {
       if (this.mapImp) {
         if (term === undefined || term === '') {
           this.mapImp.clearSearchResults()
@@ -3153,7 +3050,7 @@ export default {
                   alert: feature.alert,
                 }
                 // Show popup for all modes
-                this.checkAndCreatePopups([data], connectivityExplorerClicked)
+                this.checkAndCreatePopups([data], mapclick)
                 this.mapImp.showPopup(featureId, capitalise(feature.label), {
                   className: 'custom-popup',
                   positionAtLastClick: false,
@@ -3421,6 +3318,13 @@ export default {
       type: Boolean,
       default: true,
     },
+    /**
+     * Allow to add and display extra legends to drawer
+     */
+    externalLegends: {
+      type: Array,
+      default: [],
+    },
   },
   provide() {
     return {
@@ -3431,6 +3335,7 @@ export default {
   },
   data: function () {
     return {
+      flatmapError: null,
       sensor: null,
       mapManagerRef: undefined,
       flatmapQueries: undefined,
@@ -3559,21 +3464,17 @@ export default {
         this.drawerOpen = false
         return false
       }
-      if (!this.isFC) {
+      if ((this.systems?.length > 0) ||
+        (this.containsAlert && this.alertOptions) ||
+        (this.pathways?.length > 0) ||
+        (this.taxonConnectivity?.length > 0) ||
+        (this.legendEntry?.length > 0)
+      ) {
         this.drawerOpen = true
         return true
-      } else {
-        if ((this.systems?.length > 0) ||
-          (this.containsAlert && this.alertOptions) ||
-          (this.pathways?.length > 0) ||
-          (this.taxonConnectivity?.length > 0)
-        ) {
-          this.drawerOpen = true
-          return true
-        }
       }
       this.drawerOpen = false
-      return true
+      return false
     },
     modeDescription: function () {
       let description = this.viewingModes[this.viewingMode]
@@ -3585,6 +3486,9 @@ export default {
       }
       return description
     },
+    legendEntry: function () {
+      return [...this.flatmapLegends, ...this.externalLegends]
+    }
   },
   watch: {
     entry: function () {
@@ -3791,18 +3695,10 @@ export default {
   }
 }
 
-.svg-legends-container {
-  width: 70%;
-  min-width:183px;
-  height: auto;
-  position: relative;
-  max-height: 140px;
-}
-
 .pathway-container {
   float: left;
-  padding-left: 16px;
-  padding-right: 18px;
+  padding-left: 8px;
+  padding-right: 8px;
   text-align: left;
   overflow: auto;
   border: 1px solid rgb(220, 223, 230);
@@ -3813,6 +3709,7 @@ export default {
   overflow-x: hidden;
   scrollbar-width: thin;
   transition: all var(--el-transition-duration);
+  width: 276px;
   &.open {
     opacity: 1;
     position: relative;
