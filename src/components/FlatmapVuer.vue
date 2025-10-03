@@ -647,7 +647,7 @@ import {
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.0/+esm'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.1/+esm'
 import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
@@ -1813,7 +1813,7 @@ export default {
     setConnectivityDataSource: function (viewingMode, data) {
       // Exploration mode, only path click will be used as data source
       if (viewingMode === 'Exploration') {
-        this.connectivityDataSource = data.models.startsWith('ilxtr:') ? data.models : '';
+        this.connectivityDataSource = data.models?.startsWith('ilxtr:') ? data.models : '';
       } else {
         // Other modes, it can be anything
         // (annotation drawing doesn't have featureId or models)
