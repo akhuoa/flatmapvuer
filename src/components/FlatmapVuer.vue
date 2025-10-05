@@ -1813,7 +1813,7 @@ export default {
     setConnectivityDataSource: function (viewingMode, data) {
       // Exploration mode, only path click will be used as data source
       if (viewingMode === 'Exploration') {
-        this.connectivityDataSource = data.models.startsWith('ilxtr:') ? data.models : '';
+        this.connectivityDataSource = data.models?.startsWith('ilxtr:') ? data.models : '';
       } else {
         // Other modes, it can be anything
         // (annotation drawing doesn't have featureId or models)
