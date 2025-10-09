@@ -18,6 +18,7 @@
       <div class="beta-popovers" v-show="!disableUI">
         <div>
           <el-popover
+            v-if="displayWarning || isLegacy"
             placement="right"
             popper-class="warning-popper flatmap-popper"
             :teleported="false"
@@ -58,7 +59,10 @@ Please use `const` to assign meaningful names to them...
                 SCKAN </a
               >.
             </p>
-            <p v-else @mouseover="showTooltip(7)" @mouseout="hideTooltip(7)">
+            <p v-else
+              @mouseover="showTooltip(7)"
+              @mouseout="hideTooltip(7)"
+            >
               This map displays the connectivity of neuron populations.
               Specifically, those from the primarily rat-based
               <a
@@ -264,35 +268,17 @@ Please use `const` to assign meaningful names to them...
               :style="{ 'max-height': pathwaysMaxHeight + 'px' }"
               v-popover:checkBoxPopover
             >
-              <el-popover
-                content="Location of the featured dataset"
-                placement="bottom"
-                :teleported="true"
-                trigger="manual"
-                width="max-content"
-                :offset="-10"
-                popper-class="flatmap-popper flatmap-teleport-popper"
-                :visible="hoverVisibilities[9].value && showStarInLegend"
+              <dynamic-legends
+                v-if="legendEntry.length"
+                identifierKey="prompt"
+                colourKey="colour"
+                styleKey="style"
+                :legends="legendEntry"
+                :showStarInLegend="true"
+                :showDatasetMarkerTooltip="showDatasetMarkerTooltip"
                 ref="featuredMarkerPopover"
-              >
-                <template #reference>
-                  <div
-                    v-popover:featuredMarkerPopover
-                    @mouseover="showTooltip(9)"
-                    @mouseout="hideTooltip(9)"
-                  >
-                    <dynamic-legends
-                      v-if="legendEntry.length"
-                      identifierKey="prompt"
-                      colourKey="colour"
-                      styleKey="style"
-                      :legends="legendEntry"
-                      :showStarInLegend="true"
-                      class="svg-legends-container"
-                    />
-                  </div>
-                </template>
-              </el-popover>
+                class="svg-legends-container"
+              />
               <!-- The line below places the yellowstar svg on the left, and the text "Featured markers on the right" with css so they are both centered in the div -->
               <el-popover
                 content="Find these markers for data. The number inside the markers is the number of datasets available for each marker."
@@ -647,7 +633,7 @@ import {
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.0/+esm'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.5/+esm'
 import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
@@ -764,8 +750,13 @@ export default {
       }
     },
     /**
-     *
-     * @param filter format should follow #makeStyleFilter (flatmap-viewer)
+     * @public
+     * Function to set visibility filter for features and paths on the map.
+     * The param `filter` format should follow `#makeStyleFilter` (flatmap-viewer).
+     * If the param is `null` or `undefined`, the visibility filter will be cleared.
+     * Refer to [`setVisibilityFilter` in flatmap-viewer](https://anatomicmaps.github.io/flatmap-viewer/classes/index.FlatMap.html#setvisibilityfilter)
+     * for more details.
+     * @param {Object} `filter`
      */
     setVisibilityFilter: function (filter) {
       // More filter options -> this.mapImp.featureFilterRanges()
@@ -1272,6 +1263,11 @@ export default {
         if (this.$refs.pathwaysSelection) {
           this.$refs.pathwaysSelection.reset()
         }
+
+        this.trackEvent({
+          'event_name': `portal_maps_zoom`,
+          'category': 'reset',
+        });
       }
     },
     /**
@@ -1282,6 +1278,11 @@ export default {
     zoomIn: function () {
       if (this.mapImp) {
         this.mapImp.zoomIn()
+
+        this.trackEvent({
+          'event_name': `portal_maps_zoom`,
+          'category': 'zoom_in',
+        });
       }
     },
     /**
@@ -1292,6 +1293,11 @@ export default {
     zoomOut: function () {
       if (this.mapImp) {
         this.mapImp.zoomOut()
+
+        this.trackEvent({
+          'event_name': `portal_maps_zoom`,
+          'category': 'zoom_out',
+        });
       }
     },
     onSelectionsDataChanged: function (data) {
@@ -2092,17 +2098,27 @@ export default {
             uniqueResource = [models, []];
           }
 
+          const knowledgeSource = this.mapImp.knowledgeSource;
           const terms = uniqueResource.flat(Infinity);
           const uniqueTerms = [...new Set(terms)];
           const fetchResults = await fetchLabels(this.flatmapAPI, uniqueTerms);
           const objectResults = fetchResults.reduce((arr, item) => {
             const id = item[0];
             const valObj = JSON.parse(item[1]);
-            if (valObj.source === this.mapImp.knowledgeSource) {
-              arr.push({ id, label: valObj.label });
-            }
+            arr.push({ id, label: valObj.label, source: valObj.source });
             return arr;
           }, []);
+
+          // sort matched knowledgeSource items for same id
+          objectResults.sort((a, b) => {
+            if (a.id === b.id) {
+              if (a.source === knowledgeSource && b.source !== knowledgeSource) return -1;
+              if (a.source !== knowledgeSource && b.source === knowledgeSource) return 1;
+              return 0;
+            }
+            return a.id.localeCompare(b.id);
+          });
+
           const labels = [];
           for (let i = 0; i < uniqueTerms.length; i++) {
             const foundObj = objectResults.find((obj) => obj.id === uniqueTerms[i])
@@ -2205,8 +2221,8 @@ export default {
         tooltip['featuresAlert'] = data.alert;
         tooltip['knowledgeSource'] = getKnowledgeSource(this.mapImp);
         // Map id and uuid to load connectivity information from the map
-        tooltip['mapId'] = this.mapImp.provenance.id;
-        tooltip['mapuuid'] = this.mapImp.provenance.uuid;
+        tooltip['mapId'] = this.mapImp.mapMetadata.id;
+        tooltip['mapuuid'] = this.mapImp.mapMetadata.uuid;
       // } else {
       //   tooltip = {
       //     ...tooltip,
@@ -2386,7 +2402,15 @@ export default {
         } else {
           // skip the unavailable tooltips
           this.helpModeActiveIndex += 1;
+          this.setHelpMode(helpMode);
         }
+      }
+
+      // Skip checkbox tooltip if pathway filter is not shown
+      const activePopoverObjAfter = this.hoverVisibilities[this.helpModeActiveIndex];
+      if (activePopoverObjAfter?.ref === 'checkBoxPopover' && !this.showPathwayFilter) {
+        this.helpModeActiveIndex += 1;
+        this.setHelpMode(helpMode);
       }
 
       if (!helpMode) {
@@ -3096,6 +3120,19 @@ export default {
     setConnectionType: function (type) {
       this.connectionType = type;
     },
+    /**
+     * @public
+     * Function to track events.
+     * @arg {Object} `data`
+     */
+    trackEvent: function (data) {
+      const taggingData = {
+        'event': 'interaction_event',
+        'location': 'flatmap',
+        ...data,
+      };
+      this.$emit('trackEvent', taggingData);
+    },
   },
   props: {
     /**
@@ -3323,7 +3360,9 @@ export default {
      */
     externalLegends: {
       type: Array,
-      default: [],
+      default: function () {
+        return []
+      },
     },
   },
   provide() {
@@ -3488,7 +3527,10 @@ export default {
     },
     legendEntry: function () {
       return [...this.flatmapLegends, ...this.externalLegends]
-    }
+    },
+    showDatasetMarkerTooltip: function () {
+      return this.hoverVisibilities[9].value;
+    },
   },
   watch: {
     entry: function () {

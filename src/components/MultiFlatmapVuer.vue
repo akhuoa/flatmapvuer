@@ -91,6 +91,7 @@
       :showLocalSettings="showLocalSettings"
       :showOpenMapButton="showOpenMapButton"
       :showPathwayFilter="showPathwayFilter"
+      @trackEvent="trackEvent"
       :externalLegends="externalLegends"
     />
 
@@ -104,7 +105,7 @@
 import { markRaw } from 'vue'
 import EventBus from './EventBus'
 import FlatmapVuer from './FlatmapVuer.vue'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.0/+esm'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.5/+esm'
 import {
   ElCol as Col,
   ElOption as Option,
@@ -595,6 +596,19 @@ export default {
       let map = this.getCurrentFlatmap();
       map.setConnectionType(type);
     },
+    /**
+     * @public
+     * Function to track events.
+     * @arg {Object} `data`
+     */
+    trackEvent: function (data) {
+      const taggingData = {
+        'event': 'interaction_event',
+        'location': 'flatmap',
+        ...data,
+      };
+      this.$emit('trackEvent', taggingData);
+    },
   },
   props: {
     /**
@@ -834,7 +848,9 @@ export default {
      */
     externalLegends: {
       type: Array,
-      default: [],
+      default: function () {
+        return []
+      },
     },
   },
   data: function () {
@@ -885,6 +901,8 @@ export default {
   left: 16px;
   top: 44px;
   position: absolute;
+  width: fit-content;
+
   :deep(.el-input__inner) {
     color: rgb(48, 49, 51);
     padding-top: 0.25em;
