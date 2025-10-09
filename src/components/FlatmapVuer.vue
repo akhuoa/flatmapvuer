@@ -647,7 +647,7 @@ import {
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.0/+esm'
+import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.5/+esm'
 import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
@@ -764,8 +764,13 @@ export default {
       }
     },
     /**
-     *
-     * @param filter format should follow #makeStyleFilter (flatmap-viewer)
+     * @public
+     * Function to set visibility filter for features and paths on the map.
+     * The param `filter` format should follow `#makeStyleFilter` (flatmap-viewer).
+     * If the param is `null` or `undefined`, the visibility filter will be cleared.
+     * Refer to [`setVisibilityFilter` in flatmap-viewer](https://anatomicmaps.github.io/flatmap-viewer/classes/index.FlatMap.html#setvisibilityfilter)
+     * for more details.
+     * @param {Object} `filter`
      */
     setVisibilityFilter: function (filter) {
       // More filter options -> this.mapImp.featureFilterRanges()
@@ -3361,7 +3366,9 @@ export default {
      */
     externalLegends: {
       type: Array,
-      default: [],
+      default: function () {
+        return []
+      },
     },
   },
   provide() {
