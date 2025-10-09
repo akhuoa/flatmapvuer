@@ -18,6 +18,7 @@
       <div class="beta-popovers" v-show="!disableUI">
         <div>
           <el-popover
+            v-if="displayWarning || isLegacy"
             placement="right"
             popper-class="warning-popper flatmap-popper"
             :teleported="false"
@@ -58,7 +59,10 @@ Please use `const` to assign meaningful names to them...
                 SCKAN </a
               >.
             </p>
-            <p v-else @mouseover="showTooltip(7)" @mouseout="hideTooltip(7)">
+            <p v-else
+              @mouseover="showTooltip(7)"
+              @mouseout="hideTooltip(7)"
+            >
               This map displays the connectivity of neuron populations.
               Specifically, those from the primarily rat-based
               <a
@@ -264,35 +268,17 @@ Please use `const` to assign meaningful names to them...
               :style="{ 'max-height': pathwaysMaxHeight + 'px' }"
               v-popover:checkBoxPopover
             >
-              <el-popover
-                content="Location of the featured dataset"
-                placement="bottom"
-                :teleported="true"
-                trigger="manual"
-                width="max-content"
-                :offset="-10"
-                popper-class="flatmap-popper flatmap-teleport-popper"
-                :visible="hoverVisibilities[9].value && showStarInLegend"
+              <dynamic-legends
+                v-if="legendEntry.length"
+                identifierKey="prompt"
+                colourKey="colour"
+                styleKey="style"
+                :legends="legendEntry"
+                :showStarInLegend="true"
+                :showDatasetMarkerTooltip="showDatasetMarkerTooltip"
                 ref="featuredMarkerPopover"
-              >
-                <template #reference>
-                  <div
-                    v-popover:featuredMarkerPopover
-                    @mouseover="showTooltip(9)"
-                    @mouseout="hideTooltip(9)"
-                  >
-                    <dynamic-legends
-                      v-if="legendEntry.length"
-                      identifierKey="prompt"
-                      colourKey="colour"
-                      styleKey="style"
-                      :legends="legendEntry"
-                      :showStarInLegend="true"
-                      class="svg-legends-container"
-                    />
-                  </div>
-                </template>
-              </el-popover>
+                class="svg-legends-container"
+              />
               <!-- The line below places the yellowstar svg on the left, and the text "Featured markers on the right" with css so they are both centered in the div -->
               <el-popover
                 content="Find these markers for data. The number inside the markers is the number of datasets available for each marker."
@@ -2416,7 +2402,15 @@ export default {
         } else {
           // skip the unavailable tooltips
           this.helpModeActiveIndex += 1;
+          this.setHelpMode(helpMode);
         }
+      }
+
+      // Skip checkbox tooltip if pathway filter is not shown
+      const activePopoverObjAfter = this.hoverVisibilities[this.helpModeActiveIndex];
+      if (activePopoverObjAfter?.ref === 'checkBoxPopover' && !this.showPathwayFilter) {
+        this.helpModeActiveIndex += 1;
+        this.setHelpMode(helpMode);
       }
 
       if (!helpMode) {
@@ -3533,7 +3527,10 @@ export default {
     },
     legendEntry: function () {
       return [...this.flatmapLegends, ...this.externalLegends]
-    }
+    },
+    showDatasetMarkerTooltip: function () {
+      return this.hoverVisibilities[9].value;
+    },
   },
   watch: {
     entry: function () {
