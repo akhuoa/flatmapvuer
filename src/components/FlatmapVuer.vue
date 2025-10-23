@@ -633,7 +633,7 @@ import {
 import { capitalise } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.5/+esm'
+import flatmap from '../services/flatmapLoader.js'
 import { AnnotationService } from '@abi-software/sparc-annotation'
 import { mapState } from 'pinia'
 import { useMainStore } from '@/store/index'
@@ -761,10 +761,19 @@ export default {
     setVisibilityFilter: function (filter) {
       // More filter options -> this.mapImp.featureFilterRanges()
       if (this.mapImp) {
-        if (filter) {
-          this.mapImp.setVisibilityFilter(filter);
+        if (this.mapImp.contextLost) {
+          if (filter) {
+            this.filterToRestore = markRaw(JSON.parse(JSON.stringify(filter)));
+          } else {
+            this.filterToRestore = undefined;
+          }
         } else {
-          this.mapImp.clearVisibilityFilter();
+          if (filter) {
+            this.mapImp.setVisibilityFilter(filter);
+          } else {
+            this.mapImp.clearVisibilityFilter();
+          }
+          this.filterToRestore = undefined;
         }
       }
     },
@@ -921,6 +930,17 @@ export default {
     clearAnnotationFeature: function () {
       if (this.mapImp) {
         this.mapImp.clearAnnotationFeature()
+      }
+    },
+    forceContextLoss: function() {
+      if (this.mapImp && !this.mapImp.contextLost && !this.loading) {
+        this.mapImp.forceContextLoss()
+      }
+    },
+    forceContextRestore: function() {
+      if (this.mapImp) {
+        this.flatmapError = null
+        this.mapImp.forceContextRestore()
       }
     },
     /**
@@ -1707,6 +1727,10 @@ export default {
             eventType: eventType,
           }
           this.annotationEventCallback(payload, data)
+        } else if (eventType === 'context-lost') {
+          this.onContextLost()
+        } else if (eventType === 'context-restored') {
+          this.onContextRestored()
         } else if (eventType === 'pan-zoom') {
           this.$emit('pan-zoom-callback', data)
         } else {
@@ -1814,7 +1838,7 @@ export default {
     setConnectivityDataSource: function (viewingMode, data) {
       // Exploration mode, only path click will be used as data source
       if (viewingMode === 'Exploration') {
-        this.connectivityDataSource = data.models.startsWith('ilxtr:') ? data.models : '';
+        this.connectivityDataSource = data.models?.startsWith('ilxtr:') ? data.models : '';
       } else {
         // Other modes, it can be anything
         // (annotation drawing doesn't have featureId or models)
@@ -2774,10 +2798,6 @@ export default {
       if (!this.mapImp && !this.loading) {
         this.loading = true
         this.flatmapError = null
-        let minimap = false
-        if (this.displayMinimap) {
-          minimap = { position: 'top-right' }
-        }
 
         //As for flatmap-viewer@2.2.7, see below for the documentation
         //for the identifier:
@@ -2829,7 +2849,7 @@ export default {
             //debug: true,
             minZoom: this.minZoom,
             tooltips: this.tooltips,
-            minimap: minimap,
+            minimap: false,
             container: this.$refs.display,
             // tooltipDelay: 15, // new feature to delay tooltips showing
           }
@@ -2905,7 +2925,6 @@ export default {
         this.computePathControlsMaximumHeight()
         if (this.mapImp) {
           this.mapImp.resize()
-          this.showMinimap(this.displayMinimap)
         }
       } catch {
         console.error('Map resize error')
@@ -2988,12 +3007,16 @@ export default {
       this.processTaxon(this.mapImp.taxonIdentifiers, state ? state['taxonSelection'] : undefined)
       this.containsAlert = "alert" in this.mapImp.featureFilterRanges()
       this.flatmapLegends = this.mapImp.flatmapLegend
-      this.addResizeButtonToMinimap()
       this.loading = false
       this.computePathControlsMaximumHeight()
       this.mapResize()
       this.handleMapClick();
       this.setInitMapState();
+      if (this.displayMinimap) {
+        const minimapOptions = { position: 'top-right' };
+        this.mapImp.createMinimap(minimapOptions);
+        this.addResizeButtonToMinimap()
+      }
       /**
        * This is ``onFlatmapReady`` event.
        * @arg ``this`` (Component Vue Instance)
@@ -3016,14 +3039,38 @@ export default {
         });
       }
     },
-    /**
-     * @public
-     * Function to show or hide the minimap
-     * by providing ``flag`` (boolean) value.
-     * @arg {Boolean} `flag`
-     */
-    showMinimap: function (flag) {
-      if (this.mapImp) this.mapImp.showMinimap(flag)
+    onContextLost: function() {
+      this.lastViewport = markRaw(this.mapImp.getState())
+      this.flatmapError = {};
+      this.flatmapError['title'] = 'GL context lost!'
+      this.flatmapError['messages'] = [`GL context is lost due to too many concurrent GL contexts. Please try using the Restore Context button.`]
+      this.flatmapError['button'] = {
+        text: 'Restore Context',
+        callback: () => {
+          this.forceContextRestore()
+        }
+      };
+    },
+    onContextRestored: function() {
+      if (this.mapImp) {
+        this.handleMapClick()
+        this.setInitMapState()
+        const lostState = this.getState()
+        if (lostState) {
+          lostState.viewport = this.lastViewport
+        }
+        this.restoreMapState(lostState)
+        if (this.displayMinimap) {
+          const minimapOptions = { position: 'top-right' };
+          this.mapImp.createMinimap(minimapOptions);
+          this.addResizeButtonToMinimap()
+        }
+        if (this.filterToRestore) {
+          this.mapImp.setVisibilityFilter(this.filterToRestore)
+          this.filterToRestore = undefined
+        }
+        this.$emit('context-restored', this)
+      }
     },
     /**
      * @public
@@ -3210,6 +3257,15 @@ export default {
       default: 0,
     },
     /**
+     * This flag dictate whether a context will be allocatged
+     * for this instance
+     */
+    render: {
+      type: Boolean,
+      default: true,
+    },
+
+    /**
      * The option to create map on component mounted.
      */
     renderAtMounted: {
@@ -3374,6 +3430,7 @@ export default {
   },
   data: function () {
     return {
+      filterToRestore: undefined,
       flatmapError: null,
       sensor: null,
       mapManagerRef: undefined,
@@ -3491,6 +3548,7 @@ export default {
       taxonLeaveDelay: undefined,
       connectivityFilters: [],
       flatmapLegends: [],
+      lastViewport: undefined,
     }
   },
   computed: {
@@ -3547,6 +3605,15 @@ export default {
       if (this.helpMode) {
         this.helpModeActiveIndex += 1;
         this.setHelpMode(this.helpMode);
+      }
+    },
+    render: function(val) {
+      if (val) {
+        if (this.mapImp && this.mapImp.contextLost && !this.loading) {
+          this.$nextTick(() => {
+            this.forceContextRestore()
+          })
+        }
       }
     },
     state: {

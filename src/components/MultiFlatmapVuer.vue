@@ -58,6 +58,7 @@
       :enableOpenMapUI="enableOpenMapUI"
       :openMapOptions="openMapOptions"
       :disableUI="disableUI"
+      @context-restored="onContextRestored"
       @view-latest-map="viewLatestMap"
       @resource-selected="resourceSelected"
       @ready="FlatmapReady"
@@ -82,6 +83,7 @@
       @shown-tooltip="onTooltipShown"
       @shown-map-tooltip="onMapTooltipShown"
       :renderAtMounted="renderAtMounted"
+      :render="render && (activeSpecies == key)"
       :displayMinimap="displayMinimap"
       :showStarInLegend="showStarInLegend"
       style="height: 100%"
@@ -105,7 +107,7 @@
 import { markRaw } from 'vue'
 import EventBus from './EventBus'
 import FlatmapVuer from './FlatmapVuer.vue'
-import * as flatmap from 'https://cdn.jsdelivr.net/npm/@abi-software/flatmap-viewer@4.3.5/+esm'
+import flatmap from '../services/flatmapLoader.js'
 import {
   ElCol as Col,
   ElOption as Option,
@@ -286,6 +288,18 @@ export default {
        * This event is emitted by ``resourceSelected`` method.
        */
       this.$emit('resource-selected', action)
+    },
+    /**
+     * @public
+     * Function to emit ``context-restored`` event after the flatmap is restored.
+     * @arg {Object} `component`
+     */
+     onContextRestored: function (component) {
+      /**
+       * This event is emitted by ``ContextRestore`` method after the flatmap is restored.
+       * @arg component
+       */
+       this.$emit('context-restored', component)
     },
     /**
      * @public
@@ -634,6 +648,13 @@ export default {
       default: false,
     },
     /**
+     * This option enable rendering of the map
+     */
+    render: {
+      type: Boolean,
+      default: true,
+    },
+    /**
      * The option to show tooltips for help mode.
      */
     helpMode: {
@@ -872,6 +893,13 @@ export default {
       immediate: true,
       deep: true,
     },
+    activeSpecies: {
+      handler: function (value, oldValue) {
+        if (oldValue) {
+          this.$refs[oldValue][0].forceContextLoss()
+        }
+      }
+    }
   },
 }
 </script>

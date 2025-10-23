@@ -53,6 +53,10 @@ Cypress.on('uncaught:exception', (err) => {
 Cypress.Commands.add('loadMultiFlatmap', (entry, species = undefined) => {
     const readySpy = cy.spy().as('readySpy')
     const resourceSelectedSpy = cy.spy().as('resourceSelectedSpy')
+
+    // Ensure the alias exists before using it
+    cy.get(entry).should('exist')
+
     cy.get(entry).then((props) => {
         console.log('flatmapAPI', props)
         let propsPayload = props
@@ -61,7 +65,7 @@ Cypress.Commands.add('loadMultiFlatmap', (entry, species = undefined) => {
         }
         for (const [key, value] of Object.entries(UUIDS)) {
             if (
-                key in propsPayload.availableSpecies && 
+                key in propsPayload.availableSpecies &&
                 'uuid' in propsPayload.availableSpecies[key]
             ) {
                 propsPayload.availableSpecies[key].uuid = value

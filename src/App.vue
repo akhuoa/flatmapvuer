@@ -68,6 +68,7 @@
       @pan-zoom-callback="panZoomcallback"
       @open-map="openMap"
       @ready="FlatmapReady"
+      @context-restored="FlatmapReady"
       :initial="initial"
       :helpMode="helpMode"
       :helpModeDialog="useHelpModeDialog"
@@ -297,7 +298,7 @@ export default {
         position: 'absolute',
       },
       displayCloseButton: false,
-      initial: 'Rat',
+      initial: 'Human Male',
       helpMode: false,
       helpModeActiveItem: 0,
       helpModeLastItem: false,
@@ -359,6 +360,8 @@ export default {
   },
   mounted: function () {
     this.multiflatmapRef = this.$refs.multi;
+    window.multiflatmapRef = this.multiflatmapRef;
+    //window.flatmapRef = this.multiflatmapRef.getCurrentFlatmap();
   },
   watch: {
     helpMode: function (newVal) {
