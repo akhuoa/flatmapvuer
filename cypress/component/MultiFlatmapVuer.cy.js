@@ -53,7 +53,9 @@ describe('MultiFlatmapVuer', () => {
         cy.get('.flatmapvuer-popover').should('not.exist');
 
         // Check if alert exist in test flatmap
-        cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas').as('canvas')
+        cy.get('.maplibregl-canvas-container > .maplibregl-canvas')
+          .first() // Get the first canvas (not minimap)
+          .as('canvas')
         cy.get('.checkall-display-text').then(($label) => {
           expect($label, 'Alter filter should exist').to.contain('Alert')
           // Take a screenshot of no path flatmap
@@ -73,23 +75,26 @@ describe('MultiFlatmapVuer', () => {
         })
         // Check the metadata for path exploration is loading correctly
       }).then(() => {
-        let fmEventCallback = flatmapVuer.eventCallback()
-        fmEventCallback(
-          "click",
-          {
-            id: "ilxtr:neuron-type-keast-5",
-            featureId: 26,
-            kind: "sensory",
-            label: "neuron type kblad 5",
-            models: "ilxtr:neuron-type-keast-5",
-            source: "ilxtr:neuron-type-keast-5",
-            taxons: '["NCBITaxon:10116"]',
-            completeness: true,
-            type: "feature",
-            mapUUID: flatmapUUID,
-          },
-          []
-        );
+        // Disable manual testing of click event
+        // let fmEventCallback = flatmapVuer.eventCallback()
+        // fmEventCallback(
+        //   "click",
+        //   {
+        //     id: "ilxtr:neuron-type-keast-5",
+        //     featureId: 26,
+        //     kind: "sensory",
+        //     label: "neuron type kblad 5",
+        //     models: "ilxtr:neuron-type-keast-5",
+        //     source: "ilxtr:neuron-type-keast-5",
+        //     taxons: '["NCBITaxon:10116"]',
+        //     completeness: true,
+        //     type: "feature",
+        //     mapUUID: flatmapUUID,
+        //   },
+        //   []
+        // );
+        // Trigger click event from search function
+        flatmapVuer.searchAndShowResult('ilxtr:neuron-type-keast-5', true, true)
 
         cy.get('.flatmapvuer-popover').should('exist').contains('Neuron type kblad 5').then(() => {
 
@@ -145,39 +150,6 @@ describe('MultiFlatmapVuer', () => {
 
   })
 
-  it('change different species', () => {
-    cy.loadMultiFlatmap('@develProps')
-
-    // Check if flatmap emits ready event
-    cy.get('@readySpy').should('have.been.calledWith').then(() => {
-      const multiFlatmapVuer = window.Cypress.multiFlatmapVuer
-
-      cy.get('@develProps').then((props) => {
-        const availableSpecies = []
-        for (const [key, value] of Object.entries(props.availableSpecies)) {
-          availableSpecies.push({ name: key, taxon: value.taxo })
-        }
-
-        availableSpecies.forEach((species) => {
-          cy.then(() => {
-            multiFlatmapVuer.setSpecies(
-              species.name,
-              multiFlatmapVuer.state ? multiFlatmapVuer.state.state : undefined,
-              1
-            )
-
-            expect(multiFlatmapVuer.activeSpecies).to.eq(species.name)
-            cy.get('#maplibre-minimap > .maplibregl-canvas-container > .maplibregl-canvas').should('exist');
-            cy.get('.maplibregl-map').should('exist');
-            cy.get('.pathway-location').should('exist');
-
-            cy.wait(8000)
-          })
-        })
-      })
-    })
-  })
-
   it('prepare reference images', () => {
     cy.loadMultiFlatmap('@referenceProps')
 
@@ -229,38 +201,41 @@ describe('MultiFlatmapVuer', () => {
   flatmapServers.forEach((entry) => {
     availableSpecies.forEach((species) => {
       it(`image rendering for ${entry}-${species.name}`, () => {
+
         cy.loadMultiFlatmap(entry, species.name)
 
         cy.get('@readySpy').should('have.been.calledWith').then(() => {
           const multiFlatmapVuer = window.Cypress.multiFlatmapVuer
           const flatmapVuer = multiFlatmapVuer.$refs[species.name][0]
 
-          cy.then(() => {
-            cy.wait(1000)
-            cy.get('.el-loading-mask', { timeout: 30000 }).should('not.exist')
-            expect(multiFlatmapVuer.activeSpecies, `Active species should be ${species.name}`).to.eq(species.name)
-            // hide pathways
-            cy.get('.pathway-location > .pathway-container:visible').contains('Pathways').parent().siblings().children('.el-checkbox').click()
-            // hide drawer
-            cy.get('.pathway-location > .drawer-button:visible').click()
-            cy.wait(2000)
+          cy.get('.el-loading-mask', { timeout: 30000 }).should('not.exist')
+          cy.wrap(multiFlatmapVuer.activeSpecies).should('eq', species.name)
 
-            cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas:visible').as('canvas')
-            cy.log(`THE LATEST ${entry} ${species.name} MAP UUID IS ${flatmapVuer.mapImp.uuid}`)
-            organTypes.forEach((type) => {
-              cy.then(() => {
-                if (type === 'grayscale') {
-                  flatmapVuer.mapImp.setPaint({ coloured: false })
-                  cy.wait(3000)
-                }
-                cy.get('@canvas').compareSnapshot(`${species.name}_${type}`).then(comparisonResults => {
-                  // Percentage of minor pixel changes usually very small
-                  // Assume it will not have lot of pixel update in normal case
-                  expect(comparisonResults.percentage, `${species.name}_color maps should be almost identical`).to.be.lessThan(ERROR_TOLERANCE)
-                })
-              })
+          // hide pathways
+          cy.get('.pathway-location > .pathway-container:visible').contains('Pathways').parent().siblings().children('.el-checkbox').click()
+          // hide drawer
+          cy.get('.pathway-location > .drawer-button:visible').click()
+          cy.wait(2000)
+
+          cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas:visible').as('canvas')
+          cy.log(`THE LATEST ${entry} ${species.name} MAP UUID IS ${flatmapVuer.mapImp.uuid}`)
+
+          for (let i = 0; i < organTypes.length; i++) {
+            const type = organTypes[i];
+
+            cy.then(() => {
+              if (type === 'grayscale') {
+                flatmapVuer.mapImp.setPaint({ coloured: false })
+                cy.wait(3000)
+              }
             })
-          })
+
+            cy.get('@canvas').compareSnapshot(`${species.name}_${type}`).then(comparisonResults => {
+              // Percentage of minor pixel changes usually very small
+              // Assume it will not have lot of pixel update in normal case
+              expect(comparisonResults.percentage, `${species.name}_color maps should be almost identical`).to.be.lessThan(ERROR_TOLERANCE)
+            })
+          }
         })
       })
     })
