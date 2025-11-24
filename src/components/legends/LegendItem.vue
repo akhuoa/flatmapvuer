@@ -70,6 +70,7 @@ export default {
       const specifiedColour = this.item["color"] ? this.item["color"] : this.item["colour"];
       let colour = specifiedColour ? specifiedColour : "transparent";
       let borderColour = this.item.border ? this.item.border : "black";
+      let borderStyle = this.item.borderStyle ? this.item.borderStyle : "default";
       if (specifiedColour && !this.item.border) {
         borderColour = colour;
       }
@@ -82,7 +83,7 @@ export default {
       } else if (this.item[this.styleKey] === 'line') {
         return {'color': colour};
       } else {
-        return { 'background-color': colour, 'border-color': borderColour};
+        return { 'background-color': colour, 'border-color': borderColour, 'border-style': borderStyle};
       }
     },
   },
