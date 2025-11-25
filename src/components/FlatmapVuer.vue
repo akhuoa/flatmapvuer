@@ -3037,7 +3037,7 @@ export default {
       this.flatmapError['messages'] = [`A display issue has occurred due
       to a limit on available WebGL contexts. You can restore the display
       using the Restore Context button. Please see the
-      <a href="https://docs.sparc.science/docs/integrated-maps-viewer-overview" target='_blank'>documentation</a>
+      <a href="https://docs.sparc.science/docs/integrated-maps-viewer-overview#limit-on-available-webgl-contexts" target='_blank'>documentation</a>
       for more details.`]
       this.flatmapError['button'] = {
         text: 'Restore Context',
