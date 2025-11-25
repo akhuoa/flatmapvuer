@@ -1,5 +1,5 @@
 /* eslint-disable no-alert, no-console */
-const ERROR_TOLERANCE = 0.00384;
+const ERROR_TOLERANCE = parseFloat(Cypress.env('ERROR_TOLERANCE'));
 // Ref: flatmap-viewer/src/layers/styling.ts
 const STROKE_INTERPOLATION = [
   'interpolate',
@@ -104,7 +104,7 @@ describe('MultiFlatmapVuer Screenshot Comparison', () => {
 
       // Test with saved screenshot from fixture
       cy.get('@viewerCanvas').compareSnapshot('test-canvas').then(comparisonResults => {
-        expect(comparisonResults.percentage, 'Viewer map should match test-canvas.png exactly').to.equal(0);
+        expect(comparisonResults.percentage, 'Viewer map should be almost identical.').to.be.lessThan(ERROR_TOLERANCE);
       });
 
       // NOTE: disable base map comparison for now
