@@ -2173,40 +2173,46 @@ export default {
           });
         } else {
           // clicking on paths
-          // do nothing for origin, destination, via
           const searchTerms = resources.join();
 
+          // for neuron connection mode "all"
           if (this.connectionType.toLowerCase() === 'all') {
             this.$emit('neuron-connection-feature-click', {
               filters: [],
               search: searchTerms,
             });
+          } else {
+            // for neuron connection mode "origin", "via" and "destination"
+            await this.openConnectivityInfo(data);
           }
         }
       } else {
-        // load and store knowledge
-        loadAndStoreKnowledge(this.mapImp, this.flatmapQueries);
-        let prom1 = []
-        // Emit placeholders first.
-        // This may contain invalid connectivity.
-        this.tooltipEntry = data
-          .filter(tooltip => tooltip.resource[0] in this.mapImp.pathways.paths)
-          .map((tooltip) => {
-            return { title: tooltip.label, featureId: tooltip.resource, ready: false }
-          })
-        // this should only for flatmap paths not all features
-        if (this.tooltipEntry.length) {
-          this.$emit('connectivity-info-open', this.tooltipEntry);
+        await this.openConnectivityInfo(data);
+      }
+    },
+    openConnectivityInfo: async function (data) {
+      // load and store knowledge
+      loadAndStoreKnowledge(this.mapImp, this.flatmapQueries);
+      let prom1 = []
+      // Emit placeholders first.
+      // This may contain invalid connectivity.
+      this.tooltipEntry = data
+        .filter(tooltip => tooltip.resource[0] in this.mapImp.pathways.paths)
+        .map((tooltip) => {
+          return { title: tooltip.label, featureId: tooltip.resource, ready: false }
+        })
+      // this should only for flatmap paths not all features
+      if (this.tooltipEntry.length) {
+        this.$emit('connectivity-info-open', this.tooltipEntry);
 
-          // While having placeholders displayed, get details for all paths and then replace.
-          for (let index = 0; index < data.length; index++) {
-            prom1.push(await this.getKnowledgeTooltip(data[index]))
-          }
-          this.tooltipEntry = await Promise.all(prom1)
-          const featureIds = this.tooltipEntry.map(tooltip => tooltip.featureId[0])
-          if (featureIds.length > 0) {
-            this.displayTooltip(featureIds)
-          }
+        // While having placeholders displayed, get details for all paths and then replace.
+        for (let index = 0; index < data.length; index++) {
+          prom1.push(await this.getKnowledgeTooltip(data[index]))
+        }
+        this.tooltipEntry = await Promise.all(prom1)
+        const featureIds = this.tooltipEntry.map(tooltip => tooltip.featureId[0])
+        if (featureIds.length > 0) {
+          this.displayTooltip(featureIds)
         }
       }
     },
@@ -3043,7 +3049,11 @@ export default {
       this.lastViewport = markRaw(this.mapImp.getState())
       this.flatmapError = {};
       this.flatmapError['title'] = 'GL context lost!'
-      this.flatmapError['messages'] = [`GL context is lost due to too many concurrent GL contexts. Please try using the Restore Context button.`]
+      this.flatmapError['messages'] = [`A display issue has occurred due
+      to a limit on available WebGL contexts. You can restore the display
+      using the Restore Context button. Please see the
+      <a href="https://docs.sparc.science/docs/integrated-maps-viewer-overview#limit-on-available-webgl-contexts" target='_blank'>documentation</a>
+      for more details.`]
       this.flatmapError['button'] = {
         text: 'Restore Context',
         callback: () => {

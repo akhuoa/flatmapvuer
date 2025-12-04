@@ -11,7 +11,7 @@
     </div>
     <div class="flatmap-error-message" v-if="flatmapError.messages">
       <div v-for="(message, index) in flatmapError.messages" :key="index">
-        {{ message }}
+        <div v-html="message"></div>
       </div>
     </div>
     <div v-if="flatmapError.button">
