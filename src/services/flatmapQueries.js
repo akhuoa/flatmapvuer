@@ -525,13 +525,13 @@ let FlatmapQueries = function () {
     // Get combinations of SCKAN and Map
     if (this.singleConnectivityList?.results?.values?.length > 0) {
       this.singleConnectivityList.results.values.forEach((value) => {
-        const sckanNodeId = value[2] ? this.flattenConnectivity(JSON.parse(value[2]))[0] : '';
+        const sckanNodeId = value[2] ? JSON.parse(value[2]) : null;
         const sckanNodeLabel = value[3];
-        const mapNodeId = value[5] ? this.flattenConnectivity(JSON.parse(value[5]))[0] : '';
+        const mapNodeId = value[5] ? JSON.parse(value[5]) : null;
         const mapNodeLabel = value[6];
 
         // The base ID is SCKAN ID
-        if (axonsFlat.includes(sckanNodeId)) {
+        if (axons.find(axon => JSON.stringify(axon) === JSON.stringify(sckanNodeId))) {
           this.destinationsCombinations.push({
             sckanId: sckanNodeId,
             sckanLabel: sckanNodeLabel,
@@ -539,7 +539,7 @@ let FlatmapQueries = function () {
             mapLabel: mapNodeLabel,
           })
         }
-        if (dendritesFlat.includes(sckanNodeId)) {
+        if (dendrites.find(dendrite => JSON.stringify(dendrite) === JSON.stringify(sckanNodeId))) {
           this.originsCombinations.push({
             sckanId: sckanNodeId,
             sckanLabel: sckanNodeLabel,
@@ -547,7 +547,7 @@ let FlatmapQueries = function () {
             mapLabel: mapNodeLabel,
           })
         }
-        if (componentsFlat.includes(sckanNodeId)) {
+        if (components.find(component => JSON.stringify(component) === JSON.stringify(sckanNodeId))) {
           this.componentsCombinations.push({
             sckanId: sckanNodeId,
             sckanLabel: sckanNodeLabel,
