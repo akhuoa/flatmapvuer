@@ -1,4 +1,6 @@
 /* eslint-disable no-alert, no-console */
+import { querySingleConnectivityList } from '@abi-software/map-utilities';
+
 // remove duplicates by stringifying the objects
 const removeDuplicates = function (arrayOfAnything) {
   if (!arrayOfAnything) return []
@@ -99,6 +101,14 @@ let FlatmapQueries = function () {
     this.destinations = []
     this.origins = []
     this.components = []
+    this.destinationsWithDatasets = []
+    this.originsWithDatasets = []
+    this.componentsWithDatasets = []
+    this.destinationsCombinations = []
+    this.originsCombinations = []
+    this.componentsCombinations = []
+    this.singleConnectivityList = null
+    this.hasSingleConnectivityList = false
     this.rawURLs = []
     this.controller = undefined
     this.uberons = []
@@ -140,6 +150,10 @@ let FlatmapQueries = function () {
       destinationsWithDatasets: this.destinationsWithDatasets,
       originsWithDatasets: this.originsWithDatasets,
       componentsWithDatasets: this.componentsWithDatasets,
+      destinationsCombinations: this.destinationsCombinations,
+      originsCombinations: this.originsCombinations,
+      componentsCombinations: this.componentsCombinations,
+      hasSingleConnectivityList: this.singleConnectivityList?.results?.values?.length > 0,
       title: eventData.label,
       featureId: eventData.resource,
       hyperlinks: hyperlinks,
@@ -160,6 +174,9 @@ let FlatmapQueries = function () {
       componentsWithDatasets: this.componentsWithDatasets,
       destinations: this.destinations,
       destinationsWithDatasets: this.destinationsWithDatasets,
+      destinationsCombinations: this.destinationsCombinations,
+      originsCombinations: this.originsCombinations,
+      componentsCombinations: this.componentsCombinations,
       connectivitySource: this.connectivitySource,
       noMapConnectivity: this.noMapConnectivity,
     };
@@ -285,16 +302,35 @@ let FlatmapQueries = function () {
     this.destinations = []
     this.origins = []
     this.components = []
+    this.destinationsWithDatasets = []
+    this.originsWithDatasets = []
+    this.componentsWithDatasets = []
+    this.destinationsCombinations = []
+    this.originsCombinations = []
+    this.componentsCombinations = []
+    this.singleConnectivityList = null
     this.rawURLs = []
     if (!keastIds || keastIds.length === 0 || !keastIds[0]) return
 
-    let prom1 = this.queryForConnectivityNew(mapImp, keastIds[0]) // This on returns a promise so dont need 'await'
+    let prom1 = await this.queryForConnectivityNew(mapImp, keastIds[0]) // This on returns a promise so dont need 'await'
     let results = await Promise.all([prom1])
     return results
   }
 
-  this.queryForConnectivityNew = function (mapImp, keastId, connectivitySource = 'map', processConnectivity = true) {
-    this.connectivitySource = connectivitySource
+  this.queryForConnectivityNew = async function (mapImp, keastId, connectivitySource = 'map', processConnectivity = true) {
+    // TODO: Temporary for testing
+    const newService = (
+      keastId === 'ilxtr:sparc-nlp/kidney/132' ||
+      keastId === 'ilxtr:neuron-type-bromo-2' ||
+      keastId === 'ilxtr:sparc-nlp/mmset1/12'
+    )
+    connectivitySource = newService ? 'sckan' : connectivitySource
+    this.connectivitySource = newService ? 'sckan' : connectivitySource
+
+    if (newService) {
+      this.singleConnectivityList = await querySingleConnectivityList(mapImp.mapMetadata.uuid, keastId);
+    }
+
     return new Promise((resolve) => {
       const queryAPI = connectivitySource === 'map'
         ? this.queryMapConnectivity(mapImp.mapMetadata.uuid, keastId)
@@ -485,6 +521,42 @@ let FlatmapQueries = function () {
     this.destinationsWithDatasets = this.uberons.filter(
       (ub) => axonsFlat.indexOf(ub.id) !== -1
     ).sort(compareNames);
+
+    // Get combinations of SCKAN and Map
+    if (this.singleConnectivityList?.results?.values?.length > 0) {
+      this.singleConnectivityList.results.values.forEach((value) => {
+        const sckanNodeId = value[2] ? this.flattenConnectivity(JSON.parse(value[2]))[0] : '';
+        const sckanNodeLabel = value[3];
+        const mapNodeId = value[5] ? this.flattenConnectivity(JSON.parse(value[5]))[0] : '';
+        const mapNodeLabel = value[6];
+
+        // The base ID is SCKAN ID
+        if (axonsFlat.includes(sckanNodeId)) {
+          this.destinationsCombinations.push({
+            sckanId: sckanNodeId,
+            sckanLabel: sckanNodeLabel,
+            mapId: mapNodeId,
+            mapLabel: mapNodeLabel,
+          })
+        }
+        if (dendritesFlat.includes(sckanNodeId)) {
+          this.originsCombinations.push({
+            sckanId: sckanNodeId,
+            sckanLabel: sckanNodeLabel,
+            mapId: mapNodeId,
+            mapLabel: mapNodeLabel,
+          })
+        }
+        if (componentsFlat.includes(sckanNodeId)) {
+          this.componentsCombinations.push({
+            sckanId: sckanNodeId,
+            sckanLabel: sckanNodeLabel,
+            mapId: mapNodeId,
+            mapLabel: mapNodeLabel,
+          })
+        }
+      });
+    }
   }
 
   this.processConnectivity = function (mapImp, connectivity) {
