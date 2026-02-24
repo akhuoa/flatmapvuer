@@ -525,9 +525,9 @@ let FlatmapQueries = function () {
     // Get combinations of SCKAN and Map
     if (this.singleConnectivityList?.results?.values?.length > 0) {
       this.singleConnectivityList.results.values.forEach((value) => {
-        const sckanNodeId = value[2] ? JSON.parse(value[2]) : null;
+        const sckanNodeId = value[2] ? JSON.parse(value[2]) : [];
         const sckanNodeLabel = value[3];
-        const mapNodeId = value[5] ? JSON.parse(value[5]) : null;
+        const mapNodeId = value[5] ? JSON.parse(value[5]) : [];
         const mapNodeLabel = value[6];
 
         // The base ID is SCKAN ID
@@ -538,6 +538,15 @@ let FlatmapQueries = function () {
             mapId: mapNodeId,
             mapLabel: mapNodeLabel,
           })
+          mapNodeId.forEach((id, i) => {
+            const stringId = typeof id === 'string' ? id : id[0];
+            if (stringId) {
+              this.destinationsWithDatasets.push({
+                id: stringId,
+                name: mapNodeLabel.split(',')[i]
+              });
+            }
+          });
         }
         if (dendrites.find(dendrite => JSON.stringify(dendrite) === JSON.stringify(sckanNodeId))) {
           this.originsCombinations.push({
@@ -546,6 +555,15 @@ let FlatmapQueries = function () {
             mapId: mapNodeId,
             mapLabel: mapNodeLabel,
           })
+          mapNodeId.forEach((id, i) => {
+            const stringId = typeof id === 'string' ? id : id[0];
+            if (stringId) {
+              this.originsWithDatasets.push({
+                id: stringId,
+                name: mapNodeLabel.split(',')[i]
+              });
+            }
+          });
         }
         if (components.find(component => JSON.stringify(component) === JSON.stringify(sckanNodeId))) {
           this.componentsCombinations.push({
@@ -554,6 +572,15 @@ let FlatmapQueries = function () {
             mapId: mapNodeId,
             mapLabel: mapNodeLabel,
           })
+          mapNodeId.forEach((id, i) => {
+            const stringId = typeof id === 'string' ? id : id[0];
+            if (stringId) {
+              this.componentsWithDatasets.push({
+                id: stringId,
+                name: mapNodeLabel.split(',')[i]
+              });
+            }
+          });
         }
       });
     }
