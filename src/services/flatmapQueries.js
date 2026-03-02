@@ -107,7 +107,7 @@ let FlatmapQueries = function () {
     this.destinationsCombinations = []
     this.originsCombinations = []
     this.componentsCombinations = []
-    this.singleConnectivityList = null
+    this.singleConnectivityList = []
     this.hasSingleConnectivityList = false
     this.rawURLs = []
     this.controller = undefined
@@ -153,7 +153,7 @@ let FlatmapQueries = function () {
       destinationsCombinations: this.destinationsCombinations,
       originsCombinations: this.originsCombinations,
       componentsCombinations: this.componentsCombinations,
-      hasSingleConnectivityList: this.singleConnectivityList?.results?.values?.length > 0,
+      hasSingleConnectivityList: this.singleConnectivityList.length > 0,
       title: eventData.label,
       featureId: eventData.resource,
       hyperlinks: hyperlinks,
@@ -308,7 +308,7 @@ let FlatmapQueries = function () {
     this.destinationsCombinations = []
     this.originsCombinations = []
     this.componentsCombinations = []
-    this.singleConnectivityList = null
+    this.singleConnectivityList = []
     this.rawURLs = []
     if (!keastIds || keastIds.length === 0 || !keastIds[0]) return
 
@@ -319,12 +319,14 @@ let FlatmapQueries = function () {
 
   this.queryForConnectivityNew = async function (mapImp, keastId, connectivitySource = 'map', processConnectivity = true) {
     // TODO: Temporary for testing
-    const newService = mapImp.mapMetadata.uuid === 'e35298a5-ca44-5882-974f-874a1c393cad';
+    const newService = mapImp.id === 'human-flatmap_female';
+    const tempMapUUID = 'e35298a5-ca44-5882-974f-874a1c393cad';
+    const tempFlatmapAPI = 'https://napakalas-flatmap-demo.hf.space/';
     connectivitySource = newService ? 'sckan' : connectivitySource;
     this.connectivitySource = newService ? 'sckan' : connectivitySource;
 
     if (newService) {
-      this.singleConnectivityList = await querySingleConnectivityList(this.flatmapAPI, mapImp.mapMetadata.uuid, keastId);
+      this.singleConnectivityList = await querySingleConnectivityList(tempFlatmapAPI, tempMapUUID, keastId);
     }
 
     return new Promise((resolve) => {
@@ -519,8 +521,8 @@ let FlatmapQueries = function () {
     ).sort(compareNames);
 
     // Get combinations of SCKAN and Map
-    if (this.singleConnectivityList?.results?.values?.length > 0) {
-      this.singleConnectivityList.results.values.forEach((value) => {
+    if (this.singleConnectivityList.length > 0) {
+      this.singleConnectivityList.forEach((value) => {
         const { sckanNodeId, sckanNodeLabel, mapNodeId, mapNodeLabel } = value;
 
         // The base ID is SCKAN ID
