@@ -319,16 +319,12 @@ let FlatmapQueries = function () {
 
   this.queryForConnectivityNew = async function (mapImp, keastId, connectivitySource = 'map', processConnectivity = true) {
     // TODO: Temporary for testing
-    const newService = (
-      keastId === 'ilxtr:sparc-nlp/kidney/132' ||
-      keastId === 'ilxtr:neuron-type-bromo-2' ||
-      keastId === 'ilxtr:sparc-nlp/mmset1/12'
-    )
-    connectivitySource = newService ? 'sckan' : connectivitySource
-    this.connectivitySource = newService ? 'sckan' : connectivitySource
+    const newService = mapImp.mapMetadata.uuid === 'e35298a5-ca44-5882-974f-874a1c393cad';
+    connectivitySource = newService ? 'sckan' : connectivitySource;
+    this.connectivitySource = newService ? 'sckan' : connectivitySource;
 
     if (newService) {
-      this.singleConnectivityList = await querySingleConnectivityList(mapImp.mapMetadata.uuid, keastId);
+      this.singleConnectivityList = await querySingleConnectivityList(this.flatmapAPI, mapImp.mapMetadata.uuid, keastId);
     }
 
     return new Promise((resolve) => {
