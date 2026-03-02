@@ -525,10 +525,7 @@ let FlatmapQueries = function () {
     // Get combinations of SCKAN and Map
     if (this.singleConnectivityList?.results?.values?.length > 0) {
       this.singleConnectivityList.results.values.forEach((value) => {
-        const sckanNodeId = value[2] ? JSON.parse(value[2]) : [];
-        const sckanNodeLabel = value[3];
-        const mapNodeId = value[5] ? JSON.parse(value[5]) : [];
-        const mapNodeLabel = value[6];
+        const { sckanNodeId, sckanNodeLabel, mapNodeId, mapNodeLabel } = value;
 
         // The base ID is SCKAN ID
         if (axons.find(axon => JSON.stringify(axon) === JSON.stringify(sckanNodeId))) {
