@@ -318,15 +318,16 @@ let FlatmapQueries = function () {
   }
 
   this.queryForConnectivityNew = async function (mapImp, keastId, connectivitySource = 'map', processConnectivity = true) {
-    // TODO: Temporary for testing
-    const newService = mapImp.id === 'human-flatmap_female';
-    const tempMapUUID = 'e35298a5-ca44-5882-974f-874a1c393cad';
-    const tempFlatmapAPI = 'https://napakalas-flatmap-demo.hf.space/';
+    // The new service, CQ27, is only available for new SCKAN knowledge.
+    const newService = mapImp.knowledgeSource === 'sckan-2026-02-11';
+    const mapUUID = mapImp.mapMetadata.uuid;
+    const flatmapAPI = this.flatmapAPI;
+
     connectivitySource = newService ? 'sckan' : connectivitySource;
     this.connectivitySource = newService ? 'sckan' : connectivitySource;
 
     if (newService) {
-      this.singleConnectivityList = await querySingleConnectivityList(tempFlatmapAPI, tempMapUUID, keastId);
+      this.singleConnectivityList = await querySingleConnectivityList(flatmapAPI, mapUUID, keastId);
     }
 
     return new Promise((resolve) => {
@@ -663,14 +664,14 @@ let FlatmapQueries = function () {
   }
 
   this.queryKnowledge = async (sql, params) => {
-    const url = `${this.flatmapAPI}/knowledge/query/`;
+    const url = `${this.flatmapAPI}knowledge/query/`;
     const query = { sql, params };
     const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            "Accept": "application/json"
-        },
-        body: JSON.stringify(query),
+      method: 'POST',
+      headers: {
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(query),
     })
     if (!response.ok) {
         throw new Error(`Cannot access ${url}`);
