@@ -319,14 +319,14 @@ let FlatmapQueries = function () {
 
   this.queryForConnectivityNew = async function (mapImp, keastId, connectivitySource = 'map', processConnectivity = true) {
     // The new service, CQ27, is only available for new SCKAN knowledge.
-    const newService = mapImp.knowledgeSource === 'sckan-2026-02-11';
+    const isCq27ServiceAvailable = mapImp.knowledgeSource === 'sckan-2026-02-11';
     const mapUUID = mapImp.mapMetadata.uuid;
     const flatmapAPI = this.flatmapAPI;
 
-    connectivitySource = newService ? 'sckan' : connectivitySource;
-    this.connectivitySource = newService ? 'sckan' : connectivitySource;
+    connectivitySource = isCq27ServiceAvailable ? 'sckan' : connectivitySource;
+    this.connectivitySource = isCq27ServiceAvailable ? 'sckan' : connectivitySource;
 
-    if (newService) {
+    if (isCq27ServiceAvailable) {
       this.singleConnectivityList = await querySingleConnectivityList(flatmapAPI, mapUUID, keastId);
     }
 
