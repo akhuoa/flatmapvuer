@@ -318,8 +318,10 @@ let FlatmapQueries = function () {
   }
 
   this.queryForConnectivityNew = async function (mapImp, keastId, connectivitySource = 'map', processConnectivity = true) {
-    // The new service, CQ27, is only available for new SCKAN knowledge.
-    const isCq27ServiceAvailable = mapImp.knowledgeSource === 'sckan-2026-02-11';
+    // The new service, CQ27, is available for SCKAN knowledge sources from 2026 onward.
+    const sourceMatch = /^sckan-(\d{4})/.exec(mapImp.knowledgeSource || '');
+    const sourceYear = sourceMatch ? Number(sourceMatch[1]) : 0;
+    const isCq27ServiceAvailable = sourceYear >= 2026;
     const mapUUID = mapImp.mapMetadata.uuid;
     const flatmapAPI = this.flatmapAPI;
 
