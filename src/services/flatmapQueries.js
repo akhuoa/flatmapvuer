@@ -324,8 +324,6 @@ let FlatmapQueries = function () {
     const isCq27ServiceAvailable = sourceYear >= 2026;
     const mapUUID = mapImp.mapMetadata.uuid;
     const flatmapAPI = this.flatmapAPI;
-
-    connectivitySource = isCq27ServiceAvailable ? 'sckan' : connectivitySource;
     this.connectivitySource = isCq27ServiceAvailable ? 'sckan' : connectivitySource;
 
     if (isCq27ServiceAvailable) {
@@ -333,14 +331,14 @@ let FlatmapQueries = function () {
     }
 
     return new Promise((resolve) => {
-      const queryAPI = connectivitySource === 'map'
+      const queryAPI = this.connectivitySource === 'map'
         ? this.queryMapConnectivity(mapImp.mapMetadata.uuid, keastId)
         : mapImp.queryKnowledge(keastId);
 
       queryAPI
         .then((response) => {
           if (this.checkConnectivityExists(response)) {
-            if (connectivitySource === 'map') {
+            if (this.connectivitySource === 'map') {
               this.noMapConnectivity = false;
             }
             let connectivity = response;
@@ -355,7 +353,7 @@ let FlatmapQueries = function () {
               })
             }
             else resolve(connectivity)
-          } else if (connectivitySource === 'map') {
+          } else if (this.connectivitySource === 'map') {
             // switch to SCKAN
             // when there has no connectivity data from Map
             // and add the noMapConnectivity flag to disable the option
