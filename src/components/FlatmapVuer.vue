@@ -2822,6 +2822,8 @@ export default {
           }
         }
 
+        console.log("tooltip delay")
+
         let promise1 = this.mapManagerRef.loadMap(
           identifier,
           this.eventCallback(),
@@ -2833,7 +2835,7 @@ export default {
             tooltips: this.tooltips,
             minimap: false,
             container: this.$refs.display,
-            // tooltipDelay: 15, // new feature to delay tooltips showing
+            tooltipDelay: 15, // new feature to delay tooltips showing
           }
         )
         promise1.then((returnedObject) => {
