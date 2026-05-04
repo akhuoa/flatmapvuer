@@ -2822,8 +2822,6 @@ export default {
           }
         }
 
-        console.log("tooltip delay")
-
         let promise1 = this.mapManagerRef.loadMap(
           identifier,
           this.eventCallback(),
