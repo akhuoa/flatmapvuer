@@ -3501,12 +3501,12 @@ export default {
       containsAlert: false,
       alertOptions: [
         {
-          label: 'Display Path With Alerts',
+          label: 'Display Path With Notes',
           key: 'alert',
           enabled: true,
         },
         {
-          label: 'Display Path Without Alerts',
+          label: 'Display Path Without Notes',
           key: 'withoutAlert',
           enabled: true,
         },
