@@ -9,6 +9,22 @@ const removeDuplicates = function (arrayOfAnything) {
   )
 }
 
+// remove duplicates for terms with id (UBERON or ILX) and name properties
+const removeDuplicateTerms = function (arrayOfTerms) {
+  if (!arrayOfTerms) return []
+  const seen = new Set();
+  const filteredTerms = [];
+  arrayOfTerms.forEach((term) => {
+    const {id, name} = term;
+    const identifier = `${id.toLowerCase()}:${name.toLowerCase()}`;
+    if (!seen.has(identifier)) {
+      seen.add(identifier);
+      filteredTerms.push(term);
+    }
+  });
+  return filteredTerms;
+}
+
 const cachedLabels = {}
 const cachedTaxonLabels = [];
 
@@ -147,9 +163,9 @@ let FlatmapQueries = function () {
       destinations: this.destinations,
       origins: this.origins,
       components: this.components,
-      destinationsWithDatasets: this.destinationsWithDatasets,
-      originsWithDatasets: this.originsWithDatasets,
-      componentsWithDatasets: this.componentsWithDatasets,
+      destinationsWithDatasets: removeDuplicateTerms(this.destinationsWithDatasets),
+      originsWithDatasets: removeDuplicateTerms(this.originsWithDatasets),
+      componentsWithDatasets: removeDuplicateTerms(this.componentsWithDatasets),
       destinationsCombinations: this.destinationsCombinations,
       originsCombinations: this.originsCombinations,
       componentsCombinations: this.componentsCombinations,
@@ -169,11 +185,11 @@ let FlatmapQueries = function () {
     return {
       ...tooltipEntry,
       origins: this.origins,
-      originsWithDatasets: this.originsWithDatasets,
+      originsWithDatasets: removeDuplicateTerms(this.originsWithDatasets),
       components: this.components,
-      componentsWithDatasets: this.componentsWithDatasets,
+      componentsWithDatasets: removeDuplicateTerms(this.componentsWithDatasets),
       destinations: this.destinations,
-      destinationsWithDatasets: this.destinationsWithDatasets,
+      destinationsWithDatasets: removeDuplicateTerms(this.destinationsWithDatasets),
       destinationsCombinations: this.destinationsCombinations,
       originsCombinations: this.originsCombinations,
       componentsCombinations: this.componentsCombinations,
