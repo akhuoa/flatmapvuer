@@ -630,7 +630,7 @@ import {
   getKnowledgeSource,
   getReferenceConnectivitiesByAPI,
 } from '../services/flatmapKnowledge.js'
-import { capitalise } from './utilities.js'
+import { capitalise, normaliseAlertToStringArray } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 import flatmap from '../services/flatmapLoader.js'
@@ -1723,7 +1723,7 @@ export default {
           const resource = [data.models]
           const taxonomy = this.entry
           const biologicalSex = this.biologicalSex
-          const featuresAlert = data.alert
+          const featuresAlert = normaliseAlertToStringArray(data.alert)
           const taxons = this.getTaxons(data)
           let payload = [{
             dataset: data.dataset,
@@ -1765,7 +1765,7 @@ export default {
                     userData: args,
                     eventType: eventType,
                     provenanceTaxonomy: taxons,
-                    alert: value.alert,
+                    alert: normaliseAlertToStringArray(value.alert),
                     mapUUID: mapuuid
                   })
                 }
@@ -2224,7 +2224,7 @@ export default {
       // The line below only creates the tooltip if some data was found on the path
       // the pubmed URLs are in knowledge response.references
       if ((results && results[0]) || (data.feature.hyperlinks && data.feature.hyperlinks.length > 0)) {
-        tooltip['featuresAlert'] = data.alert;
+        tooltip['featuresAlert'] = normaliseAlertToStringArray(data.alert);
         tooltip['knowledgeSource'] = getKnowledgeSource(this.mapImp);
         // Map id and uuid to load connectivity information from the map
         tooltip['mapId'] = this.mapImp.mapMetadata.id;
@@ -3104,7 +3104,7 @@ export default {
                   feature: feature,
                   label: feature.label,
                   provenanceTaxonomy: feature.taxons,
-                  alert: feature.alert,
+                  alert: normaliseAlertToStringArray(feature.alert),
                 }
                 // Show popup for all modes
                 this.checkAndCreatePopups([data], mapclick)
