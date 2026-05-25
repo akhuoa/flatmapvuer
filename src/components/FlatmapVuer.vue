@@ -314,7 +314,7 @@ Please use `const` to assign meaningful names to them...
               />
               <selections-group
                 v-if="containsAlert && alertOptions && showPathwayFilter"
-                title="Alert"
+                title="Notes"
                 labelKey="label"
                 identifierKey="key"
                 :selections="alertOptions"
