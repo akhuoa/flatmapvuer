@@ -57,9 +57,9 @@ describe('MultiFlatmapVuer', () => {
           .first() // Get the first canvas (not minimap)
           .as('canvas')
         cy.get('.checkall-display-text').then(($label) => {
-          expect($label, 'Alter filter should exist').to.contain('Alert')
+          expect($label, 'Alter filter should exist').to.contain('Notes')
           // Take a screenshot of no path flatmap
-          cy.get('.pathway-location > .pathway-container:visible').contains('Alert').parent().siblings().children('.el-checkbox').click()
+          cy.get('.pathway-location > .pathway-container:visible').contains('Notes').parent().siblings().children('.el-checkbox').click()
           cy.get('.pathway-location > .drawer-button:visible').click()
           // CLI
           cy.get('@canvas').screenshot('base/cypress/component/MultiFlatmapVuer.cy.js/mapalert')
