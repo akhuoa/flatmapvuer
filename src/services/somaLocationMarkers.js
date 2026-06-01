@@ -45,24 +45,30 @@ const createSomaLocationMarkerElement = function (somaLocation) {
 
 const resolveMarkerPlacement = function (mapImp, curie) {
   const featureIds = Array.isArray(mapImp?.modelFeatureIds?.(curie)) ? mapImp.modelFeatureIds(curie) : []
+  const placements = []
+  const seenFeatureUris = new Set()
+
   for (const featureId of featureIds) {
     const annotation = mapImp.annotation(featureId)
-    if (annotation?.uri) {
-      return {
+    const featureUri = String(annotation?.uri || '').trim()
+    if (featureUri && !seenFeatureUris.has(featureUri)) {
+      seenFeatureUris.add(featureUri)
+      placements.push({
         type: 'feature-uri',
-        value: annotation.uri,
-      }
+        value: featureUri,
+      })
     }
   }
 
-  if (featureIds.length === 1) {
-    return {
+  // Fall back to model placement only when no feature URI can be resolved.
+  if (!placements.length && featureIds.length) {
+    placements.push({
       type: 'model',
       value: curie,
-    }
+    })
   }
 
-  return null
+  return placements
 }
 
 export const attachSomaLocationMarkerMethods = function (mapImp) {
@@ -86,23 +92,30 @@ export const attachSomaLocationMarkerMethods = function (mapImp) {
     mapImp.clearSomaLocationMarkers()
 
     normalizedSomaLocations.forEach((somaLocation) => {
-      const placement = resolveMarkerPlacement(mapImp, somaLocation.curie)
-      if (!placement) return
+      const placements = resolveMarkerPlacement(mapImp, somaLocation.curie)
+      if (!placements.length) return
 
-      const markerElement = createSomaLocationMarkerElement(somaLocation)
-      let addedMarkerIds = []
+      let somaLocationPlaced = false
+      placements.forEach((placement) => {
+        const markerElement = createSomaLocationMarkerElement(somaLocation)
+        let addedMarkerIds = []
 
-      if (placement.type === 'feature-uri') {
-        addedMarkerIds = mapImp.addMarkerByFeatureUri(placement.value, { element: markerElement })
-      } else if (placement.type === 'model') {
-        const markerId = mapImp.addMarker(placement.value, { element: markerElement })
-        addedMarkerIds = markerId > -1 ? [markerId] : []
+        if (placement.type === 'feature-uri') {
+          addedMarkerIds = mapImp.addMarkerByFeatureUri(placement.value, { element: markerElement })
+        } else if (placement.type === 'model') {
+          const markerId = mapImp.addMarker(placement.value, { element: markerElement })
+          addedMarkerIds = markerId > -1 ? [markerId] : []
+        }
+
+        if (!addedMarkerIds.length) return
+
+        markerIds.push(...addedMarkerIds)
+        somaLocationPlaced = true
+      })
+
+      if (somaLocationPlaced) {
+        placedSomaLocations.push(somaLocation)
       }
-
-      if (!addedMarkerIds.length) return
-
-      markerIds.push(...addedMarkerIds)
-      placedSomaLocations.push(somaLocation)
     })
 
     return placedSomaLocations
