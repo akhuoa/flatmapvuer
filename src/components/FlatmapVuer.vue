@@ -314,7 +314,7 @@ Please use `const` to assign meaningful names to them...
               />
               <selections-group
                 v-if="containsAlert && alertOptions && showPathwayFilter"
-                title="Alert"
+                title="Notes"
                 labelKey="label"
                 identifierKey="key"
                 :selections="alertOptions"
@@ -630,7 +630,7 @@ import {
   getKnowledgeSource,
   getReferenceConnectivitiesByAPI,
 } from '../services/flatmapKnowledge.js'
-import { capitalise } from './utilities.js'
+import { capitalise, normaliseAlertToStringArray } from './utilities.js'
 import yellowstar from '../icons/yellowstar'
 import ResizeSensor from 'css-element-queries/src/ResizeSensor'
 import flatmap from '../services/flatmapLoader.js'
@@ -1738,7 +1738,7 @@ export default {
           const resource = [data.models]
           const taxonomy = this.entry
           const biologicalSex = this.biologicalSex
-          const featuresAlert = data.alert
+          const featuresAlert = normaliseAlertToStringArray(data.alert)
           const taxons = this.getTaxons(data)
           let payload = [{
             dataset: data.dataset,
@@ -1780,7 +1780,7 @@ export default {
                     userData: args,
                     eventType: eventType,
                     provenanceTaxonomy: taxons,
-                    alert: value.alert,
+                    alert: normaliseAlertToStringArray(value.alert),
                     mapUUID: mapuuid
                   })
                 }
@@ -1958,7 +1958,9 @@ export default {
         }
 
         // Emit error message for connectivity
-        this.emitConnectivityError(errorData);
+        if (errorData.length) {
+          this.emitConnectivityError(errorData);
+        }
 
         // highlight all available features
         const connectivityFeatures = featuresToHighlight.reduce((arr, path) => {
@@ -2173,18 +2175,7 @@ export default {
           });
         } else {
           // clicking on paths
-          const searchTerms = resources.join();
-
-          // for neuron connection mode "all"
-          if (this.connectionType.toLowerCase() === 'all') {
-            this.$emit('neuron-connection-feature-click', {
-              filters: [],
-              search: searchTerms,
-            });
-          } else {
-            // for neuron connection mode "origin", "via" and "destination"
-            await this.openConnectivityInfo(data);
-          }
+          await this.openConnectivityInfo(data);
         }
       } else {
         await this.openConnectivityInfo(data);
@@ -2248,7 +2239,7 @@ export default {
       // The line below only creates the tooltip if some data was found on the path
       // the pubmed URLs are in knowledge response.references
       if ((results && results[0]) || (data.feature.hyperlinks && data.feature.hyperlinks.length > 0)) {
-        tooltip['featuresAlert'] = data.alert;
+        tooltip['featuresAlert'] = normaliseAlertToStringArray(data.alert);
         tooltip['knowledgeSource'] = getKnowledgeSource(this.mapImp);
         // Map id and uuid to load connectivity information from the map
         tooltip['mapId'] = this.mapImp.mapMetadata.id;
@@ -2857,7 +2848,7 @@ export default {
             tooltips: this.tooltips,
             minimap: false,
             container: this.$refs.display,
-            // tooltipDelay: 15, // new feature to delay tooltips showing
+            tooltipDelay: 15, // new feature to delay tooltips showing
           }
         )
         promise1.then((returnedObject) => {
@@ -3128,7 +3119,7 @@ export default {
                   feature: feature,
                   label: feature.label,
                   provenanceTaxonomy: feature.taxons,
-                  alert: feature.alert,
+                  alert: normaliseAlertToStringArray(feature.alert),
                 }
                 // Show popup for all modes
                 this.checkAndCreatePopups([data], mapclick)
@@ -3538,12 +3529,12 @@ export default {
       containsAlert: false,
       alertOptions: [
         {
-          label: 'Display Path With Alerts',
+          label: 'Display Path With Notes',
           key: 'alert',
           enabled: true,
         },
         {
-          label: 'Display Path Without Alerts',
+          label: 'Display Path Without Notes',
           key: 'withoutAlert',
           enabled: true,
         },
