@@ -10,3 +10,4 @@ docs/.vitepress/cache
 docs/components
 .DS_Store
 /.vitepress
+**/components.d.ts
