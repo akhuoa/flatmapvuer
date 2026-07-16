@@ -4542,4 +4542,7 @@ export default {
   }
 }
 
+.flatmap-feature-label {
+  padding: 6px;
+}
 </style>
