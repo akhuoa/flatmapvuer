@@ -3185,7 +3185,23 @@ export default {
     _applyCustomTooltipContent: function (popupEl) {
       if (!this.tooltipContentProvider || !this.lastHoveredFeature) return;
       try {
-        const customHtml = this.tooltipContentProvider(this.lastHoveredFeature);
+        const featureData = this.lastHoveredFeature;
+        // Detect multi-feature data format used by click events when multiple
+        // paths overlap: {0: {...}, 1: {...}, ..., mapUUID: '...'}
+        const isMultiFeature = featureData[0] && typeof featureData[0] === 'object';
+        let customHtml;
+        if (isMultiFeature) {
+          const features = [];
+          const mapUUID = featureData.mapUUID;
+          for (const [key, value] of Object.entries(featureData)) {
+            if (key !== 'mapUUID' && value && typeof value === 'object') {
+              features.push({ ...value, mapUUID });
+            }
+          }
+          customHtml = this.tooltipContentProvider(features.length > 1 ? features : features[0]);
+        } else {
+          customHtml = this.tooltipContentProvider(featureData);
+        }
         if (customHtml) {
           const contentEl = popupEl.querySelector('.maplibregl-popup-content');
           if (contentEl) {
