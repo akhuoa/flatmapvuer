@@ -1738,6 +1738,9 @@ export default {
             provenanceTaxonomy: taxons,
             alert: featuresAlert
           }]
+          if (eventType === 'mouseenter') {
+            this.lastHoveredFeature = data;
+          }
           if (eventType === 'click') {
             // If multiple paths overlap at the click location,
             // `data` is an object with numeric keys for each feature (e.g., {0: {...}, 1: {...}, ..., mapUUID: '...'}).
@@ -3154,6 +3157,62 @@ export default {
     setConnectionType: function (type) {
       this.connectionType = type;
     },
+    /**
+     * MutationObserver callback to intercept tooltip popup DOM elements
+     * and customize their content before the browser renders them.
+     */
+    _handleTooltipMutation: function (mutations) {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === 1) {
+            // Check if the added node itself is the tooltip popup
+            if (node.matches && node.matches('.flatmap-tooltip-popup')) {
+              this._applyCustomTooltipContent(node);
+            } else if (node.querySelector) {
+              // Check if it contains a tooltip popup
+              const popup = node.querySelector('.flatmap-tooltip-popup');
+              if (popup) {
+                this._applyCustomTooltipContent(popup);
+              }
+            }
+          }
+        }
+      }
+    },
+    /**
+     * Replace the default tooltip content with custom content from
+     * the tooltipContentProvider prop, if available.
+     */
+    _applyCustomTooltipContent: function (popupEl) {
+      if (!this.tooltipContentProvider || !this.lastHoveredFeature) return;
+      try {
+        const featureData = this.lastHoveredFeature;
+        // Detect multi-feature data format used by click events when multiple
+        // paths overlap: {0: {...}, 1: {...}, ..., mapUUID: '...'}
+        const isMultiFeature = featureData[0] && typeof featureData[0] === 'object';
+        let customHtml;
+        if (isMultiFeature) {
+          const features = [];
+          const mapUUID = featureData.mapUUID;
+          for (const [key, value] of Object.entries(featureData)) {
+            if (key !== 'mapUUID' && value && typeof value === 'object') {
+              features.push({ ...value, mapUUID });
+            }
+          }
+          customHtml = this.tooltipContentProvider(features.length > 1 ? features : features[0]);
+        } else {
+          customHtml = this.tooltipContentProvider(featureData);
+        }
+        if (customHtml) {
+          const contentEl = popupEl.querySelector('.maplibregl-popup-content');
+          if (contentEl) {
+            contentEl.innerHTML = customHtml;
+          }
+        }
+      } catch (e) {
+        console.warn('[flatmapvuer] Error in tooltipContentProvider:', e);
+      }
+    },
   },
   props: {
     /**
@@ -3394,6 +3453,17 @@ export default {
         return []
       },
     },
+    /**
+     * A function that provides custom tooltip HTML content for path features.
+     * The function receives the feature data from the mouseenter event (including `id`, `label`, etc.)
+     * and should return an HTML string to display in the tooltip, or return null/undefined
+     * to keep the default tooltip.
+     * This is used by mapintegratedvuer to show 'long-label' from connectivity knowledge.
+     */
+    tooltipContentProvider: {
+      type: Function,
+      default: null,
+    },
   },
   provide() {
     return {
@@ -3496,6 +3566,8 @@ export default {
       drawnCreatedEvent: {},
       previousEditEvent: {},
       previousDeletedEvent: {},
+      lastHoveredFeature: null,
+      tooltipObserver: null,
       connectionEntry: {},
       existDrawnFeatures: [], // Store all exist drawn features
       doubleClickedFeature: false,
@@ -3694,6 +3766,27 @@ export default {
       this.createFlatmap()
     }
     refreshFlatmapKnowledgeCache();
+
+    // Set up MutationObserver to customize tooltip content when
+    // tooltipContentProvider prop is provided.
+    if (this.tooltipContentProvider) {
+      this.$nextTick(() => {
+        const container = this.$refs.flatmapContainer || this.$el;
+        if (container) {
+          this.tooltipObserver = new MutationObserver(this._handleTooltipMutation.bind(this));
+          this.tooltipObserver.observe(container, {
+            childList: true,
+            subtree: true,
+          });
+        }
+      });
+    }
+  },
+  beforeUnmount: function () {
+    if (this.tooltipObserver) {
+      this.tooltipObserver.disconnect();
+      this.tooltipObserver = null;
+    }
   },
 }
 </script>
@@ -4450,4 +4543,7 @@ export default {
   }
 }
 
+.flatmap-feature-label {
+  padding: 6px;
+}
 </style>
