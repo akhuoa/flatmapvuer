@@ -3948,6 +3948,9 @@ export default {
 
 :deep(.flatmap-tooltip-popup),
 :deep(.custom-popup) {
+  font-family: Asap, sans-serif;
+  font-size: 14px;
+
   &.maplibregl-popup-anchor-bottom {
     .maplibregl-popup-content {
       margin-bottom: 12px;
