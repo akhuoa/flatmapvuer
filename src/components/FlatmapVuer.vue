@@ -4547,5 +4547,17 @@ export default {
 
 .flatmap-feature-label {
   padding: 6px;
+  text-align: left;
+  font-family: Asap, sans-serif;
+  font-size: 14px;
+}
+
+.id-tag {
+  color: #444;
+  background: #e0e0e0;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: .75rem !important;
+  letter-spacing: 1.05px;
 }
 </style>
