@@ -3109,10 +3109,22 @@ export default {
                   provenanceTaxonomy: feature.taxons,
                   alert: normaliseAlertToStringArray(feature.alert),
                 }
+
                 // Show popup for all modes
                 this.checkAndCreatePopups([data], mapclick)
+
+                // Check pathway fetures and set lastHoveredFeature for tooltip content replacement.
+                const isPathwayFeature = (feature.id.startsWith('ilxtr:') || feature.id.startsWith('ilx:'));
+                if (isPathwayFeature) {
+                  this.lastHoveredFeature = feature;
+                  this.lastHoveredFeature.mapUUID = this.mapImp.uuid;
+                } else {
+                  this.lastHoveredFeature = null;
+                }
+
+                // flatmap-tooltip-popup is used for custom tooltip content replacement.
                 this.mapImp.showPopup(featureId, capitalise(feature.label), {
-                  className: 'custom-popup',
+                  className: isPathwayFeature ? 'flatmap-tooltip-popup' : 'custom-popup',
                   positionAtLastClick: false,
                   preserveSelection: true,
                 })
