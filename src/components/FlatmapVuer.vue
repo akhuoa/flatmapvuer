@@ -1903,6 +1903,9 @@ export default {
       const connectivityData = [];
       const errorData = [];
 
+      // Remove last hovered feature to avoid showing tooltip for the last hovered feature.
+      this.lastHoveredFeature = null;
+
       // to keep the highlighted path on map
       if (connectivityInfo && connectivityInfo.featureId) {
         featuresToHighlight.push(...connectivityInfo.featureId);
