@@ -3966,8 +3966,8 @@ export default {
 
 :deep(.flatmap-tooltip-popup),
 :deep(.custom-popup) {
-  font-family: Asap, sans-serif;
-  font-size: 14px;
+  font-family: Asap, sans-serif !important;
+  font-size: 14px !important;
 
   &.maplibregl-popup-anchor-bottom {
     .maplibregl-popup-content {
@@ -4566,8 +4566,8 @@ export default {
 .flatmap-feature-label {
   padding: 6px;
   text-align: left;
-  font-family: Asap, sans-serif;
-  font-size: 14px;
+  font-family: Asap, sans-serif !important;
+  font-size: 14px !important;
 }
 
 .id-tag {
