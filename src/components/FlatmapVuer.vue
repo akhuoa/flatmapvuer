@@ -1859,6 +1859,7 @@ export default {
       // Fallback: remove any existing toolitp on DOM
       const tooltips = this.$el.querySelectorAll('.flatmap-tooltip-popup');
       tooltips.forEach((tooltip) => tooltip.remove());
+      this.lastHoveredFeature = null;
     },
     /**
      * Function to create tooltip for the provided connectivity data.
@@ -2305,6 +2306,7 @@ export default {
       document.querySelectorAll('.maplibregl-popup').forEach((item) => {
         item.style.display = 'none'
       })
+      this.lastHoveredFeature = null;
     },
     /**
      * @public
