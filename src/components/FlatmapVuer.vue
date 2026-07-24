@@ -4564,10 +4564,14 @@ export default {
 }
 
 .flatmap-feature-label {
-  padding: 6px;
-  text-align: left;
+  padding: 6px !important;
   font-family: Asap, sans-serif !important;
   font-size: 14px !important;
+
+  // provided by tooltipContentProvider from mapintegratedvuer
+  &.flatmap-connectivity-label {
+    text-align: left !important;
+  }
 }
 
 .id-tag {
