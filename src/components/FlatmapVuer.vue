@@ -1860,6 +1860,7 @@ export default {
       // Fallback: remove any existing toolitp on DOM
       const tooltips = this.$el.querySelectorAll('.flatmap-tooltip-popup');
       tooltips.forEach((tooltip) => tooltip.remove());
+      this.lastHoveredFeature = null;
     },
     /**
      * Function to create tooltip for the provided connectivity data.
@@ -1902,6 +1903,9 @@ export default {
       const geojsonHighlights = [];
       const connectivityData = [];
       const errorData = [];
+
+      // Remove last hovered feature to avoid showing tooltip for the last hovered feature.
+      this.lastHoveredFeature = null;
 
       // to keep the highlighted path on map
       if (connectivityInfo && connectivityInfo.featureId) {
@@ -2306,6 +2310,7 @@ export default {
       document.querySelectorAll('.maplibregl-popup').forEach((item) => {
         item.style.display = 'none'
       })
+      this.lastHoveredFeature = null;
     },
     /**
      * @public
@@ -3110,10 +3115,22 @@ export default {
                   provenanceTaxonomy: feature.taxons,
                   alert: normaliseAlertToStringArray(feature.alert),
                 }
+
                 // Show popup for all modes
                 this.checkAndCreatePopups([data], mapclick)
+
+                // Check pathway fetures and set lastHoveredFeature for tooltip content replacement.
+                const isPathwayFeature = (feature.id.startsWith('ilxtr:') || feature.id.startsWith('ilx:'));
+                if (isPathwayFeature) {
+                  this.lastHoveredFeature = feature;
+                  this.lastHoveredFeature.mapUUID = this.mapImp.uuid;
+                } else {
+                  this.lastHoveredFeature = null;
+                }
+
+                // flatmap-tooltip-popup is used for custom tooltip content replacement.
                 this.mapImp.showPopup(featureId, capitalise(feature.label), {
-                  className: 'custom-popup',
+                  className: isPathwayFeature ? 'flatmap-tooltip-popup' : 'custom-popup',
                   positionAtLastClick: false,
                   preserveSelection: true,
                 })
