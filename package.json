@@ -80,7 +80,9 @@
   },
   "optionalDependencies": {
     "@esbuild/linux-x64": "0.25.3",
-    "@rollup/rollup-linux-x64-gnu": "4.23.0"
+    "@rollup/rollup-darwin-arm64": "4.59.0",
+    "@rollup/rollup-linux-x64-gnu": "4.59.0",
+    "@rollup/rollup-win32-x64-msvc": "4.59.0"
   },
   "eslintConfig": {
     "root": true,
