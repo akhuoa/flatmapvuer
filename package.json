@@ -2,6 +2,9 @@
   "name": "@abi-software/flatmapvuer",
   "version": "1.13.4",
   "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
   "files": [
     "dist/*",
     "src/*",
@@ -77,7 +80,9 @@
   },
   "optionalDependencies": {
     "@esbuild/linux-x64": "0.25.3",
-    "@rollup/rollup-linux-x64-gnu": "4.23.0"
+    "@rollup/rollup-darwin-arm64": "4.59.0",
+    "@rollup/rollup-linux-x64-gnu": "4.59.0",
+    "@rollup/rollup-win32-x64-msvc": "4.59.0"
   },
   "eslintConfig": {
     "root": true,
