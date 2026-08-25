@@ -14,7 +14,7 @@ const availableSpecies = [
   { name: "Cat" }
 ]
 const organTypes = ['color', 'grayscale']
-const ERROR_TOLERANCE = parseFloat(Cypress.env('ERROR_TOLERANCE'))
+const ERROR_TOLERANCE = parseFloat(Cypress.expose('ERROR_TOLERANCE'))
 
 describe('MultiFlatmapVuer', () => {
 
