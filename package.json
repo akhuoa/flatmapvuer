@@ -55,11 +55,11 @@
     "element-plus": "^2.14.5",
     "mitt": "^3.0.1",
     "pinia": "^2.3.1",
-    "unplugin-vue-components": "^32.1.0",
     "vue": "^3.5.41"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.8",
+    "unplugin-vue-components": "^32.1.0",
     "@vuese/markdown-render": "^2.11.3",
     "auto-changelog": "^2.6.0",
     "chokidar": "^5.0.0",
