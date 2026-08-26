@@ -78,6 +78,8 @@
     "vue-docgen-api": "^4.79.2"
   },
   "optionalDependencies": {
+    "@esbuild/darwin-arm64": "^0.25.3",
+    "@esbuild/linux-x64": "^0.25.3",
     "@rollup/rollup-darwin-arm64": "^4.62.4",
     "@rollup/rollup-linux-x64-gnu": "^4.62.4",
     "@rollup/rollup-win32-x64-msvc": "^4.62.4"
