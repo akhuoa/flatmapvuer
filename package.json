@@ -3,7 +3,7 @@
   "version": "1.15.0",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=20"
+    "node": "^24.20.0"
   },
   "files": [
     "dist/*",
