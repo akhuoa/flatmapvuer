@@ -1,13 +1,41 @@
-dist
-test_html
-node_modules
-cypress/videos/*
-cypress/screenshots/*
-cypress/results/*
-cypress/reports/*
+# Dependencies
+node_modules/
+
+# Build output and caches
+dist/
+.cache/
+.parcel-cache/
+
+# API documentation
+docs/components
 docs/.vitepress/dist
 docs/.vitepress/cache
-docs/components
-.DS_Store
-/.vitepress
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local configuration
+.env
+.env.local
+.env.*.local
+
+# Test artifacts
+test_html/
+coverage/
+.nyc_output/
+cypress/videos/
+cypress/screenshots/
+cypress/results/
+cypress/reports/
+
+# Generated files
 **/components.d.ts
+
+# OS files
+.DS_Store
+Thumbs.db
