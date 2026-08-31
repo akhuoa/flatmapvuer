@@ -638,7 +638,9 @@ export default {
      */
     changeViewingMode: function (modeName) {
       let map = this.getCurrentFlatmap()
-      map.changeViewingMode(modeName)
+      if (map) {
+        map.changeViewingMode(modeName)
+      }
     },
     setConnectionType: function (type) {
       let map = this.getCurrentFlatmap();
