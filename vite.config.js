@@ -51,8 +51,16 @@ export default defineConfig(({ command, mode }) => {
         fileName: 'flatmapvuer',
       },
       rollupOptions: {
-        external: ["vue", "@abi-software/sparc-annotation", "@abi-software/svg-sprite", "@abi-software/map-utilities",
-          "@element-plus/icons-vue", "pinia"],
+        external: [
+          "vue",
+          "@abi-software/sparc-annotation",
+          "@abi-software/svg-sprite",
+          "@abi-software/map-utilities",
+          "@element-plus/icons-vue",
+          "pinia",
+          "@abi-software/svg-sprite/dist/style.css",
+          "@abi-software/map-utilities/dist/style.css"
+        ],
         output: {
           globals: {
             vue: "Vue",
