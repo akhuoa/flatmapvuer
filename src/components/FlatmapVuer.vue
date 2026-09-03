@@ -1860,6 +1860,7 @@ export default {
       // Fallback: remove any existing toolitp on DOM
       const tooltips = this.$el.querySelectorAll('.flatmap-tooltip-popup');
       tooltips.forEach((tooltip) => tooltip.remove());
+      this.lastHoveredFeature = null;
     },
     /**
      * Function to create tooltip for the provided connectivity data.
@@ -1902,6 +1903,9 @@ export default {
       const geojsonHighlights = [];
       const connectivityData = [];
       const errorData = [];
+
+      // Remove last hovered feature to avoid showing tooltip for the last hovered feature.
+      this.lastHoveredFeature = null;
 
       // to keep the highlighted path on map
       if (connectivityInfo && connectivityInfo.featureId) {
@@ -2306,6 +2310,7 @@ export default {
       document.querySelectorAll('.maplibregl-popup').forEach((item) => {
         item.style.display = 'none'
       })
+      this.lastHoveredFeature = null;
     },
     /**
      * @public
@@ -3110,10 +3115,22 @@ export default {
                   provenanceTaxonomy: feature.taxons,
                   alert: normaliseAlertToStringArray(feature.alert),
                 }
+
                 // Show popup for all modes
                 this.checkAndCreatePopups([data], mapclick)
+
+                // Check pathway fetures and set lastHoveredFeature for tooltip content replacement.
+                const isPathwayFeature = (feature.id.startsWith('ilxtr:') || feature.id.startsWith('ilx:'));
+                if (isPathwayFeature) {
+                  this.lastHoveredFeature = feature;
+                  this.lastHoveredFeature.mapUUID = this.mapImp.uuid;
+                } else {
+                  this.lastHoveredFeature = null;
+                }
+
+                // flatmap-tooltip-popup is used for custom tooltip content replacement.
                 this.mapImp.showPopup(featureId, capitalise(feature.label), {
-                  className: 'custom-popup',
+                  className: isPathwayFeature ? 'flatmap-tooltip-popup' : 'custom-popup',
                   positionAtLastClick: false,
                   preserveSelection: true,
                 })
@@ -3949,8 +3966,8 @@ export default {
 
 :deep(.flatmap-tooltip-popup),
 :deep(.custom-popup) {
-  font-family: Asap, sans-serif;
-  font-size: 14px;
+  font-family: Asap, sans-serif !important;
+  font-size: 14px !important;
 
   &.maplibregl-popup-anchor-bottom {
     .maplibregl-popup-content {
@@ -4280,7 +4297,7 @@ export default {
   @media (max-width: 1250px) {
     height: 125px !important; // important is needed here as we are over-riding the style set by the flatmap
     width: 180px !important;
-    :deep(.maplibregl-canvas .maplibregl-canvas) {
+    .maplibregl-canvas .maplibregl-canvas {
       height: 125px !important;
       width: 180px !important;
     }
@@ -4288,7 +4305,7 @@ export default {
   @media (min-width: 1251px) {
     height: 190px !important;
     width: 300px !important;
-    :deep(.maplibregl-canvas .maplibregl-canvas) {
+    .maplibregl-canvas .maplibregl-canvas {
       height: 190px !important;
       width: 300px !important;
     }
@@ -4547,10 +4564,14 @@ export default {
 }
 
 .flatmap-feature-label {
-  padding: 6px;
-  text-align: left;
-  font-family: Asap, sans-serif;
-  font-size: 14px;
+  padding: 6px !important;
+  font-family: Asap, sans-serif !important;
+  font-size: 14px !important;
+
+  // provided by tooltipContentProvider from mapintegratedvuer
+  &.flatmap-connectivity-label {
+    text-align: left !important;
+  }
 }
 
 .id-tag {

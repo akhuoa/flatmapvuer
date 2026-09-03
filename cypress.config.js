@@ -12,26 +12,28 @@ const config = defineConfig({
   reporterOptions: {
     configFile: "reporter-config.json"
   },
+  env: {
+    projectId: process.env.CYPRESS_PROJECT_ID,
+  },
+  expose: {
+    visualRegressionType: 'regression',
+    visualRegressionBaseDirectory: 'cypress/screenshots/MultiFlatmapVuer.cy.js/base',
+    visualRegressionDiffDirectory: 'cypress/screenshots/diff',
+    visualRegressionGenerateDiff: 'always',
+    visualRegressionFailSilently: true,
+    HUMAN_FEMALE_UUID: process.env.HUMAN_FEMALE_UUID ? process.env.HUMAN_FEMALE_UUID : '',
+    HUMAN_MALE_UUID: process.env.HUMAN_MALE_UUID ? process.env.HUMAN_MALE_UUID : '',
+    RAT_UUID: process.env.RAT_UUID ? process.env.RAT_UUID : '',
+    MOUSE_UUID: process.env.MOUSE_UUID ? process.env.MOUSE_UUID : '',
+    PIG_UUID: process.env.PIG_UUID ? process.env.PIG_UUID : '',
+    CAT_UUID: process.env.CAT_UUID ? process.env.CAT_UUID : '',
+    ERROR_TOLERANCE: process.env.ERROR_TOLERANCE ? process.env.ERROR_TOLERANCE : 0.0001
+  },
   component: {
     specPattern: "cypress/component/*.cy.js",
     devServer: {
       framework: "vue",
       bundler: "vite",
-    },
-    env: {
-      projectId: process.env.CYPRESS_PROJECT_ID,
-      visualRegressionType: 'regression',
-      visualRegressionBaseDirectory: 'cypress/screenshots/MultiFlatmapVuer.cy.js/base',
-      visualRegressionDiffDirectory: 'cypress/screenshots/diff',
-      visualRegressionGenerateDiff: 'always',
-      visualRegressionFailSilently: true,
-      HUMAN_FEMALE_UUID: process.env.HUMAN_FEMALE_UUID ? process.env.HUMAN_FEMALE_UUID : '',
-      HUMAN_MALE_UUID: process.env.HUMAN_MALE_UUID ? process.env.HUMAN_MALE_UUID : '',
-      RAT_UUID: process.env.RAT_UUID ? process.env.RAT_UUID : '',
-      MOUSE_UUID: process.env.MOUSE_UUID ? process.env.MOUSE_UUID : '',
-      PIG_UUID: process.env.PIG_UUID ? process.env.PIG_UUID : '',
-      CAT_UUID: process.env.CAT_UUID ? process.env.CAT_UUID : '',
-      ERROR_TOLERANCE: process.env.ERROR_TOLERANCE ? process.env.ERROR_TOLERANCE : 0.0001
     },
     screenshotsFolder: './cypress/screenshots',
     setupNodeEvents(on, config) {
