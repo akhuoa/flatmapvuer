@@ -10,7 +10,8 @@ export default defineConfig(({ command, mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: `@use './src/assets/styles' as *;`
+          api: 'modern-compiler',
+          additionalData: `@use '@/assets/styles' as *;`,
         },
       },
     },
@@ -40,18 +41,26 @@ export default defineConfig(({ command, mode }) => {
     ],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
+        '@': path.resolve(import.meta.dirname, './src'),
       }
     },
     build: {
       lib: {
-        entry: path.resolve(__dirname, "./src/components/index.js"),
+        entry: path.resolve(import.meta.dirname, "./src/components/index.js"),
         name: "FlatmapVuer",
         fileName: 'flatmapvuer',
       },
       rollupOptions: {
-        external: ["vue", "@abi-software/sparc-annotation", "@abi-software/svg-sprite", "@abi-software/map-utilities",
-          "@element-plus/icons-vue", "pinia"],
+        external: [
+          "vue",
+          "@abi-software/sparc-annotation",
+          "@abi-software/svg-sprite",
+          "@abi-software/map-utilities",
+          "@element-plus/icons-vue",
+          "pinia",
+          "@abi-software/svg-sprite/dist/style.css",
+          "@abi-software/map-utilities/dist/style.css"
+        ],
         output: {
           globals: {
             vue: "Vue",
@@ -61,6 +70,11 @@ export default defineConfig(({ command, mode }) => {
             "@element-plus/icons-vue": "@element-plus/icons-vue",
             "pinia": "pinia"
           },
+          // keep css output name stable for the "./dist/style.css" export/import paths
+          assetFileNames: (assetInfo) =>
+            assetInfo.name?.endsWith(".css")
+              ? "style.css"
+              : "assets/[name][extname]",
         },
       },
     },

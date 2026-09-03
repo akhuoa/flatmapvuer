@@ -1,5 +1,5 @@
 /* eslint-disable no-alert, no-console */
-const ERROR_TOLERANCE = parseFloat(Cypress.env('ERROR_TOLERANCE'));
+const ERROR_TOLERANCE = parseFloat(Cypress.expose('ERROR_TOLERANCE'));
 // Ref: flatmap-viewer/src/layers/styling.ts
 const STROKE_INTERPOLATION = [
   'interpolate',
@@ -56,7 +56,7 @@ function is_high_resolution_screen() {
 describe('MultiFlatmapVuer Screenshot Comparison', () => {
 
   beforeEach(() => {
-    Cypress.env('visualRegressionBaseDirectory', 'cypress/screenshots/VisualTest.cy.js/base');
+    Cypress.expose('visualRegressionBaseDirectory', 'cypress/screenshots/VisualTest.cy.js/base');
     cy.viewport(500, 500);
     cy.fixture('MultiFlatmapPropsDevel.json').then((props) => {
       const modifiedProps = {

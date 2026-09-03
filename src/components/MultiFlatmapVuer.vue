@@ -94,6 +94,7 @@
       :showOpenMapButton="showOpenMapButton"
       :showPathwayFilter="showPathwayFilter"
       :externalLegends="externalLegends"
+      :tooltipContentProvider="tooltipContentProvider"
     />
 
     <!-- multiflatmap-error -->
@@ -637,7 +638,9 @@ export default {
      */
     changeViewingMode: function (modeName) {
       let map = this.getCurrentFlatmap()
-      map.changeViewingMode(modeName)
+      if (map) {
+        map.changeViewingMode(modeName)
+      }
     },
     setConnectionType: function (type) {
       let map = this.getCurrentFlatmap();
@@ -892,6 +895,14 @@ export default {
       default: function () {
         return []
       },
+    },
+    /**
+     * A function that provides custom tooltip HTML content for path features.
+     * Passed through to each FlatmapVuer instance.
+     */
+    tooltipContentProvider: {
+      type: Function,
+      default: null,
     },
   },
   data: function () {
