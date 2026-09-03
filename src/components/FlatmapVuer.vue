@@ -4297,7 +4297,7 @@ export default {
   @media (max-width: 1250px) {
     height: 125px !important; // important is needed here as we are over-riding the style set by the flatmap
     width: 180px !important;
-    :deep(.maplibregl-canvas .maplibregl-canvas) {
+    .maplibregl-canvas .maplibregl-canvas {
       height: 125px !important;
       width: 180px !important;
     }
@@ -4305,7 +4305,7 @@ export default {
   @media (min-width: 1251px) {
     height: 190px !important;
     width: 300px !important;
-    :deep(.maplibregl-canvas .maplibregl-canvas) {
+    .maplibregl-canvas .maplibregl-canvas {
       height: 190px !important;
       width: 300px !important;
     }
