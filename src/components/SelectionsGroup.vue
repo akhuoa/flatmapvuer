@@ -10,13 +10,13 @@
           popper-class="popover-origin-help"
           v-if="helpMessage"
         >
-        <template v-if="helpMessage" #reference>
-          <el-icon class="info"><el-icon-warning /></el-icon>
-        </template>
-        <span style="word-break: keep-all">
-          {{ helpMessage }}
-        </span>
-      </el-popover>
+          <template v-if="helpMessage" #reference>
+            <el-icon class="info"><el-icon-warning /></el-icon>
+          </template>
+          <span style="word-break: keep-all">
+            {{ helpMessage }}
+          </span>
+        </el-popover>
       </el-col>
       <el-col :span="12">
         <el-checkbox
@@ -26,8 +26,9 @@
           v-model="checkAll"
           @change="handleCheckAllChange"
           @click="onAllCheckboxNativeChange"
-          >Display all</el-checkbox
         >
+          Display all
+        </el-checkbox>
       </el-col>
     </el-row>
     <el-checkbox-group
@@ -37,15 +38,12 @@
       @change="handleCheckedItemsChange"
     >
       <div class="checkbox-group-inner">
-        <el-row
-          v-for="item in selections"
-          :key="item[identifierKey]"
-          :label="item[identifierKey]"
-        >
-          <div class="checkbox-container"
+        <el-row v-for="item in selections" :key="item[identifierKey]" :label="item[identifierKey]">
+          <div
+            class="checkbox-container"
             @mouseenter="checkboxMouseEnterEmit(item[identifierKey], true)"
             @mouseleave="checkboxMouseEnterEmit(item[identifierKey], false)"
-            >
+          >
             <el-checkbox
               class="my-checkbox"
               :label="item[identifierKey]"
@@ -74,16 +72,14 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-import {
-  Warning as ElIconWarning,
-} from '@element-plus/icons-vue'
+import { Warning as ElIconWarning } from '@element-plus/icons-vue';
 import {
   ElCheckbox as Checkbox,
   ElCheckboxGroup as CheckboxGroup,
   ElIcon as Icon,
   ElCol as Col,
   ElRow as Row,
-} from 'element-plus'
+} from 'element-plus';
 
 export default {
   name: 'SelectionsGroup',
@@ -101,15 +97,15 @@ export default {
      * Also called when the associated button is pressed.
      */
     reset: function () {
-      this.checkAll = true
-      this.checkedItems = []
+      this.checkAll = true;
+      this.checkedItems = [];
       this.selections.forEach((item) => {
         if (!('enabled' in item) || item.enabled === true) {
-          this.checkedItems.push(item[this.identifierKey])
+          this.checkedItems.push(item[this.identifierKey]);
         } else {
-          this.checkAll = false
+          this.checkAll = false;
         }
-      })
+      });
     },
     setCheckboxActionData: function (containerEl, option) {
       // option = 'individual' or 'all'
@@ -127,9 +123,9 @@ export default {
 
         this.checkboxActionData = {
           selectionsTitle: selectionsTitleEl ? selectionsTitleEl.innerText : '',
-          property: (checkboxEl && option !== 'all') ? checkboxEl.value : '',
+          property: checkboxEl && option !== 'all' ? checkboxEl.value : '',
           label: checkboxLabelEl ? checkboxLabelEl.innerText : '',
-          checked: checkedLabel
+          checked: checkedLabel,
         };
       } else {
         // reset if no checkbox container found
@@ -150,7 +146,7 @@ export default {
       this.setCheckboxActionData(checkboxContainerEl, 'all');
     },
     visibilityToggle: function (key, value) {
-      this.$emit('changed', { key, value })
+      this.$emit('changed', { key, value });
       // emit event with checkbox data for tracking
       if (key === this.checkboxActionData.property) {
         // change true/false to checked/unchecked for readability
@@ -160,21 +156,24 @@ export default {
     },
     checkboxMouseEnterEmit: function (key, value) {
       // Update the stated to send to the emit
-      this.$emit('checkboxMouseEnter', { key: key, value: value, selections: this.selections, checked: this.checkedItems})
+      this.$emit('checkboxMouseEnter', {
+        key: key,
+        value: value,
+        selections: this.selections,
+        checked: this.checkedItems,
+      });
     },
     handleCheckedItemsChange: function (value) {
-      let checkedCount = value.length
-      this.checkAll = checkedCount === this.selections.length
+      let checkedCount = value.length;
+      this.checkAll = checkedCount === this.selections.length;
     },
     handleCheckAllChange: function (val) {
-      this.checkedItems = val
-        ? this.selections.map((a) => a[this.identifierKey])
-        : []
+      this.checkedItems = val ? this.selections.map((a) => a[this.identifierKey]) : [];
 
       this.$emit('checkAll', {
         keys: this.selections.map((a) => a[this.identifierKey]),
         value: val,
-      })
+      });
       // emit event with checkbox data for tracking
       this.checkboxActionData.property = this.identifierKey;
       // change true/false to checked/unchecked for readability
@@ -183,50 +182,50 @@ export default {
     },
     getBackgroundStyles: function (item) {
       if ('colour' in item && this.colourStyle === 'background') {
-        return { background: item.colour }
+        return { background: item.colour };
       }
-      return {}
+      return {};
     },
-    getState: function() {
-      let checkedCount = this.checkedItems.length
-      const checkAll = checkedCount === this.selections.length
+    getState: function () {
+      let checkedCount = this.checkedItems.length;
+      const checkAll = checkedCount === this.selections.length;
       return {
         checkAll,
-        checked: !checkAll ? this.checkedItems : []
-      }
+        checked: !checkAll ? this.checkedItems : [],
+      };
     },
-    setState: function(state) {
-      this.checkAll = state.checkAll
-      this.checkedItems.length = 0
+    setState: function (state) {
+      this.checkAll = state.checkAll;
+      this.checkedItems.length = 0;
       if (state.checked?.length) {
-        this.checkedItems.push(...state.checked)
+        this.checkedItems.push(...state.checked);
         this.selections.forEach((item) => {
-          const key = item[this.identifierKey]
-          this.$emit('changed', {key, value: this.checkedItems.includes(key)})
-        })
+          const key = item[this.identifierKey];
+          this.$emit('changed', { key, value: this.checkedItems.includes(key) });
+        });
       } else {
-        const keys = this.selections.map((a) => a[this.identifierKey])
-        let value = false
+        const keys = this.selections.map((a) => a[this.identifierKey]);
+        let value = false;
         if (this.checkAll) {
-          value = true
-          this.checkedItems.push(...keys)
+          value = true;
+          this.checkedItems.push(...keys);
         }
-        this.$emit('checkAll', { keys, value })
+        this.$emit('checkAll', { keys, value });
       }
     },
-    hasLineStyles: function(item) {
-      return 'colour' in item && this.colourStyle === 'line'
+    hasLineStyles: function (item) {
+      return 'colour' in item && this.colourStyle === 'line';
     },
     getLineStyles: function (item) {
       if ('colour' in item && this.colourStyle === 'line') {
         if ('dashed' in item && item.dashed === true) {
-          const background = `repeating-linear-gradient(90deg,${item.colour},${item.colour} 6px,transparent 0,transparent 9px)`
-          return { background }
+          const background = `repeating-linear-gradient(90deg,${item.colour},${item.colour} 6px,transparent 0,transparent 9px)`;
+          return { background };
         } else {
-          return { background: item.colour }
+          return { background: item.colour };
         }
       }
-      return { display: 'None' }
+      return { display: 'None' };
     },
   },
   props: {
@@ -253,7 +252,7 @@ export default {
     selections: {
       type: Array,
       default: function () {
-        return []
+        return [];
       },
     },
     showAsLegend: {
@@ -263,11 +262,11 @@ export default {
   },
   computed: {
     isIndeterminate: function () {
-      const count = this.checkedItems.length
+      const count = this.checkedItems.length;
       if (count === 0 || this.checkAll) {
-        return false
+        return false;
       }
-      return true
+      return true;
     },
   },
   data: function () {
@@ -280,16 +279,15 @@ export default {
         label: '',
         checked: '',
       },
-    }
+    };
   },
   mounted: function () {
-    this.reset()
+    this.reset();
   },
-}
+};
 </script>
 
 <style lang="scss" scoped>
-
 .path-visual {
   margin: 3px 0;
   height: 3px;
@@ -314,7 +312,7 @@ export default {
 }
 
 .all-checkbox {
-  height:20px;
+  height: 20px;
   float: right;
 }
 
@@ -361,7 +359,7 @@ export default {
 }
 
 :deep(.el-row) {
-  height:20px;
+  height: 20px;
   margin-bottom: 0;
 }
 
@@ -375,7 +373,6 @@ export default {
   color: #8300bf;
   margin-left: 8px;
 }
-
 
 :deep(.popover-origin-help.el-popover) {
   text-transform: none !important; // need to overide the tooltip text transform

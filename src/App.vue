@@ -10,31 +10,20 @@
       <div class="options-container">
         <el-row :gutter="20">
           <el-col :span="8">
-            <el-button @click="helpMode = !helpMode" size="small"
-              >Help Mode</el-button
-            >
+            <el-button @click="helpMode = !helpMode" size="small">Help Mode</el-button>
           </el-col>
           <el-col :span="8">
-            <el-button @click="saveSettings()" size="small"
-              >Save Settings</el-button
-            >
+            <el-button @click="saveSettings()" size="small">Save Settings</el-button>
           </el-col>
           <el-col :span="8">
-            <el-button
-              :disabled="mapSettings.length === 0"
-              @click="restoreSettings()"
-              size="small"
-              >Restore Settings</el-button
-            >
+            <el-button :disabled="mapSettings.length === 0" @click="restoreSettings()" size="small">
+              Restore Settings
+            </el-button>
           </el-col>
         </el-row>
         <el-row>
           <el-col>
-            <el-switch
-              v-model="disableUI"
-              active-text="Disable UI"
-            >
-            </el-switch>
+            <el-switch v-model="disableUI" active-text="Disable UI"></el-switch>
           </el-col>
         </el-row>
         <el-row>
@@ -48,14 +37,12 @@
               @select="search"
               popper-class="autocomplete-popper"
               :teleported="false"
-            >
-            </el-autocomplete>
+            ></el-autocomplete>
           </el-col>
         </el-row>
       </div>
       <template #reference>
-        <el-button class="options-button" :icon="ElIconSetting"
-          >Options</el-button>
+        <el-button class="options-button" :icon="ElIconSetting">Options</el-button>
       </template>
     </el-popover>
 
@@ -98,20 +85,20 @@
 
 <script>
 /* eslint-disable no-alert, no-console */
-import { AnnotationService } from '@abi-software/sparc-annotation'
+import { AnnotationService } from '@abi-software/sparc-annotation';
 import { markRaw, shallowRef } from 'vue';
-import { Setting as ElIconSetting } from '@element-plus/icons-vue'
+import { Setting as ElIconSetting } from '@element-plus/icons-vue';
 import {
   ElAutocomplete as Autocomplete,
   ElButton as Button,
   ElCol as Col,
   ElPopover as Popover,
   ElRow as Row,
-} from 'element-plus'
-import './icons/mapicon-species-style.css'
-import MultiFlatmapVuer from './components/MultiFlatmapVuer.vue'
-import { HelpModeDialog } from '@abi-software/map-utilities'
-import '@abi-software/map-utilities/dist/style.css'
+} from 'element-plus';
+import './icons/mapicon-species-style.css';
+import MultiFlatmapVuer from './components/MultiFlatmapVuer.vue';
+import { HelpModeDialog } from '@abi-software/map-utilities';
+import '@abi-software/map-utilities/dist/style.css';
 
 export default {
   name: 'app',
@@ -127,22 +114,21 @@ export default {
   },
   methods: {
     saveSettings: function () {
-      this.mapSettings.push(this.$refs.multi.getState())
+      this.mapSettings.push(this.$refs.multi.getState());
     },
     restoreSettings: function () {
-      if (this.mapSettings.length > 0)
-        this.$refs.multi.setState(this.mapSettings.pop())
+      if (this.mapSettings.length > 0) this.$refs.multi.setState(this.mapSettings.pop());
     },
     FlatmapSelected: function (resource) {
       if (resource.eventType === 'click') {
-        if (this.consoleOn) console.log('resource', resource)
+        if (this.consoleOn) console.log('resource', resource);
 
         // Show marker on centreline of right vagus X nerve trunk
         const { kind, models, location } = resource.feature;
         if (window.flatmapImp && models && location && kind === 'centreline') {
           window.flatmapImp.clearMarkers();
           window.flatmapImp.addMarker(models, {
-            location: location
+            location: location,
           });
         }
       }
@@ -154,50 +140,44 @@ export default {
       if (this.consoleOn) console.log('pathway-selection-changed', data);
     },
     FlatmapReady: function (component) {
-      if (this.consoleOn) console.log(component)
-      let taxon = component.mapImp.describes
-      let id = component.mapImp.addMarker('UBERON:0000948')
-      window.flatmapImp = component.mapImp
-      component.enablePanZoomEvents(true)
+      if (this.consoleOn) console.log(component);
+      let taxon = component.mapImp.describes;
+      let id = component.mapImp.addMarker('UBERON:0000948');
+      window.flatmapImp = component.mapImp;
+      component.enablePanZoomEvents(true);
       //component.showPathwaysDrawer(false);
-      if (this.consoleOn) console.log(taxon, id)
+      if (this.consoleOn) console.log(taxon, id);
       //component.searchAndShowResult("heart");
       // component.changeViewingMode('Annotation')
     },
     panZoomcallback: function (payload) {
-      this.payload = payload
+      this.payload = payload;
     },
     openMap: function (map) {
-      if (this.consoleOn) console.log(map)
+      if (this.consoleOn) console.log(map);
     },
     fetchSuggestions: function (term, cb) {
       if (term === '') {
-        cb([])
+        cb([]);
       } else {
-        const suggestions = []
-        const results = this.$refs.multi
-          .getCurrentFlatmap()
-          .searchSuggestions(term)
+        const suggestions = [];
+        const results = this.$refs.multi.getCurrentFlatmap().searchSuggestions(term);
         const featureIds = results.__featureIds || results.featureIds;
         featureIds.forEach((id) => {
-          const annotation = this.$refs.multi
-            .getCurrentFlatmap()
-            .mapImp.annotation(id)
-          if (annotation && annotation.label) suggestions.push(annotation.label)
-        })
-        const unique = new Set(suggestions)
-        suggestions.length = 0
+          const annotation = this.$refs.multi.getCurrentFlatmap().mapImp.annotation(id);
+          if (annotation && annotation.label) suggestions.push(annotation.label);
+        });
+        const unique = new Set(suggestions);
+        suggestions.length = 0;
         for (const item of unique) {
-          suggestions.push({ value: '"' + item + '"' })
+          suggestions.push({ value: '"' + item + '"' });
         }
-        cb(suggestions)
+        cb(suggestions);
       }
     },
     search: function () {
-      if (this.consoleOn) console.log(this.searchText)
-      this.$refs.multi
-        .getCurrentFlatmap()
-        .searchAndShowResult(this.searchText, true)
+      if (this.consoleOn) console.log(this.searchText);
+      this.$refs.multi.getCurrentFlatmap().searchAndShowResult(this.searchText, true);
     },
     onFlatmapChanged: function (activeSpecies) {
       this.helpMode = false;
@@ -234,7 +214,7 @@ export default {
   provide() {
     return {
       $annotator: this.annotator,
-    }
+    };
   },
   data: function () {
     return {
@@ -279,7 +259,7 @@ export default {
         },
         Vagus: {
           taxo: 'UBERON:0001759',
-          uuid: "0ea568ec-538d-52f3-a8e7-0437d844e1cf",
+          uuid: '0ea568ec-538d-52f3-a8e7-0437d844e1cf',
         },
         Sample: { taxo: 'NCBITaxon:1', displayWarning: true },
         'Functional Connectivity': {
@@ -287,8 +267,8 @@ export default {
           displayWarning: true,
         },
         Test: {
-          "taxo": "NCBITaxon:1",
-          "displayWarning": true
+          taxo: 'NCBITaxon:1',
+          displayWarning: true,
         },
       },
       tooltipContent: undefined,
@@ -314,40 +294,42 @@ export default {
       //flatmapAPI: "https://mapcore-demo.org/staging/flatmap/v1/"
       // flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v1/",
       ElIconSetting: shallowRef(ElIconSetting),
-      annotator: markRaw(new AnnotationService(`https://mapcore-demo.org/devel/flatmap/v4/annotator`)),
+      annotator: markRaw(
+        new AnnotationService(`https://mapcore-demo.org/devel/flatmap/v4/annotator`),
+      ),
       externalLegends: [
         {
           prompt: 'Sample Circle',
           colour: '#FA00C0',
-          border: "green",
-          style: 'circle'
+          border: 'green',
+          style: 'circle',
         },
         {
           prompt: 'Sample square',
           border: '#EA431C',
-          style: 'square'
+          style: 'square',
         },
         {
           prompt: 'Sample rounded square',
-          style: 'rounded-square'
+          style: 'rounded-square',
         },
         {
           prompt: 'Sample exoid',
           colour: '#0AED59',
           border: 'purple',
-          style: 'exoid'
+          style: 'exoid',
         },
         {
           prompt: 'Sample line',
           colour: '#0047AB',
-          style: 'line'
+          style: 'line',
         },
         {
           prompt: 'Sample dashed arrow line',
           colour: '#099F04',
           style: 'line',
           dashed: true,
-          arrow: true
+          arrow: true,
         },
         {
           prompt: 'Sample hexagon',
@@ -355,8 +337,8 @@ export default {
           style: 'hexagon',
           border: 'blue',
         },
-      ]
-    }
+      ],
+    };
   },
   mounted: function () {
     this.multiflatmapRef = this.$refs.multi;
@@ -368,9 +350,9 @@ export default {
       if (!newVal) {
         this.helpModeActiveItem = 0;
       }
-    }
+    },
   },
-}
+};
 </script>
 
 <style lang="scss">
@@ -432,7 +414,7 @@ body {
 }
 
 .options-button {
-  z-index:100;
+  z-index: 100;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);

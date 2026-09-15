@@ -6,4 +6,4 @@ export default `<div class="flatmap-marker">
     <circle cx="12.5" cy="12.5" r="9" fill="#fff"></circle>
     <text x="12" y="17.5" style="font-size:14px;fill:#000;text-anchor:middle">2</text>
   </svg>
-</div>`
+</div>`;

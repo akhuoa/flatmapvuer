@@ -45,7 +45,7 @@ async function filterPathsByOriginFromKnowledge(resource) {
   const flatmapKnowledge = getFlatmapKnowledge();
   const results = findPathsByOriginItem(flatmapKnowledge, resource);
   if (Array.isArray(results)) {
-    return results.map(x => x.id);
+    return results.map((x) => x.id);
   }
   return [];
 }
@@ -54,7 +54,7 @@ async function filterPathsByDestinationFromKnowledge(resource) {
   const flatmapKnowledge = getFlatmapKnowledge();
   const results = findPathsByDestinationItem(flatmapKnowledge, resource);
   if (Array.isArray(results)) {
-    return results.map(x => x.id);
+    return results.map((x) => x.id);
   }
   return [];
 }
@@ -63,7 +63,7 @@ async function filterPathsByViaFromKnowledge(resource) {
   const flatmapKnowledge = getFlatmapKnowledge();
   const results = findPathsByViaItem(flatmapKnowledge, resource);
   if (Array.isArray(results)) {
-    return results.map(x => x.id);
+    return results.map((x) => x.id);
   }
   return [];
 }
@@ -91,13 +91,13 @@ async function loadAndStoreKnowledge(mapImp, flatmapQueries) {
     where source="${knowledgeSource}"
     order by source desc`;
 
-  refreshFlatmapKnowledgeCache()
+  refreshFlatmapKnowledgeCache();
   const flatmapKnowledge = sessionStorage.getItem('flatmap-knowledge');
   const flatmapKnowledgeSource = sessionStorage.getItem('flatmap-knowledge-source');
 
   if (!flatmapKnowledge || flatmapKnowledgeSource !== knowledgeSource) {
     const response = await flatmapQueries.queryKnowledge(sql);
-    const parsedData = response.map(x => JSON.parse(x));
+    const parsedData = response.map((x) => JSON.parse(x));
 
     sessionStorage.setItem('flatmap-knowledge', JSON.stringify(parsedData));
     sessionStorage.setItem('flatmap-knowledge-source', knowledgeSource);
@@ -117,11 +117,7 @@ function updateFlatmapKnowledgeCache() {
 }
 
 function removeFlatmapKnowledgeCache() {
-  const keys = [
-    'flatmap-knowledge',
-    'flatmap-knowledge-expiry',
-    'flatmap-knowledge-source',
-  ];
+  const keys = ['flatmap-knowledge', 'flatmap-knowledge-expiry', 'flatmap-knowledge-source'];
 
   keys.forEach((key) => {
     sessionStorage.removeItem(key);
@@ -147,4 +143,4 @@ export {
   filterPathsByOriginFromKnowledge,
   filterPathsByDestinationFromKnowledge,
   filterPathsByViaFromKnowledge,
-}
+};

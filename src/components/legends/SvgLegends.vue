@@ -69,7 +69,7 @@
 <script>
 export default {
   name: 'SvgLegends',
-}
+};
 </script>
 
 <style lang="scss" scoped>
