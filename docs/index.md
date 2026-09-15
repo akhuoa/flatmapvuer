@@ -3,8 +3,8 @@
 layout: home
 
 hero:
-  name: "FlatmapVuer"
-  text: "API documentation for FlatmapVuer"
+  name: 'FlatmapVuer'
+  text: 'API documentation for FlatmapVuer'
   tagline: There are currently two components available.
   actions:
     - theme: brand
@@ -20,4 +20,3 @@ features:
   - title: MultiFlatmapVuer
     details: MultiFlatmapVuer takes in an array of flatmaps and provide a chooser for selecting the flatmap on display.
 ---
-
