@@ -36,7 +36,7 @@ const config = defineConfig({
       bundler: 'vite',
     },
     screenshotsFolder: './cypress/screenshots',
-    setupNodeEvents(on, config) {
+    setupNodeEvents(on, _config) {
       configureVisualRegression(on);
 
       on('before:browser:launch', (browser, launchOptions) => {
