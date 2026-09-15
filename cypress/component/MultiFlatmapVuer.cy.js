@@ -1,7 +1,6 @@
 // /* eslint-disable no-alert, no-console */
 // import { MapContent } from '../../src/components/index.js';
 
-/* eslint-disable no-alert, no-console */
 // import { FlatmapVuer, MultiFlatmapVuer } from '../../src/components/index.js';
 
 const flatmapServers = ['@stagingProps', '@currentProps'];
@@ -44,7 +43,7 @@ describe('MultiFlatmapVuer', () => {
       .then(() => {
         // Create a pop up and ensure it shows
         const flatmapVuer = window.Cypress.multiFlatmapVuer.getCurrentFlatmap();
-        const flatmapUUID = flatmapVuer.mapImp.uuid;
+        const _flatmapUUID = flatmapVuer.mapImp.uuid;
         flatmapVuer.showPopup(39, 'Test', {
           className: 'flatmapvuer-popover',
           positionAtLastClick: true,
@@ -199,6 +198,7 @@ describe('MultiFlatmapVuer', () => {
                 multiFlatmapVuer.state ? multiFlatmapVuer.state.state : undefined,
                 1,
               );
+              // eslint-disable-next-line cypress/no-unnecessary-waiting -- allow species render to settle
               cy.wait(1000);
               cy.get('.el-loading-mask', { timeout: 30000 }).should('not.exist');
               expect(multiFlatmapVuer.activeSpecies).to.eq(species.name);
@@ -212,6 +212,7 @@ describe('MultiFlatmapVuer', () => {
                 .click();
               // hide drawer
               cy.get('.pathway-location > .drawer-button:visible').click();
+              // eslint-disable-next-line cypress/no-unnecessary-waiting -- allow drawer animation to finish
               cy.wait(2000);
 
               cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas:visible').as('canvas');
@@ -219,6 +220,7 @@ describe('MultiFlatmapVuer', () => {
                 cy.then(() => {
                   if (type === 'grayscale') {
                     flatmapVuer.mapImp.setPaint({ coloured: false });
+                    // eslint-disable-next-line cypress/no-unnecessary-waiting -- allow repaint to finish
                     cy.wait(3000);
                   }
                   // CLI
@@ -260,6 +262,7 @@ describe('MultiFlatmapVuer', () => {
               .click();
             // hide drawer
             cy.get('.pathway-location > .drawer-button:visible').click();
+            // eslint-disable-next-line cypress/no-unnecessary-waiting -- allow drawer animation to finish
             cy.wait(2000);
 
             cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas:visible').as('canvas');
@@ -271,6 +274,7 @@ describe('MultiFlatmapVuer', () => {
               cy.then(() => {
                 if (type === 'grayscale') {
                   flatmapVuer.mapImp.setPaint({ coloured: false });
+                  // eslint-disable-next-line cypress/no-unnecessary-waiting -- allow repaint to finish
                   cy.wait(3000);
                 }
               });

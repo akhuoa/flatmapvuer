@@ -1,6 +1,7 @@
-/* eslint-disable no-alert, no-console */
 const ERROR_TOLERANCE = parseFloat(Cypress.expose('ERROR_TOLERANCE'));
 // Ref: flatmap-viewer/src/layers/styling.ts
+// NOTE: style modifications are disabled for now, keep the helpers around
+// eslint-disable-next-line no-unused-vars
 const STROKE_INTERPOLATION = [
   'interpolate',
   ['exponential', 2],
@@ -12,6 +13,7 @@ const STROKE_INTERPOLATION = [
   9,
   ['*', ['var', 'width'], ['^', 2, 2.0]],
 ];
+// eslint-disable-next-line no-unused-vars
 const LAYERS = [
   {
     id: 'simple-test_pathways_nerve-centreline-edge',
@@ -27,6 +29,7 @@ const LAYERS = [
   },
 ];
 
+// eslint-disable-next-line no-unused-vars
 const modifyRenderedMap = (mapImp, layers, strokeInterpolation) => {
   const map = mapImp.map;
 
@@ -40,7 +43,7 @@ const modifyRenderedMap = (mapImp, layers, strokeInterpolation) => {
 
       map.setPaintProperty(layerId, 'line-color', color);
       map.setPaintProperty(layerId, 'line-opacity', opacity);
-    } catch (error) {
+    } catch (_error) {
       console.log(`Layer ${layerId} not found or already updated`);
     }
   });
@@ -87,17 +90,19 @@ describe('MultiFlatmapVuer Screenshot Comparison', () => {
     cy.window().then((win) => {
       const flatmapVuer = win.Cypress.multiFlatmapVuer.getCurrentFlatmap();
       const mapImp = flatmapVuer.mapImp;
-      const flatmapUUID = mapImp.uuid;
+      const _flatmapUUID = mapImp.uuid;
 
       // Wait for the map canvas to appear
       cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas:visible', {
         timeout: 30000,
       }).should('exist');
 
+      // eslint-disable-next-line cypress/no-unnecessary-waiting -- allow map render to settle
       cy.wait(1000);
       cy.get('.el-loading-mask', { timeout: 30000 }).should('not.exist');
       // NOTE: disable style modifications for now
       // modifyRenderedMap(mapImp, LAYERS, STROKE_INTERPOLATION); // modify centreline style
+      // eslint-disable-next-line cypress/no-unnecessary-waiting -- allow map render to settle
       cy.wait(2000);
 
       // Take screenshot of viewer canvas
