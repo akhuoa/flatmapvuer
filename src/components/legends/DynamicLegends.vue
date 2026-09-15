@@ -45,7 +45,6 @@
 <script>
 import LegendItem from './LegendItem.vue';
 
-/* eslint-disable no-alert, no-console */
 export default {
   name: 'DynamicLegends',
   components: {

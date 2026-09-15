@@ -1,4 +1,3 @@
-/* eslint-disable no-alert, no-console */
 import { querySingleConnectivityList } from '@abi-software/map-utilities';
 
 // remove duplicates by stringifying the objects
@@ -27,7 +26,7 @@ const cachedLabels = {};
 const cachedTaxonLabels = [];
 
 const findTaxonomyLabel = async function (flatmapAPI, taxonomy) {
-  if (cachedLabels && cachedLabels.hasOwnProperty(taxonomy)) {
+  if (cachedLabels && Object.hasOwn(cachedLabels, taxonomy)) {
     return cachedLabels[taxonomy];
   }
 
@@ -132,7 +131,7 @@ let FlatmapQueries = function () {
   };
 
   this.createTooltipData = async function (mapImp, eventData) {
-    let hyperlinks = [];
+    let hyperlinks;
     if (eventData.feature.hyperlinks && eventData.feature.hyperlinks.length > 0) {
       hyperlinks = eventData.feature.hyperlinks;
     } else {
@@ -204,23 +203,21 @@ let FlatmapQueries = function () {
     return labelList;
   };
 
-  this.createLabelLookup = function (mapImp, uberons) {
-    return new Promise(async (resolve) => {
-      let uberonMap = {};
-      this.uberons = [];
-      const entityLabels = await findTaxonomyLabels(mapImp, uberons);
-      if (entityLabels.length) {
-        entityLabels.forEach((entityLabel) => {
-          const { taxon: entity, label } = entityLabel;
-          uberonMap[entity] = label;
-          this.uberons.push({
-            id: entity,
-            name: label,
-          });
+  this.createLabelLookup = async function (mapImp, uberons) {
+    let uberonMap = {};
+    this.uberons = [];
+    const entityLabels = await findTaxonomyLabels(mapImp, uberons);
+    if (entityLabels.length) {
+      entityLabels.forEach((entityLabel) => {
+        const { taxon: entity, label } = entityLabel;
+        uberonMap[entity] = label;
+        this.uberons.push({
+          id: entity,
+          name: label,
         });
-        resolve(uberonMap);
-      }
-    });
+      });
+    }
+    return uberonMap;
   };
 
   this.buildConnectivitySqlStatement = function (keastIds) {
@@ -307,7 +304,6 @@ let FlatmapQueries = function () {
 
     // set up the abort controller
     this.controller = new AbortController();
-    const signal = this.controller.signal;
 
     const keastIds = eventData.resource;
     this.destinations = [];
@@ -423,7 +419,7 @@ let FlatmapQueries = function () {
 
       return await response.json();
     } catch (error) {
-      throw new Error(error);
+      throw new Error(error, { cause: error });
     }
   };
 

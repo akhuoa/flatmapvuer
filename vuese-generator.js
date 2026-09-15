@@ -39,7 +39,6 @@ function generateMarkdown(file) {
         methods: transformData(methods),
       };
       const r = new Render(parseResult);
-      const renderResult = r.render();
       const markdownResult = r.renderMarkdown();
       const markdownContent = markdownResult.content;
       const componentName = path.basename(fileWithPath, '.vue');
@@ -63,8 +62,6 @@ function generateMarkdown(file) {
 
 function transformData(data = []) {
   data.forEach((prop) => {
-    prop.name = prop.name;
-
     if (prop.description) {
       prop.describe = [prop.description.replaceAll('\n', ' ')];
     }

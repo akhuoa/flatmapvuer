@@ -97,18 +97,10 @@
 </template>
 
 <script>
-/* eslint-disable no-alert, no-console */
 import { markRaw } from 'vue';
 import EventBus from './EventBus';
 import FlatmapVuer from './FlatmapVuer.vue';
 import flatmap from '../services/flatmapLoader.js';
-import {
-  ElCol as Col,
-  ElOption as Option,
-  ElSelect as Select,
-  ElRow as Row,
-  ElPopover as Popover,
-} from 'element-plus';
 
 const TAXON_UUID = {
   'NCBITaxon:10114': '01fedbf9-d783-509c-a10c-827941ab13da',
@@ -124,11 +116,6 @@ const TAXON_UUID = {
 export default {
   name: 'MultiFlatmapVuer',
   components: {
-    Col,
-    Row,
-    Option,
-    Select,
-    Popover,
     FlatmapVuer,
   },
   created: function () {

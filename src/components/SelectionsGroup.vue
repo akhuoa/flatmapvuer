@@ -71,24 +71,11 @@
 </template>
 
 <script>
-/* eslint-disable no-alert, no-console */
 import { Warning as ElIconWarning } from '@element-plus/icons-vue';
-import {
-  ElCheckbox as Checkbox,
-  ElCheckboxGroup as CheckboxGroup,
-  ElIcon as Icon,
-  ElCol as Col,
-  ElRow as Row,
-} from 'element-plus';
 
 export default {
   name: 'SelectionsGroup',
   components: {
-    Checkbox,
-    CheckboxGroup,
-    Col,
-    Icon,
-    Row,
     ElIconWarning,
   },
   methods: {

@@ -388,7 +388,7 @@ Please use `const` to assign meaningful names to them...
           <el-row class="backgroundText">Viewing Mode</el-row>
           <el-row class="backgroundControl">
             <div style="margin-bottom: 2px">
-              <template v-for="(value, key, index) in viewingModes" :key="key">
+              <template v-for="(value, key) in viewingModes" :key="key">
                 <template v-if="key === viewingMode">
                   <span class="viewing-mode-title">
                     <b>{{ key }}</b>
@@ -535,7 +535,6 @@ Please use `const` to assign meaningful names to them...
 </template>
 
 <script>
-/* eslint-disable no-alert, no-console */
 import { inject, provide, shallowRef, markRaw } from 'vue';
 import {
   WarningFilled as ElIconWarningFilled,
@@ -545,19 +544,6 @@ import {
 import SelectionsGroup from './SelectionsGroup.vue';
 import { MapSvgIcon, MapSvgSpriteColor } from '@abi-software/svg-sprite';
 import '@abi-software/svg-sprite/dist/style.css';
-import SvgLegends from './legends/SvgLegends.vue';
-import DynamicLegends from './legends/DynamicLegends.vue';
-import {
-  ElButton as Button,
-  ElCol as Col,
-  ElLoading as Loading,
-  ElRadio as Radio,
-  ElRadioGroup as RadioGroup,
-  ElRow as Row,
-  ElSelect as Select,
-  ElDialog as Dialog,
-  ElIcon as Icon,
-} from 'element-plus';
 import flatmapMarker from '../icons/flatmap-marker';
 import { FlatmapQueries, findTaxonomyLabels } from '../services/flatmapQueries.js';
 import {
@@ -642,21 +628,11 @@ const processFTUs = (parent, key) => {
 export default {
   name: 'FlatmapVuer',
   components: {
-    Button,
-    Col,
-    Loading,
-    Radio,
-    Icon,
-    RadioGroup,
-    Row,
-    Select,
-    Dialog,
     MapSvgIcon,
     MapSvgSpriteColor,
     Tooltip,
     TreeControls,
     SelectionsGroup,
-    SvgLegends,
     ElIconWarningFilled,
     ElIconArrowDown,
     ElIconArrowLeft,
@@ -1944,7 +1920,7 @@ export default {
     },
     searchConnectivitiesByReference: async function (resource) {
       const flatmapKnowledge = sessionStorage.getItem('flatmap-knowledge');
-      let featureIds = [];
+      let featureIds;
 
       if (flatmapKnowledge) {
         featureIds = await getReferenceConnectivitiesFromStorage(resource);
@@ -2991,7 +2967,7 @@ export default {
     handleMapClick: function () {
       const _map = this.mapImp.map;
       if (_map) {
-        _map.on('click', (e) => {
+        _map.on('click', () => {
           if (!this.connectivityDataSource) {
             this.$emit('connectivity-info-close');
           }
@@ -3542,7 +3518,6 @@ export default {
       openMapRef: undefined,
       backgroundIconRef: undefined,
       toolbarOptions: ['Edit', 'Delete', 'Point', 'LineString', 'Polygon', 'Connection'],
-      annotator: undefined,
       authorisedUser: undefined,
       activeDrawMode: undefined,
       activeDrawTool: undefined,
