@@ -3563,21 +3563,15 @@ export default {
     },
     requiresDrawer: function () {
       if (this.loading) {
-        this.drawerOpen = false;
         return false;
       }
-      if (
+      return (
         this.systems?.length > 0 ||
         (this.containsAlert && this.alertOptions) ||
         this.pathways?.length > 0 ||
         this.taxonConnectivity?.length > 0 ||
         this.legendEntry?.length > 0
-      ) {
-        this.drawerOpen = true;
-        return true;
-      }
-      this.drawerOpen = false;
-      return false;
+      );
     },
     modeDescription: function () {
       let description = this.viewingModes[this.viewingMode];
@@ -3599,6 +3593,12 @@ export default {
   watch: {
     entry: function () {
       if (!this.state) this.createFlatmap();
+    },
+    requiresDrawer: {
+      handler: function (value) {
+        this.drawerOpen = value;
+      },
+      immediate: true,
     },
     helpMode: function (newVal, oldVal) {
       if (newVal !== oldVal) {
