@@ -5,6 +5,7 @@ import prettierConfig from 'eslint-config-prettier';
 import cypress from 'eslint-plugin-cypress';
 import vue from 'eslint-plugin-vue';
 import globals from 'globals';
+import { fileURLToPath } from 'node:url';
 
 const gitignorePath = fileURLToPath(new URL('.gitignore', import.meta.url));
 
