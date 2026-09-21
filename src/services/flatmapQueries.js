@@ -123,6 +123,7 @@ let FlatmapQueries = function () {
     this.singleConnectivityList = [];
     this.hasSingleConnectivityList = false;
     this.rawURLs = [];
+    this.expertConsultants = []
     this.controller = undefined;
     this.uberons = [];
     this.lookUp = [];
@@ -167,6 +168,7 @@ let FlatmapQueries = function () {
       title: eventData.label,
       featureId: eventData.resource,
       hyperlinks: hyperlinks,
+      "expert-consultants": this.expertConsultants,
       provenanceTaxonomy: eventData.provenanceTaxonomy,
       provenanceTaxonomyLabel: taxonomyLabel,
       connectivitySource: this.connectivitySource,
@@ -317,6 +319,7 @@ let FlatmapQueries = function () {
     this.componentsCombinations = [];
     this.singleConnectivityList = [];
     this.rawURLs = [];
+    this.expertConsultants = []
     if (!keastIds || keastIds.length === 0 || !keastIds[0]) return;
 
     let prom1 = await this.queryForConnectivityNew(mapImp, keastIds[0]); // This on returns a promise so dont need 'await'
@@ -362,6 +365,9 @@ let FlatmapQueries = function () {
                   // with publications from both PubMed and Others
                   this.rawURLs = [...response.references];
                 }
+                if (response['expert-consultants']) {
+                  this.expertConsultants = [...response['expert-consultants']];
+                }
                 resolve(processedConnectivity);
               });
             } else resolve(connectivity);
@@ -382,6 +388,9 @@ let FlatmapQueries = function () {
                       if (fallbackResponse.references) {
                         // with publications from both PubMed and Others
                         this.rawURLs = [...fallbackResponse.references];
+                      }
+                      if (fallbackResponse['expert-consultants']) {
+                        this.expertConsultants = [...fallbackResponse['expert-consultants']];
                       }
                       resolve(processedConnectivity);
                     });
