@@ -19,11 +19,7 @@
           ref="featuredMarkerPopover"
         >
           <template #reference>
-            <div
-              v-popover:featuredMarkerPopover
-              @mouseover="onMouseOver"
-              @mouseout="onMouseOut"
-            >
+            <div v-popover:featuredMarkerPopover @mouseover="onMouseOver" @mouseout="onMouseOut">
               <LegendItem
                 :item="item"
                 :identifierKey="identifierKey"
@@ -49,24 +45,23 @@
 <script>
 import LegendItem from './LegendItem.vue';
 
-/* eslint-disable no-alert, no-console */
 export default {
-  name: "DynamicLegends",
+  name: 'DynamicLegends',
   components: {
     LegendItem,
   },
   props: {
     identifierKey: {
       type: String,
-      default: "id",
+      default: 'id',
     },
     styleKey: {
       type: String,
-      default: "style",
+      default: 'style',
     },
     title: {
       type: String,
-      default: "",
+      default: '',
     },
     legends: {
       type: Array,

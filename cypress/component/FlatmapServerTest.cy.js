@@ -2,7 +2,6 @@ import MultiFlatmapVuer from '../../src/components/MultiFlatmapVuer.vue';
 const FLATMAP_API = 'https://mapcore-demo.org/current/flatmap/v3/';
 
 describe('MultiFlatmapVuer Error Handling', () => {
-
   it('should handle 500 Internal Server Error', () => {
     cy.intercept('GET', FLATMAP_API, {
       statusCode: 500,

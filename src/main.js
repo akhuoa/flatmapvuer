@@ -1,20 +1,18 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import App from './App.vue'
-import { useMainStore } from '@/store/index'
-import './assets/fonts.scss'
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './App.vue';
+import { useMainStore } from '@/store/index';
+import './assets/fonts.scss';
 
-const pinia = createPinia()
-const app = createApp(App)
+const pinia = createPinia();
+const app = createApp(App);
 
-app.use(pinia)
+app.use(pinia);
 
-const mainStore = useMainStore()
-const token = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("user-token"))
+const mainStore = useMainStore();
+const token = document.cookie.split('; ').find((row) => row.startsWith('user-token'));
 if (mainStore && token) {
-    mainStore.setUserToken(token.split("=")[1])
+  mainStore.setUserToken(token.split('=')[1]);
 }
 
-app.mount('#app')
+app.mount('#app');

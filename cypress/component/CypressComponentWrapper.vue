@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import FlatmapVuer from '/src/components/FlatmapVuer.vue'
-import MultiFlatmapVuer from '/src/components/MultiFlatmapVuer.vue'
+import FlatmapVuer from '/src/components/FlatmapVuer.vue';
+import MultiFlatmapVuer from '/src/components/MultiFlatmapVuer.vue';
 
 export default {
   name: 'CypressComponentWrapper',
@@ -31,28 +31,26 @@ export default {
   },
   methods: {
     componentMounted() {
-      console.log('Component mounted!')
-      window.Cypress.multiFlatmapVuer = this.$refs.component
+      console.log('Component mounted!');
+      window.Cypress.multiFlatmapVuer = this.$refs.component;
       if (this.component === 'MultiFlatmapVuer') {
-        this.$refs.component.$el.style.position = 'absolute'
+        this.$refs.component.$el.style.position = 'absolute';
       }
     },
     flatmapReady() {
-      console.log('Flatmap ready!')
+      console.log('Flatmap ready!');
       if ('Test' in this.$refs.component.$refs) {
-        window.Cypress.flatmapVuer = this.$refs.component.$refs.Test[0]
-        console.log('window.Cypress.flatmapVuer', window.Cypress.flatmapVuer)
+        window.Cypress.flatmapVuer = this.$refs.component.$refs.Test[0];
+        console.log('window.Cypress.flatmapVuer', window.Cypress.flatmapVuer);
       }
-      this.$emit('ready', true)
+      this.$emit('ready', true);
     },
     resourceSelected(resource) {
-      console.log('Resource selected!', resource)
-      this.$emit('resource-selected', resource)
+      console.log('Resource selected!', resource);
+      this.$emit('resource-selected', resource);
     },
   },
-}
+};
 </script>
 
-<style>
-
-</style>
+<style></style>
