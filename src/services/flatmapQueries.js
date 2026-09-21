@@ -123,7 +123,7 @@ let FlatmapQueries = function () {
     this.singleConnectivityList = [];
     this.hasSingleConnectivityList = false;
     this.rawURLs = [];
-    this.expertConsultants = []
+    this.expertConsultants = [];
     this.controller = undefined;
     this.uberons = [];
     this.lookUp = [];
@@ -168,7 +168,7 @@ let FlatmapQueries = function () {
       title: eventData.label,
       featureId: eventData.resource,
       hyperlinks: hyperlinks,
-      "expert-consultants": this.expertConsultants,
+      'expert-consultants': this.expertConsultants,
       provenanceTaxonomy: eventData.provenanceTaxonomy,
       provenanceTaxonomyLabel: taxonomyLabel,
       connectivitySource: this.connectivitySource,
@@ -319,7 +319,7 @@ let FlatmapQueries = function () {
     this.componentsCombinations = [];
     this.singleConnectivityList = [];
     this.rawURLs = [];
-    this.expertConsultants = []
+    this.expertConsultants = [];
     if (!keastIds || keastIds.length === 0 || !keastIds[0]) return;
 
     let prom1 = await this.queryForConnectivityNew(mapImp, keastIds[0]); // This on returns a promise so dont need 'await'
