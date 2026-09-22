@@ -23,10 +23,21 @@
             @change="setSpecies"
           >
             <el-option v-for="(item, key) in speciesList" :key="key" :label="key" :value="key">
-              <span class="select-box-icon">
-                <i :class="item.iconClass"></i>
+              <span class="option-label">
+                <span class="option-title">
+                  <span class="select-box-icon">
+                    <i :class="item.iconClass"></i>
+                  </span>
+                  {{ key }}
+                </span>
+                <span
+                  v-if="enableOpenMapUI"
+                  class="open-new-view-chip"
+                  @click.stop="openSpeciesInNewView(key)"
+                >
+                  Open new view
+                </span>
               </span>
-              {{ key }}
             </el-option>
           </el-select>
         </template>
@@ -37,6 +48,13 @@
       from ``openMapOptions`` props.
       @event open-map
       @arg {Object} `$event`
+    -->
+    <!--
+      This event is emitted when the user chooses to open a species
+      in a new view/panel from the species select, instead of switching
+      the currently displayed species.
+      @event open-map-species
+      @arg {String} `species`
     -->
     <FlatmapVuer
       v-for="(item, key) in speciesList"
@@ -328,6 +346,20 @@ export default {
      */
     getCurrentFlatmap: function () {
       return this.$refs[this.activeSpecies][0];
+    },
+    /**
+     * @public
+     * Function to request opening the given species in a new view/panel,
+     * leaving the currently displayed species unchanged.
+     * @arg {String} `species`
+     */
+    openSpeciesInNewView: function (species) {
+      /**
+       * This event is emitted when the user chooses to open a species
+       * in a new view/panel instead of switching the current one.
+       * @arg species
+       */
+      this.$emit('open-map-species', species);
     },
     /**
      * @public
@@ -963,8 +995,40 @@ export default {
   }
 }
 
+.option-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+
+  &:hover {
+    .open-new-view-chip {
+      opacity: 1;
+    }
+  }
+}
+
+.open-new-view-chip {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: $app-primary-color;
+  color: #fff;
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    background-color: #ac76c5;
+  }
+}
+
 .flatmap-dropdown {
-  min-width: 160px !important;
+  min-width: 220px !important;
   .el-select-dropdown__item {
     white-space: nowrap;
     text-align: left;
