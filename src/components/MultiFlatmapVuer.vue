@@ -1035,13 +1035,15 @@ export default {
 .option-label {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
   width: 100%;
 }
 
 .option-title {
   flex: 1;
   min-width: 0;
+  padding: 0 8px;
+  cursor: pointer;
 }
 
 .open-new-view-button {
@@ -1053,6 +1055,7 @@ export default {
   width: 24px;
   height: 24px;
   padding: 0;
+  margin-right: 8px;
   border: 1px solid transparent;
   border-radius: 4px;
   background-color: transparent;
@@ -1063,11 +1066,6 @@ export default {
     background-color 0.2s ease,
     border-color 0.2s ease;
 
-  .el-select-dropdown__item.is-hovering &,
-  .el-select-dropdown__item:hover & {
-    color: $app-primary-color;
-  }
-
   &:hover,
   &:focus-visible {
     color: $app-primary-color;
@@ -1077,11 +1075,18 @@ export default {
   }
 }
 
-.flatmap-dropdown {
-  min-width: 220px !important;
+:deep(.flatmap-dropdown) {
   .el-select-dropdown__item {
     white-space: nowrap;
     text-align: left;
+    padding: 0;
+
+    &.is-hovering,
+    &:hover {
+      color: $app-primary-color;
+      cursor: default;
+    }
+
     &.selected {
       color: $app-primary-color;
       font-weight: normal;
