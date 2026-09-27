@@ -15,6 +15,7 @@
         <template #reference>
           <el-select
             id="flatmap-select"
+            ref="speciesSelect"
             :teleported="false"
             v-model="activeSpecies"
             placeholder="Select"
@@ -24,19 +25,53 @@
           >
             <el-option v-for="(item, key) in speciesList" :key="key" :label="key" :value="key">
               <span class="option-label">
-                <span class="option-title">
-                  <span class="select-box-icon">
-                    <i :class="item.iconClass"></i>
-                  </span>
-                  {{ key }}
-                </span>
-                <span
-                  v-if="enableOpenMapUI"
-                  class="open-new-view-chip"
-                  @click.stop="openSpeciesInNewView(key)"
+                <el-tooltip
+                  :content="
+                    activeSpecies === key ? `Currently viewing ${key}` : `Change species to ${key}`
+                  "
+                  placement="top"
+                  effect="light"
+                  :show-after="200"
+                  popper-class="flatmap-species-option-tooltip"
                 >
-                  Open new view
-                </span>
+                  <span class="option-title">
+                    <span class="select-box-icon">
+                      <i :class="item.iconClass"></i>
+                    </span>
+                    {{ key }}
+                  </span>
+                </el-tooltip>
+                <el-tooltip
+                  v-if="enableOpenMapUI"
+                  :content="`Open ${key} in a new view`"
+                  placement="top"
+                  effect="light"
+                  :show-after="200"
+                  popper-class="flatmap-open-new-view-tooltip"
+                >
+                  <button
+                    type="button"
+                    class="open-new-view-button"
+                    :aria-label="`Open ${key} in a new view`"
+                    @click.stop="openSpeciesInNewView(key)"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="14"
+                      height="14"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <rect x="8" y="8" width="13" height="13" rx="2" />
+                      <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+                      <path d="M14.5 11.5v6M11.5 14.5h6" />
+                    </svg>
+                  </button>
+                </el-tooltip>
               </span>
             </el-option>
           </el-select>
@@ -354,6 +389,8 @@ export default {
      * @arg {String} `species`
      */
     openSpeciesInNewView: function (species) {
+      // Close the dropdown as the species opens in another view
+      this.$refs.speciesSelect?.blur();
       /**
        * This event is emitted when the user chooses to open a species
        * in a new view/panel instead of switching the current one.
@@ -1000,30 +1037,43 @@ export default {
   align-items: center;
   gap: 8px;
   width: 100%;
-
-  &:hover {
-    .open-new-view-chip {
-      opacity: 1;
-    }
-  }
 }
 
-.open-new-view-chip {
+.option-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.open-new-view-button {
   flex-shrink: 0;
   margin-left: auto;
-  padding: 2px 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid transparent;
   border-radius: 4px;
-  background-color: $app-primary-color;
-  color: #fff;
-  font-size: 10px;
-  line-height: 14px;
-  white-space: nowrap;
+  background-color: transparent;
+  color: #909399;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 
-  &:hover {
-    background-color: #ac76c5;
+  .el-select-dropdown__item.is-hovering &,
+  .el-select-dropdown__item:hover & {
+    color: $app-primary-color;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $app-primary-color;
+    background-color: #f3ecf6;
+    border-color: $app-primary-color;
+    outline: none;
   }
 }
 
@@ -1066,5 +1116,21 @@ export default {
 <style lang="scss">
 .multi-container {
   --el-color-primary: #8300bf;
+}
+
+.el-popper.flatmap-open-new-view-tooltip,
+.el-popper.flatmap-species-option-tooltip {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: rgb(48, 49, 51);
+  background-color: #f3ecf6;
+  border: 1px solid $app-primary-color;
+  white-space: nowrap;
+  font-family: $font-family;
+
+  .el-popper__arrow::before {
+    background-color: #f3ecf6;
+    border-color: $app-primary-color;
+  }
 }
 </style>
