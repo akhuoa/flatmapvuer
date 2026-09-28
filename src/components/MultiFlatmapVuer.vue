@@ -26,9 +26,8 @@
             <el-option v-for="(item, key) in speciesList" :key="key" :label="key" :value="key">
               <span class="option-label">
                 <el-tooltip
-                  :content="
-                    activeSpecies === key ? `Currently viewing ${key}` : `Change species to ${key}`
-                  "
+                  v-if="activeSpecies !== key"
+                  :content="`Change species to ${key}`"
                   placement="top"
                   effect="light"
                   :show-after="200"
@@ -41,6 +40,12 @@
                     {{ key }}
                   </span>
                 </el-tooltip>
+                <span v-else class="option-title">
+                  <span class="select-box-icon">
+                    <i :class="item.iconClass"></i>
+                  </span>
+                  {{ key }}
+                </span>
                 <el-tooltip
                   v-if="enableOpenMapUI"
                   :content="`Open ${key} in a new view`"
