@@ -40,7 +40,7 @@
                     {{ key }}
                   </span>
                 </el-tooltip>
-                <span v-else class="option-title">
+                <span v-else class="option-title active-species">
                   <span class="select-box-icon">
                     <i :class="item.iconClass"></i>
                   </span>
@@ -1049,6 +1049,10 @@ export default {
   min-width: 0;
   padding: 0 8px;
   cursor: pointer;
+
+  &.active-species {
+    cursor: default;
+  }
 }
 
 .open-new-view-button {
