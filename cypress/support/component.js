@@ -14,28 +14,27 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import './commands'
+import './commands';
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 
-import { mount } from 'cypress/vue'
+import { mount } from 'cypress/vue';
 import { addCompareSnapshotCommand } from 'cypress-visual-regression/dist/command';
 
 addCompareSnapshotCommand({
   capture: 'fullPage', // cypress screenshot option
   errorThreshold: 0.5, // plugin threshold option
   pixelmatchOptions: {
-    threshold: 0.1 // pixelmatch threshold option
-  }
-})
+    threshold: 0.1, // pixelmatch threshold option
+  },
+});
 
 Cypress.Commands.add('mount', (...args) => {
   return mount(...args).then(({ wrapper }) => {
-    return cy.wrap(wrapper).as('vue')
-  })
-})
-
+    return cy.wrap(wrapper).as('vue');
+  });
+});
 
 // Example use:
 // cy.mount(MyComponent)

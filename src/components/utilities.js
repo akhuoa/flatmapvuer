@@ -1,6 +1,5 @@
-const capitalise = term => {
-  if (term)
-    return term.charAt(0).toUpperCase() + term.slice(1);
+const capitalise = (term) => {
+  if (term) return term.charAt(0).toUpperCase() + term.slice(1);
   return term;
 };
 
@@ -38,7 +37,4 @@ const normaliseAlertToStringArray = (value) => {
   return [];
 };
 
-export {
-  capitalise,
-  normaliseAlertToStringArray,
-};
+export { capitalise, normaliseAlertToStringArray };
