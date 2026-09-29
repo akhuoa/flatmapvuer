@@ -22,12 +22,7 @@
             popper-class="flatmap-dropdown"
             @change="setSpecies"
           >
-            <el-option
-              v-for="(item, key) in speciesList"
-              :key="key"
-              :label="key"
-              :value="key"
-            >
+            <el-option v-for="(item, key) in speciesList" :key="key" :label="key" :value="key">
               <span class="select-box-icon">
                 <i :class="item.iconClass"></i>
               </span>
@@ -35,7 +30,6 @@
             </el-option>
           </el-select>
         </template>
-
       </el-popover>
     </div>
     <!--
@@ -83,7 +77,7 @@
       @shown-tooltip="onTooltipShown"
       @shown-map-tooltip="onMapTooltipShown"
       :renderAtMounted="renderAtMounted"
-      :render="render && (activeSpecies == key)"
+      :render="render && activeSpecies == key"
       :displayMinimap="displayMinimap"
       :showStarInLegend="showStarInLegend"
       style="height: 100%"
@@ -103,18 +97,10 @@
 </template>
 
 <script>
-/* eslint-disable no-alert, no-console */
-import { markRaw } from 'vue'
-import EventBus from './EventBus'
-import FlatmapVuer from './FlatmapVuer.vue'
-import flatmap from '../services/flatmapLoader.js'
-import {
-  ElCol as Col,
-  ElOption as Option,
-  ElSelect as Select,
-  ElRow as Row,
-  ElPopover as Popover,
-} from 'element-plus'
+import { markRaw } from 'vue';
+import EventBus from './EventBus';
+import FlatmapVuer from './FlatmapVuer.vue';
+import flatmap from '../services/flatmapLoader.js';
 
 const TAXON_UUID = {
   'NCBITaxon:10114': '01fedbf9-d783-509c-a10c-827941ab13da',
@@ -122,7 +108,7 @@ const TAXON_UUID = {
   'NCBITaxon:9606': '42ed6323-f645-5fbe-bada-9581819cf689',
   'NCBITaxon:10090': '25285fab-48a0-5620-a6a0-f9a0374837d5',
   'NCBITaxon:9685': '73060497-46a6-52bf-b975-cac511c127cb',
-}
+};
 
 /**
  * A vue component to show a flatmap from the list of multiple flatmap data.
@@ -130,21 +116,16 @@ const TAXON_UUID = {
 export default {
   name: 'MultiFlatmapVuer',
   components: {
-    Col,
-    Row,
-    Option,
-    Select,
-    Popover,
     FlatmapVuer,
   },
   created: function () {
     this.loadMapManager();
   },
   mounted: function () {
-    this.initialise()
+    this.initialise();
     EventBus.on('onActionClick', (action) => {
-      this.resourceSelected(action)
-    })
+      this.resourceSelected(action);
+    });
     EventBus.on('open-pubmed-url', (url) => {
       /**
        * This event is emitted when the user clicks
@@ -166,12 +147,12 @@ export default {
       return new Promise((resolve) => {
         if (this.requireInitialisation) {
           //It has not been initialised yet
-          this.requireInitialisation = false
+          this.requireInitialisation = false;
           const controller = new AbortController();
           const signal = controller.signal;
           const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-          fetch(this.flatmapAPI, {signal})
+          fetch(this.flatmapAPI, { signal })
             .then((response) => {
               if (!response.ok) {
                 // HTTP-level errors
@@ -181,7 +162,7 @@ export default {
                   this.multiflatmapError['messages'] = [
                     `Sorry, the component could not be loaded because the specified
                     flatmap API endpoint is incorrect. Please check the endpoint URL
-                    or contact support if the problem persists.`
+                    or contact support if the problem persists.`,
                   ];
                   this.initialised = true;
                   resolve();
@@ -191,7 +172,7 @@ export default {
                 }
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
               }
-              return response.json()
+              return response.json();
             })
             .then((data) => {
               // Application-level 404 in a 200 response
@@ -202,7 +183,7 @@ export default {
                 this.multiflatmapError['messages'] = [
                   `Sorry, the component could not be loaded because the specified
                   flatmap API endpoint is incorrect. Please check the endpoint URL
-                  or contact support if the problem persists.`
+                  or contact support if the problem persists.`,
                 ];
 
                 this.initialised = true;
@@ -213,87 +194,79 @@ export default {
               //Check each key in the provided availableSpecies against the one
               Object.keys(this.availableSpecies).forEach((key) => {
                 // FIrst look through the uuid
-                const uuid = this.availableSpecies[key].uuid
+                const uuid = this.availableSpecies[key].uuid;
                 if (uuid && data.length && data.map((e) => e.uuid).indexOf(uuid) > 0) {
-                  this.speciesList[key] = this.availableSpecies[key]
+                  this.speciesList[key] = this.availableSpecies[key];
                 } else {
                   for (let i = 0; i < data.length; i++) {
                     if (this.availableSpecies[key].taxo === data[i].taxon) {
                       if (this.availableSpecies[key].biologicalSex) {
                         if (
                           data[i].biologicalSex &&
-                          data[i].biologicalSex ===
-                            this.availableSpecies[key].biologicalSex
+                          data[i].biologicalSex === this.availableSpecies[key].biologicalSex
                         ) {
-                          this.speciesList[key] = this.availableSpecies[key]
-                          break
+                          this.speciesList[key] = this.availableSpecies[key];
+                          break;
                         }
                       } else {
-                        this.speciesList[key] = this.availableSpecies[key]
-                        break
+                        this.speciesList[key] = this.availableSpecies[key];
+                        break;
                       }
                     }
                   }
                 }
-              })
+              });
               //Use the state species if it does not have any other species information
-              let species = this.initial
+              let species = this.initial;
               if (this.state) {
-                const mapState = this.state.state
-                if (
-                  (!mapState || (!mapState.uuid && !mapState.entry)) &&
-                  this.state.species
-                )
-                  species = this.state.species
-                else species = undefined
+                const mapState = this.state.state;
+                if ((!mapState || (!mapState.uuid && !mapState.entry)) && this.state.species)
+                  species = this.state.species;
+                else species = undefined;
               }
               if (species) {
                 //No state resuming, set the current flatmap to {this.initial}
                 if (species && this.speciesList[species] !== undefined) {
-                  this.activeSpecies = species
+                  this.activeSpecies = species;
                 } else {
-                  this.activeSpecies = Object.keys(this.speciesList)[0]
+                  this.activeSpecies = Object.keys(this.speciesList)[0];
                 }
-                this.setSpecies(
-                  this.activeSpecies,
-                  this.state ? this.state.state : undefined,
-                  5
-                )
+                this.setSpecies(this.activeSpecies, this.state ? this.state.state : undefined, 5);
               }
-              this.initialised = true
-              resolve()
+              this.initialised = true;
+              resolve();
               //Resolve all other promises resolve in the list
               this.resolveList.forEach((other) => {
-                other()
-              })
+                other();
+              });
             })
             .catch((error) => {
               if (error && error.handled) return;
-              console.error('Error fetching flatmap:', error)
+              console.error('Error fetching flatmap:', error);
               this.initialised = true;
               this.multiflatmapError = {};
               this.multiflatmapError['title'] = 'MultiFlatmap Error!';
               this.multiflatmapError['messages'] = [
                 `Sorry, the component could not be loaded due to an unexpected error.
-                Please try again later or contact support if the problem persists.`
+                Please try again later or contact support if the problem persists.`,
               ];
-              resolve()
+              resolve();
               //Resolve all other promises resolve in the list
               this.resolveList.forEach((other) => {
-                other()
-              })
+                other();
+              });
             })
             .finally(() => {
               clearTimeout(timeoutId);
             });
         } else if (this.initialised) {
           //resolve as it has been initialised
-          resolve()
+          resolve();
         } else {
           //resolve when the async initialisation is finished
-          this.resolveList.push(resolve)
+          this.resolveList.push(resolve);
         }
-      })
+      });
     },
     /**
      * Function to load `mapManager` to create flatmap.
@@ -303,7 +276,9 @@ export default {
         if (this.mapManager) {
           this.mapManagerRef = this.mapManager;
         } else {
-          this.mapManagerRef = markRaw(new flatmap.MapViewer(this.flatmapAPI, { container: undefined }));
+          this.mapManagerRef = markRaw(
+            new flatmap.MapViewer(this.flatmapAPI, { container: undefined }),
+          );
           /**
            * The event emitted after a new mapManager is loaded.
            * This mapManager can be used to create new flatmaps.
@@ -317,23 +292,23 @@ export default {
      * Function to emit ``resource-selected`` event with provided ``resource``.
      * @arg {Object} `action`
      */
-     resourceSelected: function (action) {
+    resourceSelected: function (action) {
       /**
        * This event is emitted by ``resourceSelected`` method.
        */
-      this.$emit('resource-selected', action)
+      this.$emit('resource-selected', action);
     },
     /**
      * @public
      * Function to emit ``context-restored`` event after the flatmap is restored.
      * @arg {Object} `component`
      */
-     onContextRestored: function (component) {
+    onContextRestored: function (component) {
       /**
        * This event is emitted by ``ContextRestore`` method after the flatmap is restored.
        * @arg component
        */
-       this.$emit('context-restored', component)
+      this.$emit('context-restored', component);
     },
     /**
      * @public
@@ -345,14 +320,14 @@ export default {
        * This event is emitted by ``FlatmapReady`` method after the flatmap is loaded.
        * @arg component
        */
-      this.$emit('ready', component)
+      this.$emit('ready', component);
     },
     /**
      * @public
      * Function to get the current active map.
      */
     getCurrentFlatmap: function () {
-      return this.$refs[this.activeSpecies][0]
+      return this.$refs[this.activeSpecies][0];
     },
     /**
      * @public
@@ -365,7 +340,7 @@ export default {
        * The event emitted by ``panZoomCallback`` method.
        * @arg payload
        */
-      this.$emit('pan-zoom-callback', payload)
+      this.$emit('pan-zoom-callback', payload);
     },
     onAnnotationClose: function () {
       this.$emit('annotation-close');
@@ -399,8 +374,8 @@ export default {
      * @arg {Object} `options`
      */
     showPopup: function (featureId, node, options) {
-      let map = this.getCurrentFlatmap()
-      map.showPopup(featureId, node, options)
+      let map = this.getCurrentFlatmap();
+      map.showPopup(featureId, node, options);
     },
     /**
      * @public
@@ -410,8 +385,8 @@ export default {
      * @arg {Object} `options`
      */
     showMarkerPopup: function (featureId, node, options) {
-      let map = this.getCurrentFlatmap()
-      map.showMarkerPopup(featureId, node, options)
+      let map = this.getCurrentFlatmap();
+      map.showMarkerPopup(featureId, node, options);
     },
     /**
      * @public
@@ -424,20 +399,20 @@ export default {
      */
     setSpecies: function (species, state, numberOfRetry) {
       if (this.$refs && species in this.$refs) {
-        this.activeSpecies = species
-        this.$refs[this.activeSpecies][0].createFlatmap(state)
+        this.activeSpecies = species;
+        this.$refs[this.activeSpecies][0].createFlatmap(state);
         /**
          * This event is emitted by ``setSpecies`` method.
          * Emitted on first load and when user changes species.
          * @arg activeSpecies
          */
-        this.$emit('flatmapChanged', this.activeSpecies)
+        this.$emit('flatmapChanged', this.activeSpecies);
       } else if (numberOfRetry) {
-        const retry = numberOfRetry - 1
+        const retry = numberOfRetry - 1;
         if (retry >= 0) {
           this.$nextTick(() => {
-            this.setSpecies(species, state, retry)
-          })
+            this.setSpecies(species, state, retry);
+          });
         }
       }
     },
@@ -449,16 +424,16 @@ export default {
      * @private
      */
     viewLatestMap: function (state) {
-      const keys = Object.keys(this.speciesList)
+      const keys = Object.keys(this.speciesList);
       for (let i = 0; i < keys.length; i++) {
-        const species = this.speciesList[keys[i]]
+        const species = this.speciesList[keys[i]];
         if (
           !species.isLegacy &&
           species.taxo === state.entry &&
           species.biologicalSex === state.biologicalSex
         ) {
-          this.setSpecies(keys[i], state, 0)
-          return
+          this.setSpecies(keys[i], state, 0);
+          return;
         }
       }
     },
@@ -471,16 +446,16 @@ export default {
      */
     createLegacyEntry: function (state, taxo, uuid) {
       if (uuid && taxo) {
-        let name = 'Legacy'
+        let name = 'Legacy';
         if (state.species) {
-          if (state.species.slice(0, 6) === 'Legacy') name = state.species
-          else name = name + ` ${state.species}`
+          if (state.species.slice(0, 6) === 'Legacy') name = state.species;
+          else name = name + ` ${state.species}`;
         }
         this.speciesList[name] = {
           taxo: taxo,
           isLegacy: true,
           displayWarning: true,
-        }
+        };
         return {
           species: name,
           state: {
@@ -489,7 +464,7 @@ export default {
             viewport: state.state.viewport,
             searchTerm: state.state.searchTerm,
           },
-        }
+        };
       }
     },
     /**
@@ -502,52 +477,40 @@ export default {
     updateState: function (state) {
       return new Promise((resolve) => {
         if (state && state.state) {
-          const mapState = state.state
+          const mapState = state.state;
           //uuid is not in the state, this is a legacy map
           if (!mapState.uuid) {
             if (mapState.entry) {
-              const uuid =
-                mapState.entry in TAXON_UUID
-                  ? TAXON_UUID[mapState.entry]
-                  : undefined
-              const newState = this.createLegacyEntry(
-                state,
-                mapState.entry,
-                uuid
-              )
-              resolve(newState ? newState : state)
+              const uuid = mapState.entry in TAXON_UUID ? TAXON_UUID[mapState.entry] : undefined;
+              const newState = this.createLegacyEntry(state, mapState.entry, uuid);
+              resolve(newState ? newState : state);
             }
           } else if (mapState.entry) {
             //uuid is in the state but should be checked if it is the latest map
             //for that taxon
             return new Promise(() => {
               //mapManager.findMap_ is an async function so we need to wrap this with a promise
-              const identifier = { taxon: mapState.entry }
-              if (mapState.biologicalSex)
-                identifier['biologicalSex'] = mapState.biologicalSex
+              const identifier = { taxon: mapState.entry };
+              if (mapState.biologicalSex) identifier['biologicalSex'] = mapState.biologicalSex;
               this.mapManagerRef
                 .findMap(identifier)
                 .then((map) => {
                   if (map.uuid !== mapState.uuid) {
-                    return this.createLegacyEntry(
-                      state,
-                      mapState.entry,
-                      mapState.uuid
-                    )
+                    return this.createLegacyEntry(state, mapState.entry, mapState.uuid);
                   }
                 })
                 .then((newState) => {
-                  resolve(newState ? newState : state)
+                  resolve(newState ? newState : state);
                 })
                 .catch(() => {
-                  resolve(state)
-                })
-            })
+                  resolve(state);
+                });
+            });
           }
           //Create a new state and add the legacy map to the select
         }
-        resolve(state)
-      })
+        resolve(state);
+      });
     },
     /**
      * @public
@@ -558,10 +521,10 @@ export default {
       let state = {
         species: this.activeSpecies,
         state: undefined,
-      }
-      let map = this.getCurrentFlatmap()
-      state.state = map.getState()
-      return state
+      };
+      let map = this.getCurrentFlatmap();
+      state.state = map.getState();
+      return state;
     },
     /**
      * @public
@@ -577,17 +540,14 @@ export default {
         //Update state if required
         this.updateState(state).then((currentState) => {
           this.initialise().then(() => {
-            if (
-              currentState.species &&
-              currentState.species !== this.activeSpecies
-            ) {
-              this.setSpecies(currentState.species, currentState.state, 5)
+            if (currentState.species && currentState.species !== this.activeSpecies) {
+              this.setSpecies(currentState.species, currentState.state, 5);
             } else if (currentState.state) {
-              let map = this.getCurrentFlatmap()
-              map.setState(currentState.state)
+              let map = this.getCurrentFlatmap();
+              map.setState(currentState.state);
             }
-          })
-        })
+          });
+        });
       }
     },
     /**
@@ -596,10 +556,7 @@ export default {
      * @arg {Number} `index`
      */
     activateTooltipByIndex: function (index) {
-      return (
-        index === this.helpModeActiveItem
-        && this.helpMode
-      );
+      return index === this.helpModeActiveItem && this.helpMode;
     },
     /**
      * @public
@@ -637,9 +594,9 @@ export default {
      * @arg {String} `modeName`
      */
     changeViewingMode: function (modeName) {
-      let map = this.getCurrentFlatmap()
+      let map = this.getCurrentFlatmap();
       if (map) {
-        map.changeViewingMode(modeName)
+        map.changeViewingMode(modeName);
       }
     },
     setConnectionType: function (type) {
@@ -812,7 +769,7 @@ export default {
             iconClass: 'mapicon-icon_cat',
             displayWarning: true,
           },
-        }
+        };
       },
     },
     /**
@@ -861,7 +818,7 @@ export default {
     /**
      * The option to show connectivity information in sidebar
      */
-     annotationSidebar: {
+    annotationSidebar: {
       type: Boolean,
       default: false,
     },
@@ -893,7 +850,7 @@ export default {
     externalLegends: {
       type: Array,
       default: function () {
-        return []
+        return [];
       },
     },
     /**
@@ -914,12 +871,12 @@ export default {
       initialised: false,
       mapManagerRef: undefined,
       multiflatmapError: null,
-    }
+    };
   },
   watch: {
     state: {
       handler: function (state) {
-        this.setState(state)
+        this.setState(state);
       },
       immediate: true,
       deep: true,
@@ -927,12 +884,12 @@ export default {
     activeSpecies: {
       handler: function (value, oldValue) {
         if (oldValue) {
-          this.$refs[oldValue][0].forceContextLoss()
+          this.$refs[oldValue][0].forceContextLoss();
         }
-      }
-    }
+      },
+    },
   },
-}
+};
 </script>
 
 <style lang="scss" scoped>
@@ -989,7 +946,7 @@ export default {
       width: fit-content;
     }
     .el-input {
-      .el-input__wrapper{
+      .el-input__wrapper {
         &is-focus,
         &:focus {
           border: 1px solid $app-primary-color;
@@ -1043,9 +1000,7 @@ export default {
 </style>
 
 <style lang="scss">
-
 .multi-container {
-  --el-color-primary: #8300BF;
+  --el-color-primary: #8300bf;
 }
-
 </style>

@@ -1,11 +1,12 @@
-import path from "path";
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import path from 'path';
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import AutoImport from 'unplugin-auto-import/vite';
+import Components from 'unplugin-vue-components/vite';
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ command }) => {
   const config = {
     css: {
       preprocessorOptions: {
@@ -20,8 +21,11 @@ export default defineConfig(({ command, mode }) => {
         template: {
           compilerOptions: {
             isCustomElement: (tag) => ['bx:grid'].includes(tag),
-          }
-        }
+          },
+        },
+      }),
+      AutoImport({
+        resolvers: [ElementPlusResolver()],
       }),
       Components({
         // allow auto load markdown components under `./src/components/`
@@ -35,52 +39,47 @@ export default defineConfig(({ command, mode }) => {
         ],
         dts: 'src/components.d.ts',
       }),
-
-      // https://github.com/antfu/unocss
-      // see unocss.config.ts for config
     ],
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname, './src'),
-      }
+      },
     },
     build: {
       lib: {
-        entry: path.resolve(import.meta.dirname, "./src/components/index.js"),
-        name: "FlatmapVuer",
+        entry: path.resolve(import.meta.dirname, './src/components/index.js'),
+        name: 'FlatmapVuer',
         fileName: 'flatmapvuer',
       },
       rollupOptions: {
         external: [
-          "vue",
-          "@abi-software/sparc-annotation",
-          "@abi-software/svg-sprite",
-          "@abi-software/map-utilities",
-          "@element-plus/icons-vue",
-          "pinia",
-          "@abi-software/svg-sprite/dist/style.css",
-          "@abi-software/map-utilities/dist/style.css"
+          'vue',
+          '@abi-software/sparc-annotation',
+          '@abi-software/svg-sprite',
+          '@abi-software/map-utilities',
+          '@element-plus/icons-vue',
+          'pinia',
+          '@abi-software/svg-sprite/dist/style.css',
+          '@abi-software/map-utilities/dist/style.css',
         ],
         output: {
           globals: {
-            vue: "Vue",
-            "@abi-software/sparc-annotation": "@abi-software/sparc-annotation",
-            "@abi-software/svg-sprite": "@abi-software/svg-sprite",
-            "@abi-software/map-utilities": "@abi-software/map-utilities",
-            "@element-plus/icons-vue": "@element-plus/icons-vue",
-            "pinia": "pinia"
+            vue: 'Vue',
+            '@abi-software/sparc-annotation': '@abi-software/sparc-annotation',
+            '@abi-software/svg-sprite': '@abi-software/svg-sprite',
+            '@abi-software/map-utilities': '@abi-software/map-utilities',
+            '@element-plus/icons-vue': '@element-plus/icons-vue',
+            pinia: 'pinia',
           },
           // keep css output name stable for the "./dist/style.css" export/import paths
           assetFileNames: (assetInfo) =>
-            assetInfo.name?.endsWith(".css")
-              ? "style.css"
-              : "assets/[name][extname]",
+            assetInfo.name?.endsWith('.css') ? 'style.css' : 'assets/[name][extname]',
         },
       },
     },
     optimizeDeps: {
-      entries: ['./cypress/*']
-    }
+      entries: ['./cypress/*'],
+    },
   };
 
   if (command === 'serve') {
@@ -89,4 +88,4 @@ export default defineConfig(({ command, mode }) => {
     };
   }
   return config;
-})
+});

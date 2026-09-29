@@ -35,50 +35,50 @@ export default {
       default: () => ({}),
     },
   },
-}
+};
 </script>
 
 <style lang="scss" scoped>
-  .flatmap-error {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    gap: 1rem;;
-  }
+.flatmap-error {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
+}
 
-  .flatmap-error-title {
-    font-size: 18px;
-    text-align: center;
-  }
+.flatmap-error-title {
+  font-size: 18px;
+  text-align: center;
+}
 
-  .flatmap-error-message {
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 1rem;
-    line-height: 20px;
-    border: 1px solid var(--el-border-color);
-    border-radius: var(--el-border-radius-base);
-    max-width: 500px;
-  }
+.flatmap-error-message {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  line-height: 20px;
+  border: 1px solid var(--el-border-color);
+  border-radius: var(--el-border-radius-base);
+  max-width: 500px;
+}
 
-  .el-button--primary.button {
-    font-family: inherit;
+.el-button--primary.button {
+  font-family: inherit;
 
-    &:hover,
-    &:active,
-    &:focus {
-      background: $app-primary-color;
-      border-color: $app-primary-color;
-      box-shadow: 0px 0px 2px 0px rgba(131, 0, 191, 0.5);
-      color: #fff;
-    }
+  &:hover,
+  &:active,
+  &:focus {
+    background: $app-primary-color;
+    border-color: $app-primary-color;
+    box-shadow: 0px 0px 2px 0px rgba(131, 0, 191, 0.5);
+    color: #fff;
   }
+}
 </style>
