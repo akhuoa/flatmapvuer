@@ -1,29 +1,35 @@
-/* eslint-disable no-alert, no-console */
 const ERROR_TOLERANCE = parseFloat(Cypress.expose('ERROR_TOLERANCE'));
 // Ref: flatmap-viewer/src/layers/styling.ts
+// NOTE: style modifications are disabled for now, keep the helpers around
+// eslint-disable-next-line no-unused-vars
 const STROKE_INTERPOLATION = [
   'interpolate',
   ['exponential', 2],
   ['zoom'],
-   2, ["*", ['var', 'width'], ["^", 2,  0.5]],
-   7, ["*", ['var', 'width'], ["^", 2,  1.5]],
-   9, ["*", ['var', 'width'], ["^", 2,  2.0]]
+  2,
+  ['*', ['var', 'width'], ['^', 2, 0.5]],
+  7,
+  ['*', ['var', 'width'], ['^', 2, 1.5]],
+  9,
+  ['*', ['var', 'width'], ['^', 2, 2.0]],
 ];
+// eslint-disable-next-line no-unused-vars
 const LAYERS = [
   {
     id: 'simple-test_pathways_nerve-centreline-edge',
     width: 2,
     color: '#ccc',
-    opacity: 0
+    opacity: 0,
   },
   {
     id: 'simple-test_pathways_nerve-centreline-track',
     width: 2,
     color: '#ccc',
-    opacity: 0.2
+    opacity: 0.2,
   },
 ];
 
+// eslint-disable-next-line no-unused-vars
 const modifyRenderedMap = (mapImp, layers, strokeInterpolation) => {
   const map = mapImp.map;
 
@@ -33,16 +39,11 @@ const modifyRenderedMap = (mapImp, layers, strokeInterpolation) => {
   layers.forEach((layer) => {
     const { id: layerId, width, color, opacity } = layer;
     try {
-      map.setPaintProperty(layerId, 'line-width', [
-        'let',
-        'width',
-        width,
-        strokeInterpolation
-      ]);
+      map.setPaintProperty(layerId, 'line-width', ['let', 'width', width, strokeInterpolation]);
 
       map.setPaintProperty(layerId, 'line-color', color);
       map.setPaintProperty(layerId, 'line-opacity', opacity);
-    } catch (error) {
+    } catch (_error) {
       console.log(`Layer ${layerId} not found or already updated`);
     }
   });
@@ -54,7 +55,6 @@ function is_high_resolution_screen() {
 }
 
 describe('MultiFlatmapVuer Screenshot Comparison', () => {
-
   beforeEach(() => {
     Cypress.expose('visualRegressionBaseDirectory', 'cypress/screenshots/VisualTest.cy.js/base');
     cy.viewport(500, 500);
@@ -67,10 +67,16 @@ describe('MultiFlatmapVuer Screenshot Comparison', () => {
       cy.wrap(modifiedProps).as('develProps');
     });
 
-    const testCanvasPath = is_high_resolution_screen() ? 'test-canvas_hr.png' : 'test-canvas_lr.png';
+    const testCanvasPath = is_high_resolution_screen()
+      ? 'test-canvas_hr.png'
+      : 'test-canvas_lr.png';
     cy.fixture(testCanvasPath).then((baseImage) => {
       // Save the base image to the screenshots folder for comparison
-      cy.writeFile('cypress/screenshots/VisualTest.cy.js/base/cypress/component/VisualTest.cy.js/test-canvas.png', baseImage, 'base64');
+      cy.writeFile(
+        'cypress/screenshots/VisualTest.cy.js/base/cypress/component/VisualTest.cy.js/test-canvas.png',
+        baseImage,
+        'base64',
+      );
     });
   });
 
@@ -84,28 +90,42 @@ describe('MultiFlatmapVuer Screenshot Comparison', () => {
     cy.window().then((win) => {
       const flatmapVuer = win.Cypress.multiFlatmapVuer.getCurrentFlatmap();
       const mapImp = flatmapVuer.mapImp;
-      const flatmapUUID = mapImp.uuid;
+      const _flatmapUUID = mapImp.uuid;
 
       // Wait for the map canvas to appear
-      cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas:visible', { timeout: 30000 }).should('exist');
+      cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas:visible', {
+        timeout: 30000,
+      }).should('exist');
 
+      // eslint-disable-next-line cypress/no-unnecessary-waiting -- allow map render to settle
       cy.wait(1000);
       cy.get('.el-loading-mask', { timeout: 30000 }).should('not.exist');
       // NOTE: disable style modifications for now
       // modifyRenderedMap(mapImp, LAYERS, STROKE_INTERPOLATION); // modify centreline style
+      // eslint-disable-next-line cypress/no-unnecessary-waiting -- allow map render to settle
       cy.wait(2000);
 
       // Take screenshot of viewer canvas
       cy.get('.maplibregl-touch-zoom-rotate > .maplibregl-canvas:visible').as('viewerCanvas');
       // CLI
-      cy.get('@viewerCanvas').screenshot('base/cypress/component/VisualTest.cy.js/viewer-canvas', { overwrite: true })
+      cy.get('@viewerCanvas').screenshot('base/cypress/component/VisualTest.cy.js/viewer-canvas', {
+        overwrite: true,
+      });
       // UI
-      cy.get('@viewerCanvas').screenshot('VisualTest.cy.js/base/cypress/component/VisualTest.cy.js/viewer-canvas', { overwrite: true })
+      cy.get('@viewerCanvas').screenshot(
+        'VisualTest.cy.js/base/cypress/component/VisualTest.cy.js/viewer-canvas',
+        { overwrite: true },
+      );
 
       // Test with saved screenshot from fixture
-      cy.get('@viewerCanvas').compareSnapshot('test-canvas').then(comparisonResults => {
-        expect(comparisonResults.percentage, 'Viewer map should be almost identical.').to.be.lessThan(ERROR_TOLERANCE);
-      });
+      cy.get('@viewerCanvas')
+        .compareSnapshot('test-canvas')
+        .then((comparisonResults) => {
+          expect(
+            comparisonResults.percentage,
+            'Viewer map should be almost identical.',
+          ).to.be.lessThan(ERROR_TOLERANCE);
+        });
 
       // NOTE: disable base map comparison for now
       // Currently, the base map's style are differnt from rendered map in viewer
@@ -158,5 +178,4 @@ describe('MultiFlatmapVuer Screenshot Comparison', () => {
       // });
     });
   });
-
 });

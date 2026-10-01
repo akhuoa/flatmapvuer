@@ -1,3 +1,3 @@
-import mitt from 'mitt'
-const EventBus = new mitt()
-export default EventBus
+import mitt from 'mitt';
+const EventBus = new mitt();
+export default EventBus;
