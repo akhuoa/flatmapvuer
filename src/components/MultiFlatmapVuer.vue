@@ -15,6 +15,7 @@
         <template #reference>
           <el-select
             id="flatmap-select"
+            ref="speciesSelect"
             :teleported="false"
             v-model="activeSpecies"
             placeholder="Select"
@@ -23,10 +24,60 @@
             @change="setSpecies"
           >
             <el-option v-for="(item, key) in speciesList" :key="key" :label="key" :value="key">
-              <span class="select-box-icon">
-                <i :class="item.iconClass"></i>
+              <span class="option-label">
+                <el-tooltip
+                  v-if="activeSpecies !== key"
+                  :content="`Change species to ${key}`"
+                  placement="top"
+                  effect="light"
+                  :show-after="200"
+                  popper-class="flatmap-species-option-tooltip"
+                >
+                  <span class="option-title">
+                    <span class="select-box-icon">
+                      <i :class="item.iconClass"></i>
+                    </span>
+                    {{ key }}
+                  </span>
+                </el-tooltip>
+                <span v-else class="option-title active-species">
+                  <span class="select-box-icon">
+                    <i :class="item.iconClass"></i>
+                  </span>
+                  {{ key }}
+                </span>
+                <el-tooltip
+                  v-if="enableOpenMapUI"
+                  :content="`Open ${key} in a new view`"
+                  placement="top"
+                  effect="light"
+                  :show-after="200"
+                  popper-class="flatmap-open-new-view-tooltip"
+                >
+                  <button
+                    type="button"
+                    class="open-new-view-button"
+                    :aria-label="`Open ${key} in a new view`"
+                    @click.stop="openSpeciesInNewView(key)"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="14"
+                      height="14"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <rect x="8" y="8" width="13" height="13" rx="2" />
+                      <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+                      <path d="M14.5 11.5v6M11.5 14.5h6" />
+                    </svg>
+                  </button>
+                </el-tooltip>
               </span>
-              {{ key }}
             </el-option>
           </el-select>
         </template>
@@ -37,6 +88,13 @@
       from ``openMapOptions`` props.
       @event open-map
       @arg {Object} `$event`
+    -->
+    <!--
+      This event is emitted when the user chooses to open a species
+      in a new view/panel from the species select, instead of switching
+      the currently displayed species.
+      @event open-map-species
+      @arg {String} `species`
     -->
     <FlatmapVuer
       v-for="(item, key) in speciesList"
@@ -328,6 +386,22 @@ export default {
      */
     getCurrentFlatmap: function () {
       return this.$refs[this.activeSpecies][0];
+    },
+    /**
+     * @public
+     * Function to request opening the given species in a new view/panel,
+     * leaving the currently displayed species unchanged.
+     * @arg {String} `species`
+     */
+    openSpeciesInNewView: function (species) {
+      // Close the dropdown as the species opens in another view
+      this.$refs.speciesSelect?.blur();
+      /**
+       * This event is emitted when the user chooses to open a species
+       * in a new view/panel instead of switching the current one.
+       * @arg species
+       */
+      this.$emit('open-map-species', species);
     },
     /**
      * @public
@@ -963,11 +1037,65 @@ export default {
   }
 }
 
-.flatmap-dropdown {
-  min-width: 160px !important;
+.option-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.option-title {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px;
+  cursor: pointer;
+
+  &.active-species {
+    cursor: default;
+  }
+}
+
+.open-new-view-button {
+  flex-shrink: 0;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin-right: 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background-color: transparent;
+  color: #909399;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: $app-primary-color;
+    background-color: #f3ecf6;
+    border-color: $app-primary-color;
+    outline: none;
+  }
+}
+
+:deep(.flatmap-dropdown) {
   .el-select-dropdown__item {
     white-space: nowrap;
     text-align: left;
+    padding: 0;
+
+    &.is-hovering,
+    &:hover {
+      color: $app-primary-color;
+      cursor: default;
+    }
+
     &.selected {
       color: $app-primary-color;
       font-weight: normal;
@@ -1002,5 +1130,21 @@ export default {
 <style lang="scss">
 .multi-container {
   --el-color-primary: #8300bf;
+}
+
+.el-popper.flatmap-open-new-view-tooltip,
+.el-popper.flatmap-species-option-tooltip {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: rgb(48, 49, 51);
+  background-color: #f3ecf6;
+  border: 1px solid $app-primary-color;
+  white-space: nowrap;
+  font-family: $font-family;
+
+  .el-popper__arrow::before {
+    background-color: #f3ecf6;
+    border-color: $app-primary-color;
+  }
 }
 </style>
