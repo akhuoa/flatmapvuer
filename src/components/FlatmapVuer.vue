@@ -557,6 +557,7 @@ import { capitalise, normaliseAlertToStringArray } from './utilities.js';
 import yellowstar from '../icons/yellowstar';
 import ResizeSensor from 'css-element-queries/src/ResizeSensor';
 import flatmap from '../services/flatmapLoader.js';
+import { attachSomaLocationMarkerMethods } from '../services/somaLocationMarkers.js';
 import { AnnotationService } from '@abi-software/sparc-annotation';
 import { mapState } from 'pinia';
 import { useMainStore } from '@/store/index';
@@ -2786,7 +2787,7 @@ export default {
         });
         promise1
           .then((returnedObject) => {
-            this.mapImp = returnedObject;
+            this.mapImp = attachSomaLocationMarkerMethods(returnedObject);
             this.serverURL = this.mapImp.makeServerUrl('').slice(0, -1);
             let mapVersion = this.mapImp.details.version;
             this.setFlightPathInfo(mapVersion);
