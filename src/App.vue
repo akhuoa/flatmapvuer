@@ -247,6 +247,9 @@ export default {
           taxo: 'UBERON:0001759',
           uuid: '0ea568ec-538d-52f3-a8e7-0437d844e1cf',
         },
+        FC: {
+          uuid: '0525bdec-ce68-5230-b10e-bdde3269e55f',
+        },
         Sample: { taxo: 'NCBITaxon:1', displayWarning: true },
         'Functional Connectivity': {
           taxo: 'FunctionalConnectivity',
@@ -273,8 +276,8 @@ export default {
       mapSettings: [],
       //flatmapAPI: "https://mapcore-demo.org/current/flatmap/v2/"
       //flatmapAPI: "https://mapcore-demo.org/devel/flatmap/v3/"
-      //flatmapAPI: "https://mapcore-demo.org/current/flatmap/v3/",
-      flatmapAPI: 'https://mapcore-demo.org/devel/flatmap/v4/',
+      flatmapAPI: "https://mapcore-demo.org/current/flatmap/v3/",
+      //flatmapAPI: 'https://mapcore-demo.org/devel/flatmap/v4/',
       //flatmapAPI: 'https://mapcore-demo.org/curation/flatmap/',
       //flatmapAPI: "https://mapcore-demo.org/fccb/flatmap/"
       //flatmapAPI: "https://mapcore-demo.org/staging/flatmap/v1/"
