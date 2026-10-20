@@ -19,7 +19,12 @@
           ref="featuredMarkerPopover"
         >
           <template #reference>
-            <div v-popover:featuredMarkerPopover @mouseover="onMouseOver" @mouseout="onMouseOut">
+            <div
+              v-popover:featuredMarkerPopover
+              data-help-id="featured-marker"
+              @mouseover="onMouseOver"
+              @mouseout="onMouseOut"
+            >
               <LegendItem
                 :item="item"
                 :identifierKey="identifierKey"

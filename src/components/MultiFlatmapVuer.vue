@@ -389,6 +389,23 @@ export default {
     },
     /**
      * @public
+     * Function to get the help mode tour steps of this component and the current flatmap,
+     * to be used with ``HelpModeTour`` from ``@abi-software/map-utilities``.
+     * @returns {Array} The list of help steps.
+     */
+    getHelpModeSteps: function () {
+      const speciesStep = {
+        id: 'multiflatmap-species-select',
+        title: 'Select a species',
+        description: 'Switch between the maps of the available species.',
+        placement: 'right',
+        target: () => this.$refs.speciesSelect?.$el,
+      };
+      const flatmapSteps = this.getCurrentFlatmap()?.getHelpModeSteps?.() ?? [];
+      return [speciesStep, ...flatmapSteps];
+    },
+    /**
+     * @public
      * Function to request opening the given species in a new view/panel,
      * leaving the currently displayed species unchanged.
      * @arg {String} `species`

@@ -57,7 +57,12 @@ Please use `const` to assign meaningful names to them...
               progresses.
             </p>
             <template #reference>
-              <div class="warning-icon" @mouseover="showTooltip(7)" @mouseout="hideTooltip(7)">
+              <div
+                class="warning-icon"
+                data-help-id="warning"
+                @mouseover="showTooltip(7)"
+                @mouseout="hideTooltip(7)"
+              >
                 <el-icon v-if="displayWarning || isLegacy"><el-icon-warning-filled /></el-icon>
                 <template v-if="isLegacy">
                   <span class="warning-text">Legacy Map</span>
@@ -84,6 +89,7 @@ Please use `const` to assign meaningful names to them...
           <template #reference>
             <div
               class="latest-changesicon"
+              data-help-id="whats-new"
               v-if="displayLatestChanges"
               @mouseover="showTooltip(8)"
               @mouseout="hideTooltip(8)"
@@ -151,6 +157,7 @@ Please use `const` to assign meaningful names to them...
           <template #reference>
             <div
               class="icon-button-container"
+              data-help-id="zoom-in"
               @click="zoomIn()"
               @mouseover="showTooltip(1)"
               @mouseout="hideTooltip(1)"
@@ -172,6 +179,7 @@ Please use `const` to assign meaningful names to them...
           <template #reference>
             <div
               class="icon-button-container"
+              data-help-id="zoom-out"
               @click="zoomOut()"
               @mouseover="showTooltip(2)"
               @mouseout="hideTooltip(2)"
@@ -198,6 +206,7 @@ Please use `const` to assign meaningful names to them...
           <template #reference>
             <div
               class="icon-button-container"
+              data-help-id="zoom-fit"
               @click="resetView()"
               @mouseover="showTooltip(3)"
               @mouseout="hideTooltip(3)"
@@ -225,6 +234,7 @@ Please use `const` to assign meaningful names to them...
           >
             <div
               class="pathway-container"
+              data-help-id="pathways"
               :class="{ open: drawerOpen, close: !drawerOpen }"
               :style="{ 'max-height': pathwaysMaxHeight + 'px' }"
               v-popover:checkBoxPopover
@@ -253,8 +263,9 @@ Please use `const` to assign meaningful names to them...
               >
                 <template #reference>
                   <div
-                    v-show="hoverVisibilities[0].value"
+                    v-show="hoverVisibilities[0].value || helpTourStepId === 'marker'"
                     class="flatmap-marker-help"
+                    data-help-id="marker"
                     v-html="flatmapMarker"
                     v-popover:markerPopover
                   ></div>
@@ -488,6 +499,7 @@ Please use `const` to assign meaningful names to them...
               <div
                 v-if="enableOpenMapUI && openMapOptions.length > 0"
                 ref="openMapRef"
+                data-help-id="open-map"
                 class="icon-button-container"
                 @mouseover="showTooltip(4)"
                 @mouseout="hideTooltip(4)"
@@ -510,6 +522,7 @@ Please use `const` to assign meaningful names to them...
             <template #reference>
               <div
                 ref="backgroundIconRef"
+                data-help-id="settings"
                 class="icon-button-container"
                 @mouseover="showTooltip(5)"
                 @mouseout="hideTooltip(5)"
@@ -570,6 +583,7 @@ import {
 import '@abi-software/map-utilities/dist/style.css';
 import EventBus from './EventBus.js';
 import FlatmapError from './FlatmapError.vue';
+import { flatmapHelpModeSteps, flatmapWarningDescriptions } from './helpModeSteps.js';
 
 const ERROR_MESSAGE = 'cannot be found on the map.';
 
@@ -2326,6 +2340,50 @@ export default {
     },
     /**
      * @public
+     * Function to get the help mode tour steps of this flatmap,
+     * to be used with ``HelpModeTour`` from ``@abi-software/map-utilities``.
+     * Steps with unavailable targets are skipped by the tour.
+     * @returns {Array} The list of help steps.
+     */
+    getHelpModeSteps: function () {
+      const openDrawer = () => {
+        if (this.requiresDrawer) this.drawerOpen = true;
+      };
+      return flatmapHelpModeSteps.map((stepDef) => {
+        const { id, inDrawer, ...step } = stepDef;
+        const helpStep = {
+          ...step,
+          id: `flatmap-${id}`,
+          target: () => this.$el?.querySelector?.(`[data-help-id="${id}"]`),
+        };
+        if (id === 'map-popup') {
+          helpStep.target = () => this.$el?.querySelector?.('.flatmap-popup-popper');
+          helpStep.onEnter = () => this.openFlatmapHelpPopup();
+          helpStep.onLeave = () => this.closeFlatmapHelpPopup();
+        } else if (id === 'warning') {
+          helpStep.description = this.isLegacy
+            ? flatmapWarningDescriptions.legacy
+            : this.isFC
+              ? flatmapWarningDescriptions.fc
+              : flatmapWarningDescriptions.default;
+        } else if (inDrawer) {
+          if (id === 'pathways' && !this.showPathwayFilter) {
+            helpStep.title = 'Legends';
+            helpStep.description = 'The legends explain the symbols and colours used on this map.';
+          }
+          helpStep.onEnter = () => {
+            openDrawer();
+            this.helpTourStepId = id;
+          };
+          helpStep.onLeave = () => {
+            this.helpTourStepId = '';
+          };
+        }
+        return helpStep;
+      });
+    },
+    /**
+     * @public
      * Function to set help mode
      * by providing flag ``helpMode`` (true/false).
      * @arg {Boolean} `helpMode`
@@ -3482,6 +3540,7 @@ export default {
         { value: false, refs: 'toolbarPopover', ref: 'connectionPopover' }, // 15
       ],
       helpModeActiveIndex: this.helpModeInitialIndex,
+      helpTourStepId: '',
       yellowstar: yellowstar,
       isFC: false,
       inHelp: false,
