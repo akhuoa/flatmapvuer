@@ -12,6 +12,7 @@
           <el-col :span="8">
             <el-button @click="helpMode = !helpMode" size="small">Help Mode</el-button>
             <el-button @click="startHelpTour" size="small">Help Tour</el-button>
+            <el-button @click="startHelpHover" size="small">Hover Help</el-button>
           </el-col>
           <el-col :span="8">
             <el-button @click="saveSettings()" size="small">Save Settings</el-button>
@@ -83,6 +84,7 @@
     />
 
     <HelpModeTour v-model="helpTourOpen" :steps="helpTourSteps" />
+    <HelpModeHover v-model="helpHoverOpen" :steps="helpTourSteps" />
   </div>
 </template>
 
@@ -92,7 +94,7 @@ import { markRaw, shallowRef } from 'vue';
 import { Setting as ElIconSetting } from '@element-plus/icons-vue';
 import './icons/mapicon-species-style.css';
 import MultiFlatmapVuer from './components/MultiFlatmapVuer.vue';
-import { HelpModeDialog, HelpModeTour } from '@abi-software/map-utilities';
+import { HelpModeDialog, HelpModeHover, HelpModeTour } from '@abi-software/map-utilities';
 import '@abi-software/map-utilities/dist/style.css';
 
 export default {
@@ -101,6 +103,7 @@ export default {
     MultiFlatmapVuer,
     HelpModeDialog,
     HelpModeTour,
+    HelpModeHover,
   },
   methods: {
     saveSettings: function () {
@@ -179,6 +182,10 @@ export default {
     startHelpTour: function () {
       this.helpTourSteps = this.$refs.multi.getHelpModeSteps();
       this.helpTourOpen = true;
+    },
+    startHelpHover: function () {
+      this.helpTourSteps = this.$refs.multi.getHelpModeSteps();
+      this.helpHoverOpen = true;
     },
     onHelpModeShowNext: function () {
       this.helpModeActiveItem += 1;
@@ -282,6 +289,7 @@ export default {
       useHelpModeDialog: true,
       helpTourOpen: false,
       helpTourSteps: [],
+      helpHoverOpen: false,
       multiflatmapRef: null,
       mapSettings: [],
       //flatmapAPI: "https://mapcore-demo.org/current/flatmap/v2/"

@@ -399,6 +399,7 @@ export default {
         title: 'Select a species',
         description: 'Switch between the maps of the available species.',
         placement: 'right',
+        area: 'map-info',
         target: () => this.$refs.speciesSelect?.$el,
       };
       const flatmapSteps = this.getCurrentFlatmap()?.getHelpModeSteps?.() ?? [];
