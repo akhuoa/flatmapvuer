@@ -266,9 +266,11 @@ Please use `const` to assign meaningful names to them...
                     v-show="hoverVisibilities[0].value || helpTourStepIds.includes('marker')"
                     class="flatmap-marker-help"
                     data-help-id="marker"
-                    v-html="flatmapMarker"
                     v-popover:markerPopover
-                  ></div>
+                  >
+                    <div class="flatmap-marker-help-icon" v-html="flatmapMarker"></div>
+                    <span class="flatmap-marker-help-label">Dataset markers</span>
+                  </div>
                 </template>
               </el-popover>
               <tree-controls
@@ -3933,16 +3935,24 @@ export default {
   width: auto;
 }
 
+// Lined up with the legend items, the icon is wider than the 20px legend icons
 .flatmap-marker-help {
-  display: block;
+  display: flex;
+  align-items: center;
   width: max-content;
-  margin: 0.5rem;
+  margin: 8px 8.5px;
 
   :deep(.flatmap-marker svg) {
     display: block;
     width: 28px;
     height: 28px;
   }
+}
+
+.flatmap-marker-help-label {
+  margin-left: 10px;
+  font-size: 12px;
+  color: rgb(48, 49, 51);
 }
 
 .el-dropdown-link {
