@@ -263,7 +263,7 @@ Please use `const` to assign meaningful names to them...
               >
                 <template #reference>
                   <div
-                    v-show="hoverVisibilities[0].value || helpTourStepId === 'marker'"
+                    v-show="hoverVisibilities[0].value || helpTourStepIds.includes('marker')"
                     class="flatmap-marker-help"
                     data-help-id="marker"
                     v-html="flatmapMarker"
@@ -2371,12 +2371,13 @@ export default {
             helpStep.title = 'Legends';
             helpStep.description = 'The legends explain the symbols and colours used on this map.';
           }
+          // The hover help enters all the steps at once
           helpStep.onEnter = () => {
             openDrawer();
-            this.helpTourStepId = id;
+            if (!this.helpTourStepIds.includes(id)) this.helpTourStepIds.push(id);
           };
           helpStep.onLeave = () => {
-            this.helpTourStepId = '';
+            this.helpTourStepIds = this.helpTourStepIds.filter((stepId) => stepId !== id);
           };
         }
         return helpStep;
@@ -3540,7 +3541,7 @@ export default {
         { value: false, refs: 'toolbarPopover', ref: 'connectionPopover' }, // 15
       ],
       helpModeActiveIndex: this.helpModeInitialIndex,
-      helpTourStepId: '',
+      helpTourStepIds: [],
       yellowstar: yellowstar,
       isFC: false,
       inHelp: false,

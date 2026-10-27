@@ -2,14 +2,12 @@
  * Help mode tour steps for FlatmapVuer.
  * `id` matches the `data-help-id` attribute of the target element.
  * `area` is one of the `HELP_MODE_AREAS` keys from `@abi-software/map-utilities`.
- * `hover: false` steps are not shown in the hover help, they need `onEnter` to be visible.
  * `inDrawer` steps are inside the pathway drawer, which is opened before showing them.
  */
 const flatmapHelpModeSteps = [
   {
     id: 'map-popup',
     area: 'map-info',
-    hover: false,
     title: 'Explore the map',
     description:
       'Hover over a feature on the map to see its name, click on it to see more information such as its connectivity.',
@@ -40,7 +38,6 @@ const flatmapHelpModeSteps = [
   {
     id: 'marker',
     area: 'legends',
-    hover: false,
     title: 'Dataset markers',
     description:
       'Find these markers on the map for data. The number inside a marker is the number of datasets available at that location.',
