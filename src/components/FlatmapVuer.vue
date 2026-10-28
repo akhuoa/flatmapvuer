@@ -17,6 +17,8 @@
         v-help-mode="{
           id: 'flatmap-map-popup',
           area: 'map-info',
+          // After the controls at the top left, e.g. what's new, the map is below them
+          order: 1,
           title: 'Explore the map',
           description:
             'Hover over a feature on the map to see its name, click on it to see more information such as its connectivity.',
