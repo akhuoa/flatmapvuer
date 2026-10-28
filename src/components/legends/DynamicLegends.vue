@@ -15,13 +15,20 @@
           width="max-content"
           :offset="0"
           popper-class="flatmap-popper flatmap-teleport-popper"
-          :visible="tooltipVisible"
+          :visible="isHovering"
           ref="featuredMarkerPopover"
         >
           <template #reference>
             <div
               v-popover:featuredMarkerPopover
-              data-help-id="featured-marker"
+              v-help-mode="{
+                id: 'flatmap-featured-marker',
+                area: 'legends',
+                title: 'Featured dataset marker',
+                description: 'Shows the location of the featured dataset on the map.',
+                placement: 'right',
+                onEnter: openHelpModeDrawer,
+              }"
               @mouseover="onMouseOver"
               @mouseout="onMouseOut"
             >
@@ -49,11 +56,18 @@
 
 <script>
 import LegendItem from './LegendItem.vue';
+import { helpModeDirective } from '@abi-software/map-utilities';
 
 export default {
   name: 'DynamicLegends',
   components: {
     LegendItem,
+  },
+  directives: {
+    helpMode: helpModeDirective,
+  },
+  inject: {
+    openHelpModeDrawer: { default: () => () => {} },
   },
   props: {
     identifierKey: {
@@ -78,22 +92,12 @@ export default {
       type: Boolean,
       default: false,
     },
-    showDatasetMarkerTooltip: {
-      type: Boolean,
-      default: false,
-    },
   },
   data() {
     return {
       isHovering: false,
       hoverTimeout: null,
     };
-  },
-  computed: {
-    tooltipVisible() {
-      // Show tooltip when either help mode is active OR user is hovering
-      return (this.showDatasetMarkerTooltip && this.showStarInLegend) || this.isHovering;
-    },
   },
   methods: {
     onMouseOver() {

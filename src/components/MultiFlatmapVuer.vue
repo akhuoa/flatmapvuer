@@ -2,86 +2,80 @@
   <div class="multi-container" ref="multiContainer">
     <div style="position: absolute; z-index: 100" v-if="!disableUI">
       <div class="species-display-text">Species</div>
-      <el-popover
-        content="Select a species"
-        placement="right"
-        trigger="manual"
-        popper-class="flatmap-popper flatmap-teleport-popper right-popper"
-        width="max-content"
-        :visible="activateTooltipByIndex(0)"
+      <el-select
+        id="flatmap-select"
+        ref="speciesSelect"
+        v-help-mode="{
+          id: 'multiflatmap-species-select',
+          area: 'map-info',
+          title: 'Select a species',
+          description: 'Switch between the maps of the available species.',
+          placement: 'right',
+        }"
         :teleported="false"
-        ref="selectPopover"
+        v-model="activeSpecies"
+        placeholder="Select"
+        class="select-box"
+        popper-class="flatmap-dropdown"
+        @change="setSpecies"
       >
-        <template #reference>
-          <el-select
-            id="flatmap-select"
-            ref="speciesSelect"
-            :teleported="false"
-            v-model="activeSpecies"
-            placeholder="Select"
-            class="select-box"
-            popper-class="flatmap-dropdown"
-            @change="setSpecies"
-          >
-            <el-option v-for="(item, key) in speciesList" :key="key" :label="key" :value="key">
-              <span class="option-label">
-                <el-tooltip
-                  v-if="activeSpecies !== key"
-                  :content="`Change species to ${key}`"
-                  placement="top"
-                  effect="light"
-                  :show-after="200"
-                  popper-class="flatmap-species-option-tooltip"
-                >
-                  <span class="option-title">
-                    <span class="select-box-icon">
-                      <i :class="item.iconClass"></i>
-                    </span>
-                    {{ key }}
-                  </span>
-                </el-tooltip>
-                <span v-else class="option-title active-species">
-                  <span class="select-box-icon">
-                    <i :class="item.iconClass"></i>
-                  </span>
-                  {{ key }}
+        <el-option v-for="(item, key) in speciesList" :key="key" :label="key" :value="key">
+          <span class="option-label">
+            <el-tooltip
+              v-if="activeSpecies !== key"
+              :content="`Change species to ${key}`"
+              placement="top"
+              effect="light"
+              :show-after="200"
+              popper-class="flatmap-species-option-tooltip"
+            >
+              <span class="option-title">
+                <span class="select-box-icon">
+                  <i :class="item.iconClass"></i>
                 </span>
-                <el-tooltip
-                  v-if="enableOpenMapUI"
-                  :content="`Open ${key} in a new view`"
-                  placement="top"
-                  effect="light"
-                  :show-after="200"
-                  popper-class="flatmap-open-new-view-tooltip"
-                >
-                  <button
-                    type="button"
-                    class="open-new-view-button"
-                    :aria-label="`Open ${key} in a new view`"
-                    @click.stop="openSpeciesInNewView(key)"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="14"
-                      height="14"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <rect x="8" y="8" width="13" height="13" rx="2" />
-                      <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
-                      <path d="M14.5 11.5v6M11.5 14.5h6" />
-                    </svg>
-                  </button>
-                </el-tooltip>
+                {{ key }}
               </span>
-            </el-option>
-          </el-select>
-        </template>
-      </el-popover>
+            </el-tooltip>
+            <span v-else class="option-title active-species">
+              <span class="select-box-icon">
+                <i :class="item.iconClass"></i>
+              </span>
+              {{ key }}
+            </span>
+            <el-tooltip
+              v-if="enableOpenMapUI"
+              :content="`Open ${key} in a new view`"
+              placement="top"
+              effect="light"
+              :show-after="200"
+              popper-class="flatmap-open-new-view-tooltip"
+            >
+              <button
+                type="button"
+                class="open-new-view-button"
+                :aria-label="`Open ${key} in a new view`"
+                @click.stop="openSpeciesInNewView(key)"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="8" y="8" width="13" height="13" rx="2" />
+                  <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+                  <path d="M14.5 11.5v6M11.5 14.5h6" />
+                </svg>
+              </button>
+            </el-tooltip>
+          </span>
+        </el-option>
+      </el-select>
     </div>
     <!--
       This event is emitted when the user chooses a different map option
@@ -127,13 +121,6 @@
       @open-map="$emit('open-map', $event)"
       @pathway-selection-changed="onSelectionsDataChanged"
       :minZoom="minZoom"
-      :helpMode="activeSpecies == key && helpMode"
-      :helpModeActiveItem="helpModeActiveItem"
-      :helpModeDialog="helpModeDialog"
-      :helpModeInitialIndex="-2"
-      @help-mode-last-item="onHelpModeLastItem"
-      @shown-tooltip="onTooltipShown"
-      @shown-map-tooltip="onMapTooltipShown"
       :renderAtMounted="renderAtMounted"
       :render="render && activeSpecies == key"
       :displayMinimap="displayMinimap"
@@ -158,6 +145,7 @@
 import { markRaw } from 'vue';
 import EventBus from './EventBus';
 import FlatmapVuer from './FlatmapVuer.vue';
+import { collectHelpModeSteps, helpModeDirective } from '@abi-software/map-utilities';
 import flatmap from '../services/flatmapLoader.js';
 
 const TAXON_UUID = {
@@ -175,6 +163,9 @@ export default {
   name: 'MultiFlatmapVuer',
   components: {
     FlatmapVuer,
+  },
+  directives: {
+    helpMode: helpModeDirective,
   },
   created: function () {
     this.loadMapManager();
@@ -389,21 +380,14 @@ export default {
     },
     /**
      * @public
-     * Function to get the help mode tour steps of this component and the current flatmap,
-     * to be used with ``HelpModeTour`` from ``@abi-software/map-utilities``.
+     * Function to get the help mode steps of this component and the current flatmap,
+     * from the elements with ``v-help-mode``, to be used with ``HelpModeTour`` and
+     * ``HelpModeHover`` from ``@abi-software/map-utilities``.
+     * The flatmaps of the other species are hidden and left out.
      * @returns {Array} The list of help steps.
      */
     getHelpModeSteps: function () {
-      const speciesStep = {
-        id: 'multiflatmap-species-select',
-        title: 'Select a species',
-        description: 'Switch between the maps of the available species.',
-        placement: 'right',
-        area: 'map-info',
-        target: () => this.$refs.speciesSelect?.$el,
-      };
-      const flatmapSteps = this.getCurrentFlatmap()?.getHelpModeSteps?.() ?? [];
-      return [speciesStep, ...flatmapSteps];
+      return collectHelpModeSteps(this.$el);
     },
     /**
      * @public
@@ -644,44 +628,6 @@ export default {
     },
     /**
      * @public
-     * Function to activate help mode tooltip by item index number
-     * @arg {Number} `index`
-     */
-    activateTooltipByIndex: function (index) {
-      return index === this.helpModeActiveItem && this.helpMode;
-    },
-    /**
-     * @public
-     * Function to check the last item of help mode
-     * @arg {Boolean} `isLastItem`
-     */
-    onHelpModeLastItem: function (isLastItem) {
-      if (isLastItem) {
-        this.$emit('help-mode-last-item', true);
-      }
-    },
-    /**
-     * @public
-     * Function to emit event after a tooltip is shown.
-     */
-    onTooltipShown: function () {
-      /**
-       * This event is emitted after a tooltip in Flatmap is shown.
-       */
-      this.$emit('shown-tooltip');
-    },
-    /**
-     * @public
-     * Function to emit event after a tooltip on the map is shown.
-     */
-    onMapTooltipShown: function () {
-      /**
-       * This event is emitted after a tooltip on Flatmap's map is shown.
-       */
-      this.$emit('shown-map-tooltip');
-    },
-    /**
-     * @public
      * Function to change the view mode of the map.
      * @arg {String} `modeName`
      */
@@ -725,36 +671,6 @@ export default {
     render: {
       type: Boolean,
       default: true,
-    },
-    /**
-     * The option to show tooltips for help mode.
-     */
-    helpMode: {
-      type: Boolean,
-      default: false,
-    },
-    /**
-     * The active item index of help mode.
-     */
-    helpModeActiveItem: {
-      type: Number,
-      default: 0,
-    },
-    /**
-     * The option to use helpModeDialog.
-     * On default, `false`, clicking help will show all tooltips.
-     * If `true`, clicking help will show the help-mode-dialog.
-     */
-    helpModeDialog: {
-      type: Boolean,
-      default: false,
-    },
-    /**
-     * The last item of help mode.
-     */
-    helpModeLastItem: {
-      type: Boolean,
-      default: false,
     },
     /**
      * The option to display minimap at the top-right corner of the map.
